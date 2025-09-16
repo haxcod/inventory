@@ -1,0 +1,366 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom theme configuration for Tailwind v4 */
+  --color-gray-900: #111827;
+  --color-black: #000000;
+}
+
+:root {
+  --toast-bg: #ffffff;
+  --toast-color: #000000;
+  
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+}
+
+.dark {
+  --toast-bg: #000000;
+  --toast-color: #ffffff;
+  
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 0%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 9%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 9%;
+  --muted-foreground: 0 0% 70%;
+  --accent: 0 0% 9%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 224.3 76.3% 94.1%;
+}
+
+/* Dark mode gradients fallback - Force black theme in dark mode */
+.dark [class*="bg-gradient-to-r"] {
+  background: linear-gradient(to right, #111827, #000000) !important;
+}
+
+/* Force black theme for Select dropdowns in dark mode */
+.dark .bg-card {
+  background-color: #000000 !important;
+}
+
+.dark .bg-muted {
+  background-color: #111111 !important;
+}
+
+/* Force text colors in dark mode */
+.dark .text-foreground {
+  color: #ffffff !important;
+}
+
+.dark .text-muted-foreground {
+  color: #9ca3af !important;
+}
+
+/* Force selected option background in dark mode */
+.dark .bg-gray-800 {
+  background-color: #1f2937 !important;
+}
+
+/* Force selected option background specifically */
+.dark .selected-option {
+  background-color: #1f2937 !important;
+}
+
+/* Force dark theme for all elements */
+.dark {
+  color-scheme: dark;
+}
+
+.dark * {
+  border-color: hsl(var(--border));
+}
+
+/* Specific overrides for card headers in dark mode */
+.dark .bg-gradient-to-r.from-blue-50.to-indigo-50,
+.dark .bg-gradient-to-r.from-purple-50.to-pink-50,
+.dark .bg-gradient-to-r.from-green-50.to-emerald-50,
+.dark .bg-gradient-to-r.from-orange-50.to-yellow-50,
+.dark .bg-gradient-to-r.from-red-50.to-pink-50,
+.dark .bg-gradient-to-r.from-indigo-50.to-purple-50,
+.dark .bg-gradient-to-r.from-gray-50.to-gray-100,
+.dark .bg-gradient-to-r.from-emerald-50.to-teal-50 {
+  background: linear-gradient(to right, #111827, #000000) !important;
+}
+
+/* Base styles using direct CSS instead of @apply */
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Custom styles for specific components that need additional styling */
+
+/* Sidebar button styling */
+.sidebar-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.sidebar-button:hover::before {
+  left: 100%;
+}
+
+.sidebar-button-active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+  transform: translateX(4px);
+}
+
+.sidebar-button-inactive {
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.sidebar-button-inactive:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #bfdbfe;
+  transform: translateX(2px);
+}
+
+/* Dark theme sidebar button styling */
+.dark .sidebar-button::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.dark .sidebar-button-active {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  box-shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.4);
+}
+
+.dark .sidebar-button-inactive:hover {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  border-color: #4b5563;
+}
+
+/* Additional dark theme sidebar improvements */
+.dark .sidebar-button {
+  color: #e5e7eb;
+}
+
+.dark .sidebar-button:hover {
+  color: #ffffff;
+}
+
+/* Dark theme sidebar scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Force sidebar background colors */
+.sidebar-container {
+  background-color: #ffffff !important;
+}
+
+.dark .sidebar-container {
+  background-color: #000000 !important;
+}
+
+/* Additional sidebar background overrides */
+[class*="sidebar-container"] {
+  background-color: #ffffff !important;
+}
+
+.dark [class*="sidebar-container"] {
+  background-color: #000000 !important;
+}
+
+/* Force all sidebar elements to use proper colors */
+.dark .sidebar-container * {
+  color: #e5e7eb !important;
+}
+
+.dark .sidebar-container .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+.dark .sidebar-container .text-blue-400 {
+  color: #60a5fa !important;
+}
+
+/* Force sidebar text colors */
+.sidebar-text {
+  color: #374151 !important;
+}
+
+.dark .sidebar-text {
+  color: #e5e7eb !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Mobile sidebar overlay blur effect */
+.mobile-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .mobile-overlay {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  /* Better touch targets */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved text readability on mobile */
+  .mobile-text {
+    line-height: 1.5;
+  }
+  
+  /* Better spacing for mobile cards */
+  .mobile-card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Responsive tables */
+  .mobile-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile-friendly buttons */
+  .mobile-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+}
