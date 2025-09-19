@@ -7,6 +7,7 @@ import { Label } from '../components/ui/Label';
 import type { Product } from '../types';
 import { formatCurrency, formatNumber } from '../lib/utils';
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -97,10 +98,12 @@ export default function ProductsPage() {
                 Manage your inventory products
               </p>
             </div>
-            <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-blue-400 w-full sm:w-auto">
-              <PlusIcon className="h-5 w-5 mr-2" />
-              Add Product
-            </Button>
+            <Link to="/products/add">
+              <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-blue-400 w-full sm:w-auto">
+                <PlusIcon className="h-5 w-5 mr-2" />
+                Add Product
+              </Button>
+            </Link>
           </div>
         </div>
 

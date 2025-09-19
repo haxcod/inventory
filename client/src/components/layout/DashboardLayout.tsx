@@ -7,7 +7,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen bg-background dark:bg-black">
       <Sidebar />
       <div className="lg:ml-56">
         {/* Mobile header spacing */}

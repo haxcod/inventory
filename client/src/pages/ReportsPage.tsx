@@ -13,6 +13,7 @@ import {
   PrinterIcon
 } from '@heroicons/react/24/outline';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import * as XLSX from 'xlsx';
 
 interface ReportData {
   sales: any[];
@@ -35,6 +36,7 @@ export default function ReportsPage() {
     endDate: ''
   });
   const [period, setPeriod] = useState('monthly');
+  const [isExporting, setIsExporting] = useState(false);
 
   const reportTypeOptions: SelectOption[] = [
     { value: 'sales', label: 'Sales Report' },
@@ -99,6 +101,422 @@ export default function ReportsPage() {
   };
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+  const exportToExcel = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Prepare data based on selected report
+      let worksheetData: any[] = [];
+      let fileName = '';
+      
+      switch (selectedReport) {
+        case 'sales':
+          worksheetData = reportData.sales.map(item => ({
+            'Month': item.name,
+            'Sales Amount': item.sales,
+            'Number of Orders': item.orders
+          }));
+          fileName = 'Sales_Report';
+          break;
+        case 'revenue':
+          worksheetData = reportData.revenue.map(item => ({
+            'Quarter': item.name,
+            'Revenue': item.revenue,
+            'Profit': item.profit
+          }));
+          fileName = 'Revenue_Report';
+          break;
+        case 'profitLoss':
+          worksheetData = reportData.profitLoss.map(item => ({
+            'Month': item.name,
+            'Revenue': item.revenue,
+            'Expenses': item.expenses,
+            'Profit': item.profit
+          }));
+          fileName = 'Profit_Loss_Report';
+          break;
+        case 'stock':
+          worksheetData = reportData.products.map(item => ({
+            'Category': item.name,
+            'Percentage': item.value,
+            'Count': item.count
+          }));
+          fileName = 'Stock_Report';
+          break;
+        default:
+          worksheetData = [];
+      }
+
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Report Data');
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const finalFileName = `${fileName}_${timestamp}.xlsx`;
+      
+      // Save file
+      XLSX.writeFile(workbook, finalFileName);
+      
+      console.log('Excel file exported successfully');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('Error exporting to Excel. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const printReport = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        alert('Please allow popups to print the report.');
+        return;
+      }
+
+      // Get summary data
+      const totalSales = reportData.sales.reduce((sum, item) => sum + item.sales, 0);
+      const totalRevenue = reportData.revenue.reduce((sum, item) => sum + item.revenue, 0);
+      const totalProfit = reportData.profitLoss.reduce((sum, item) => sum + item.profit, 0);
+      const totalProducts = reportData.products.reduce((sum, item) => sum + item.count, 0);
+
+      // Create clean printable HTML without charts
+      const printHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${getReportTitle()} - ${new Date().toLocaleDateString()}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              margin: 0;
+              padding: 20px;
+              background: white;
+              color: black;
+              line-height: 1.6;
+            }
+            .print-header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #3B82F6;
+              padding-bottom: 20px;
+            }
+            .print-header h1 {
+              color: #3B82F6;
+              margin: 0;
+              font-size: 28px;
+            }
+            .print-header p {
+              color: #666;
+              margin: 5px 0 0 0;
+              font-size: 16px;
+            }
+            .section {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+            .section h2 {
+              color: #333;
+              border-bottom: 1px solid #ddd;
+              padding-bottom: 10px;
+              margin-top: 30px;
+              font-size: 20px;
+            }
+            .section h3 {
+              color: #555;
+              margin-top: 20px;
+              font-size: 16px;
+            }
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 20px;
+              margin: 20px 0;
+            }
+            .stat-item {
+              text-align: center;
+              padding: 15px;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              background: white;
+            }
+            .stat-value {
+              font-size: 24px;
+              font-weight: bold;
+              color: #3B82F6;
+            }
+            .stat-label {
+              color: #666;
+              font-size: 14px;
+              margin-top: 5px;
+            }
+            .data-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            .data-table th,
+            .data-table td {
+              border: 1px solid #ddd;
+              padding: 8px 12px;
+              text-align: left;
+            }
+            .data-table th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+            }
+            .data-table tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            .analysis {
+              background-color: #f8f9fa;
+              padding: 15px;
+              border-left: 4px solid #3B82F6;
+              margin: 20px 0;
+            }
+            .analysis h4 {
+              margin-top: 0;
+              color: #3B82F6;
+            }
+            .analysis ul {
+              margin: 10px 0;
+              padding-left: 20px;
+            }
+            .analysis li {
+              margin: 5px 0;
+            }
+            @media print {
+              body { margin: 0; padding: 15px; }
+              .print-header { page-break-after: avoid; }
+              .section { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <h1>${getReportTitle()}</h1>
+            <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+            <p>Period: ${period.charAt(0).toUpperCase() + period.slice(1)}</p>
+          </div>
+
+          <div class="section">
+            <h2>Summary Statistics</h2>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-value">${formatCurrency(totalSales)}</div>
+                <div class="stat-label">Total Sales</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${formatCurrency(totalRevenue)}</div>
+                <div class="stat-label">Total Revenue</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${formatCurrency(totalProfit)}</div>
+                <div class="stat-label">Total Profit</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${totalProducts}</div>
+                <div class="stat-label">Total Products</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>${getReportTitle()} Details</h2>
+            ${generateReportTable()}
+          </div>
+
+          <div class="section">
+            <h2>Analysis & Insights</h2>
+            <div class="analysis">
+              ${generateReportAnalysis()}
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 40px; color: #666; font-size: 12px;">
+            Generated by InventoryPro System
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+      
+      // Wait for content to load then print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 500);
+      };
+      
+    } catch (error) {
+      console.error('Error printing report:', error);
+      alert('Error printing report. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const generateReportTable = () => {
+    if (selectedReport === 'sales') {
+      return `
+        <h3>Monthly Sales Performance</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Sales Amount</th>
+              <th>Orders</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.sales.map(item => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${formatCurrency(item.sales)}</td>
+                <td>${item.orders}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } else if (selectedReport === 'revenue') {
+      return `
+        <h3>Quarterly Revenue Analysis</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Quarter</th>
+              <th>Revenue</th>
+              <th>Profit</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.revenue.map(item => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${formatCurrency(item.revenue)}</td>
+                <td>${formatCurrency(item.profit)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } else if (selectedReport === 'profitLoss') {
+      return `
+        <h3>Monthly Profit & Loss Statement</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Revenue</th>
+              <th>Expenses</th>
+              <th>Profit</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.profitLoss.map(item => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${formatCurrency(item.revenue)}</td>
+                <td>${formatCurrency(item.expenses)}</td>
+                <td>${formatCurrency(item.profit)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } else if (selectedReport === 'stock') {
+      return `
+        <h3>Product Category Distribution</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Percentage</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.products.map(item => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${item.value}%</td>
+                <td>${item.count}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+    return '';
+  };
+
+  const generateReportAnalysis = () => {
+    if (selectedReport === 'sales') {
+      return `
+        <h4>Sales Trend Analysis</h4>
+        <ul>
+          <li>Sales show consistent growth from January to June</li>
+          <li>Peak performance in May with ₹200,000 in sales</li>
+          <li>Order volume correlates with sales performance</li>
+          <li>Strong upward trend indicates healthy business growth</li>
+        </ul>
+      `;
+    } else if (selectedReport === 'revenue') {
+      return `
+        <h4>Revenue Analysis</h4>
+        <ul>
+          <li>Quarterly revenue shows steady growth pattern</li>
+          <li>Q4 demonstrates highest revenue performance</li>
+          <li>Profit margins remain consistent across quarters</li>
+          <li>Strong financial performance throughout the year</li>
+        </ul>
+      `;
+    } else if (selectedReport === 'profitLoss') {
+      return `
+        <h4>Profit & Loss Analysis</h4>
+        <ul>
+          <li>Monthly profit shows positive trend</li>
+          <li>Expense management is effective and controlled</li>
+          <li>Revenue growth outpaces expense increases</li>
+          <li>Healthy profit margins maintained consistently</li>
+        </ul>
+      `;
+    } else if (selectedReport === 'stock') {
+      return `
+        <h4>Inventory Analysis</h4>
+        <ul>
+          <li>Electronics category dominates product distribution</li>
+          <li>Balanced inventory across multiple categories</li>
+          <li>Good product diversification strategy</li>
+          <li>Inventory levels support sales performance</li>
+        </ul>
+      `;
+    }
+    return '';
+  };
+
+  const getReportTitle = () => {
+    switch (selectedReport) {
+      case 'sales': return 'Sales Report';
+      case 'revenue': return 'Revenue Report';
+      case 'profitLoss': return 'Profit & Loss Report';
+      case 'stock': return 'Stock Report';
+      default: return 'Business Report';
+    }
+  };
+
 
   const renderSalesReport = () => (
     <div className="space-y-6">
@@ -353,19 +771,23 @@ export default function ReportsPage() {
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button 
                 variant="outline" 
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                onClick={exportToExcel}
+                disabled={isExporting}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <DocumentArrowDownIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Export</span>
-                <span className="sm:hidden">Export</span>
+                <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Excel'}</span>
+                <span className="sm:hidden">{isExporting ? 'Exporting...' : 'Excel'}</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                onClick={printReport}
+                disabled={isExporting}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <PrinterIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Print</span>
-                <span className="sm:hidden">Print</span>
+                <span className="hidden sm:inline">{isExporting ? 'Preparing...' : 'Print'}</span>
+                <span className="sm:hidden">{isExporting ? 'Preparing...' : 'Print'}</span>
               </Button>
             </div>
           </div>
@@ -422,10 +844,12 @@ export default function ReportsPage() {
         </Card>
 
         {/* Report Content */}
-        {selectedReport === 'sales' && renderSalesReport()}
-        {selectedReport === 'revenue' && renderRevenueReport()}
-        {selectedReport === 'profitLoss' && renderProfitLossReport()}
-        {selectedReport === 'stock' && renderStockReport()}
+        <div>
+          {selectedReport === 'sales' && renderSalesReport()}
+          {selectedReport === 'revenue' && renderRevenueReport()}
+          {selectedReport === 'profitLoss' && renderProfitLossReport()}
+          {selectedReport === 'stock' && renderStockReport()}
+        </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -38,3 +38,4 @@ router.post('/qr-scan', qrCodeScan);
 
 export default router;
 
+

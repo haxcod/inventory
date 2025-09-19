@@ -63,7 +63,10 @@ export function Sidebar() {
           >
             {isMobileMenuOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
           </Button>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">InventoryPro</h1>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">InventoryPro</h1>
+            <p className="text-xs text-gray-600 dark:text-gray-400">{user?.name || 'Admin User'}</p>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button 
@@ -91,8 +94,8 @@ export function Sidebar() {
         }}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+          {/* Logo - Hidden on mobile */}
+          <div className="hidden lg:flex items-center justify-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
             <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">InventoryPro</h1>
           </div>
 
@@ -109,7 +112,7 @@ export function Sidebar() {
                   className={cn(
                     'sidebar-button group flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 cursor-pointer',
                     isActive 
-                      ? 'sidebar-button-active text-white border-l-4 border-white' 
+                      ? 'sidebar-button-active border-l-4' 
                       : 'sidebar-button-inactive'
                   )}
                   style={{
@@ -133,7 +136,7 @@ export function Sidebar() {
                     className="mr-3 h-5 w-5 transition-colors duration-200"
                     style={{
                       color: isActive 
-                        ? '#ffffff' 
+                        ? (theme === 'dark' ? '#ffffff' : '#111827')
                         : theme === 'dark' ? '#d1d5db' : '#6b7280'
                     }}
                     onMouseEnter={(e) => {
@@ -151,7 +154,7 @@ export function Sidebar() {
                     className="flex-1 font-semibold transition-colors duration-200"
                     style={{
                       color: isActive 
-                        ? '#ffffff' 
+                        ? (theme === 'dark' ? '#ffffff' : '#111827')
                         : theme === 'dark' ? '#e5e7eb' : '#374151'
                     }}
                     onMouseEnter={(e) => {
@@ -168,7 +171,12 @@ export function Sidebar() {
                     {item.name}
                   </span>
                   {isActive && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{
+                        backgroundColor: theme === 'dark' ? '#ffffff' : '#111827'
+                      }}
+                    ></div>
                   )}
                 </Link>
               );

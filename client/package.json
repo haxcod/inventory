@@ -16,10 +16,15 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.13",
+    "@types/html2canvas": "^0.5.35",
     "axios": "^1.12.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
+    "jszip": "^3.10.1",
+    "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-cookie": "^8.0.1",
     "react-dom": "^19.1.1",
@@ -33,10 +38,12 @@
     "recharts": "^3.2.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",

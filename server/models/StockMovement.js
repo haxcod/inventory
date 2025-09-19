@@ -50,3 +50,4 @@ const StockMovement = mongoose.model('StockMovement', StockMovementSchema);
 
 export default StockMovement;
 
+

@@ -121,13 +121,13 @@ export const Select: React.FC<SelectProps> = ({
         id={id}
         name={name}
          className={cn(
-           "relative w-full px-4 py-3 text-left bg-card border-2 rounded-xl shadow-sm cursor-pointer transition-all duration-200",
+           "relative w-full px-4 py-3 text-left bg-white dark:bg-black border-2 rounded-xl shadow-sm cursor-pointer transition-all duration-200",
            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
            "hover:border-gray-300 dark:hover:border-gray-600",
            error 
              ? "border-red-500 focus:ring-red-500 focus:border-red-500" 
              : "border-gray-200 dark:border-gray-600",
-           disabled && "opacity-50 cursor-not-allowed bg-muted",
+           disabled && "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800",
            isOpen && "ring-2 ring-blue-500 border-blue-500",
            className
          )}
@@ -140,15 +140,15 @@ export const Select: React.FC<SelectProps> = ({
         aria-disabled={disabled}
       >
          <span className={cn(
-           "block truncate text-foreground font-medium",
-           !selectedOption && "text-muted-foreground"
+           "block truncate text-gray-900 dark:text-white font-medium",
+           !selectedOption && "text-gray-500 dark:text-gray-300"
          )}>
            {selectedOption ? selectedOption.label : placeholder}
          </span>
         <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
            <ChevronDownIcon 
              className={cn(
-               "h-5 w-5 text-muted-foreground transition-transform duration-200",
+               "h-5 w-5 text-gray-500 dark:text-gray-300 transition-transform duration-200",
                isOpen && "rotate-180"
              )}
            />
@@ -156,9 +156,9 @@ export const Select: React.FC<SelectProps> = ({
       </div>
 
        {isOpen && (
-         <div className="absolute z-50 w-full mt-1 bg-card border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl max-h-60 overflow-auto">
+         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-black border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl max-h-60 overflow-auto">
            {options.length === 0 ? (
-             <div className="px-4 py-3 text-sm text-muted-foreground">
+             <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
                No options available
              </div>
            ) : (
@@ -168,10 +168,10 @@ export const Select: React.FC<SelectProps> = ({
                  ref={el => optionRefs.current[index] = el}
                  className={cn(
                    "relative px-4 py-3 cursor-pointer transition-colors duration-150",
-                   "hover:bg-muted",
-                   focusedIndex === index && "bg-muted",
+                   "hover:bg-gray-100 dark:hover:bg-gray-800",
+                   focusedIndex === index && "bg-gray-100 dark:bg-gray-800",
                    option.disabled && "opacity-50 cursor-not-allowed",
-                   selectedOption?.value === option.value && "bg-blue-50 dark:bg-gray-800 selected-option"
+                   selectedOption?.value === option.value && "bg-blue-50 dark:bg-gray-700 selected-option"
                  )}
                  onClick={() => handleOptionClick(option)}
                  onMouseEnter={() => setFocusedIndex(index)}
@@ -180,7 +180,7 @@ export const Select: React.FC<SelectProps> = ({
                  aria-disabled={option.disabled}
                >
                  <div className="flex items-center justify-between">
-                   <span className="block truncate text-foreground font-medium">
+                   <span className="block truncate text-gray-900 dark:text-white font-medium">
                      {option.label}
                    </span>
                    {selectedOption?.value === option.value && (

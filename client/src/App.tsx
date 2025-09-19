@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ConfirmationProvider } from './context/ConfirmationContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -12,11 +13,13 @@ import ReportsPage from './pages/ReportsPage';
 import BranchesPage from './pages/BranchesPage';
 import UsersPage from './pages/UsersPage';
 import SettingsPage from './pages/SettingsPage';
+import AddProductPage from './pages/AddProductPage';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen">
+    <ConfirmationProvider>
+      <BrowserRouter>
+        <div className="min-h-screen">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
@@ -36,6 +39,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProductsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/products/add" 
+            element={
+              <ProtectedRoute>
+                <AddProductPage />
               </ProtectedRoute>
             } 
           />
@@ -110,8 +121,9 @@ function App() {
             },
           }}
         />
-      </div>
-    </BrowserRouter>
+        </div>
+      </BrowserRouter>
+    </ConfirmationProvider>
   );
 }
 

@@ -19,6 +19,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { useConfirmations } from '../context/ConfirmationContext';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -27,7 +28,21 @@ export default function PaymentsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [methodFilter, setMethodFilter] = useState('all');
   const [showNewPayment, setShowNewPayment] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  const [showEditPayment, setShowEditPayment] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const { confirmDelete, showSuccess, showError } = useConfirmations();
   const [newPayment, setNewPayment] = useState({
+    amount: '',
+    paymentMethod: 'cash' as 'cash' | 'card' | 'upi' | 'bank_transfer',
+    paymentType: 'credit' as 'credit' | 'debit',
+    description: '',
+    reference: '',
+    customer: '',
+    notes: '',
+  });
+  const [editPayment, setEditPayment] = useState({
     amount: '',
     paymentMethod: 'cash' as 'cash' | 'card' | 'upi' | 'bank_transfer',
     paymentType: 'credit' as 'credit' | 'debit',
@@ -66,6 +81,20 @@ export default function PaymentsPage() {
   useEffect(() => {
     fetchPayments();
   }, []);
+
+  // Prevent body scroll when modals are open
+  useEffect(() => {
+    if (showNewPayment || showEditPayment || showPaymentDetails) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showNewPayment, showEditPayment, showPaymentDetails]);
 
   const fetchPayments = async () => {
     try {
@@ -188,9 +217,145 @@ export default function PaymentsPage() {
       });
       // Refresh payments list
       fetchPayments();
+      
+      // Show success message
+      showConfirmation({
+        title: 'Payment Created',
+        message: `Payment of ${formatCurrency(paymentData.amount)} has been successfully created.`,
+        type: 'success',
+        confirmText: 'OK',
+        showCancel: false,
+        onConfirm: () => {}
+      });
     } catch (error) {
       console.error('Error creating payment:', error);
+      showConfirmation({
+        title: 'Create Failed',
+        message: 'There was an error creating the payment. Please try again.',
+        type: 'error',
+        confirmText: 'OK',
+        showCancel: false,
+        onConfirm: () => {}
+      });
     }
+  };
+
+  const handleViewPayment = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setShowPaymentDetails(true);
+  };
+
+  const handleClosePaymentDetails = () => {
+    setSelectedPayment(null);
+    setShowPaymentDetails(false);
+  };
+
+  const handleEditPayment = (payment: Payment) => {
+    setEditingPayment(payment);
+    setEditPayment({
+      amount: payment.amount.toString(),
+      paymentMethod: payment.paymentMethod,
+      paymentType: payment.paymentType,
+      description: payment.description,
+      reference: payment.reference || '',
+      customer: payment.customer || '',
+      notes: payment.notes || '',
+    });
+    setShowEditPayment(true);
+  };
+
+  const handleCloseEditPayment = () => {
+    setEditingPayment(null);
+    setShowEditPayment(false);
+    setEditPayment({
+      amount: '',
+      paymentMethod: 'cash',
+      paymentType: 'credit',
+      description: '',
+      reference: '',
+      customer: '',
+      notes: '',
+    });
+  };
+
+  const handleUpdatePayment = async () => {
+    try {
+      if (!editingPayment) return;
+
+      // Mock API call
+      const updatedPayment = {
+        ...editingPayment,
+        amount: parseFloat(editPayment.amount),
+        paymentMethod: editPayment.paymentMethod,
+        paymentType: editPayment.paymentType,
+        description: editPayment.description,
+        reference: editPayment.reference,
+        customer: editPayment.customer,
+        notes: editPayment.notes,
+        updatedAt: new Date(),
+      };
+      
+      console.log('Updating payment:', updatedPayment);
+      
+      // Update the payment in the list
+      setPayments(prev => prev.map(p => p._id === editingPayment._id ? updatedPayment : p));
+      
+      setShowEditPayment(false);
+      setEditingPayment(null);
+      setEditPayment({
+        amount: '',
+        paymentMethod: 'cash',
+        paymentType: 'credit',
+        description: '',
+        reference: '',
+        customer: '',
+        notes: '',
+      });
+    } catch (error) {
+      console.error('Error updating payment:', error);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    const payment = payments.find(p => p._id === paymentId);
+    const paymentName = payment ? `${payment.customer} - ${formatCurrency(payment.amount)}` : 'this payment';
+    
+    showConfirmation({
+      title: 'Delete Payment',
+      message: `Are you sure you want to delete ${paymentName}? This action cannot be undone.`,
+      type: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          // Mock API call
+          console.log('Deleting payment:', paymentId);
+          
+          // Remove the payment from the list
+          setPayments(prev => prev.filter(p => p._id !== paymentId));
+          
+          // Show success message
+          showConfirmation({
+            title: 'Payment Deleted',
+            message: 'The payment has been successfully deleted.',
+            type: 'success',
+            confirmText: 'OK',
+            showCancel: false,
+            onConfirm: () => {}
+          });
+        } catch (error) {
+          console.error('Error deleting payment:', error);
+          showConfirmation({
+            title: 'Delete Failed',
+            message: 'There was an error deleting the payment. Please try again.',
+            type: 'error',
+            confirmText: 'OK',
+            showCancel: false,
+            onConfirm: () => {}
+          });
+        }
+      }
+    });
   };
 
   if (isLoading) {
@@ -212,18 +377,18 @@ export default function PaymentsPage() {
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold">
                 Payment Management
-              </h1>
+            </h1>
               <p className="mt-2 text-emerald-100 dark:text-gray-300 text-sm sm:text-base">
-                Track and manage all payment transactions
-              </p>
-            </div>
+              Track and manage all payment transactions
+            </p>
+          </div>
             <Button 
               onClick={() => setShowNewPayment(true)}
               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-emerald-400 w-full sm:w-auto"
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              New Payment
-            </Button>
+            <PlusIcon className="h-4 w-4 mr-2" />
+            New Payment
+          </Button>
           </div>
         </div>
 
@@ -235,14 +400,14 @@ export default function PaymentsPage() {
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg flex-shrink-0">
                     <BanknotesIcon className="h-8 w-8 text-white" />
-                  </div>
+                </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Total Payments
-                    </p>
+                    Total Payments
+                  </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {payments.length}
-                    </p>
+                    {payments.length}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -258,14 +423,14 @@ export default function PaymentsPage() {
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg flex-shrink-0">
                     <span className="text-white font-bold text-lg sm:text-xl">₹</span>
-                  </div>
+                </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Total Amount
-                    </p>
+                    Total Amount
+                  </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
-                    </p>
+                    {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -281,14 +446,14 @@ export default function PaymentsPage() {
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg flex-shrink-0">
                     <span className="text-white font-bold text-lg sm:text-xl">+</span>
-                  </div>
+                </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Credits
-                    </p>
+                    Credits
+                  </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {formatCurrency(payments.filter(p => p.paymentType === 'credit').reduce((sum, p) => sum + p.amount, 0))}
-                    </p>
+                    {formatCurrency(payments.filter(p => p.paymentType === 'credit').reduce((sum, p) => sum + p.amount, 0))}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -304,14 +469,14 @@ export default function PaymentsPage() {
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg flex-shrink-0">
                     <span className="text-white font-bold text-lg sm:text-xl">-</span>
-                  </div>
+                </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Debits
-                    </p>
+                    Debits
+                  </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {formatCurrency(payments.filter(p => p.paymentType === 'debit').reduce((sum, p) => sum + p.amount, 0))}
-                    </p>
+                    {formatCurrency(payments.filter(p => p.paymentType === 'debit').reduce((sum, p) => sum + p.amount, 0))}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -324,106 +489,128 @@ export default function PaymentsPage() {
 
         {/* New Payment Modal */}
         {showNewPayment && (
-          <Card className="hover:shadow-lg transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-900 dark:to-black">
-              <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Create New Payment</CardTitle>
-              <CardDescription className="text-muted-foreground">
+          <div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowNewPayment(false);
+              }
+            }}
+          >
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-gray-900 dark:to-black">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <PlusIcon className="h-5 w-5 text-emerald-600" />
+                    Create New Payment
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowNewPayment(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </Button>
+                </div>
+                <CardDescription className="text-muted-foreground">
                 Record a new payment transaction
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="amount" className="text-sm font-semibold text-foreground">Amount</Label>
+                    <Label htmlFor="amount" className="text-sm font-semibold text-foreground">Amount</Label>
                   <Input
                     id="amount"
                     type="number"
                     value={newPayment.amount}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
                     placeholder="Enter amount"
-                    className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="paymentMethod" className="text-sm font-semibold text-foreground">Payment Method</Label>
-                  <Select
+                    <Label htmlFor="paymentMethod" className="text-sm font-semibold text-foreground">Payment Method</Label>
+                    <Select
                     id="paymentMethod"
-                    options={paymentMethodOptions}
+                      options={paymentMethodOptions}
                     value={newPayment.paymentMethod}
-                    onChange={(value) => setNewPayment(prev => ({ ...prev, paymentMethod: value as any }))}
-                    placeholder="Select payment method"
-                    className="mt-2"
-                  />
+                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentMethod: value as any }))}
+                      placeholder="Select payment method"
+                      className="mt-2"
+                    />
                 </div>
                 <div>
-                  <Label htmlFor="paymentType" className="text-sm font-semibold text-foreground">Payment Type</Label>
-                  <Select
+                    <Label htmlFor="paymentType" className="text-sm font-semibold text-foreground">Payment Type</Label>
+                    <Select
                     id="paymentType"
-                    options={paymentTypeOptions}
+                      options={paymentTypeOptions}
                     value={newPayment.paymentType}
-                    onChange={(value) => setNewPayment(prev => ({ ...prev, paymentType: value as any }))}
-                    placeholder="Select payment type"
-                    className="mt-2"
-                  />
+                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentType: value as any }))}
+                      placeholder="Select payment type"
+                      className="mt-2"
+                    />
                 </div>
                 <div>
-                  <Label htmlFor="customer" className="text-sm font-semibold text-foreground">Customer</Label>
+                    <Label htmlFor="customer" className="text-sm font-semibold text-foreground">Customer</Label>
                   <Input
                     id="customer"
                     value={newPayment.customer}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, customer: e.target.value }))}
                     placeholder="Enter customer name"
-                    className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="description" className="text-sm font-semibold text-foreground">Description</Label>
+                    <Label htmlFor="description" className="text-sm font-semibold text-foreground">Description</Label>
                   <Input
                     id="description"
                     value={newPayment.description}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Enter payment description"
-                    className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="reference" className="text-sm font-semibold text-foreground">Reference</Label>
+                    <Label htmlFor="reference" className="text-sm font-semibold text-foreground">Reference</Label>
                   <Input
                     id="reference"
                     value={newPayment.reference}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, reference: e.target.value }))}
                     placeholder="Transaction reference"
-                    className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="notes" className="text-sm font-semibold text-foreground">Notes</Label>
+                    <Label htmlFor="notes" className="text-sm font-semibold text-foreground">Notes</Label>
                   <Input
                     id="notes"
                     value={newPayment.notes}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="Additional notes"
-                    className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
                   />
                 </div>
               </div>
-              <div className="mt-6 flex gap-3">
-                <Button 
-                  onClick={handleCreatePayment}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                >
-                  Create Payment
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowNewPayment(false)}
-                  className="border-2 border-gray-200 hover:border-gray-300 hover:bg-muted"
-                >
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowNewPayment(false)}
+                    className="border-2 border-gray-200 hover:border-gray-300"
+                  >
                   Cancel
                 </Button>
+                  <Button 
+                    onClick={handleCreatePayment}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  >
+                    Create Payment
+                  </Button>
               </div>
             </CardContent>
           </Card>
+          </div>
         )}
 
         {/* Filters */}
@@ -484,7 +671,7 @@ export default function PaymentsPage() {
                           payment.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-600' :
                           'bg-gray-100 text-gray-600'
                         }`}>
-                          {getPaymentMethodIcon(payment.paymentMethod)}
+                        {getPaymentMethodIcon(payment.paymentMethod)}
                         </div>
                         <span className="capitalize font-semibold text-foreground">
                           {payment.paymentMethod.replace('_', ' ')}
@@ -514,15 +701,30 @@ export default function PaymentsPage() {
                   </div>
                 </div>
                 <div className="mt-6 flex gap-2">
-                  <Button variant="outline" size="sm" className="text-blue-600 hover:bg-blue-50 hover:text-blue-700">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                    onClick={() => handleViewPayment(payment)}
+                  >
                     <EyeIcon className="h-4 w-4 mr-1" />
                     View
                   </Button>
-                  <Button variant="outline" size="sm" className="text-green-600 hover:bg-green-50 hover:text-green-700">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                    onClick={() => handleEditPayment(payment)}
+                  >
                     <PencilIcon className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => handleDeletePayment(payment._id)}
+                  >
                     <TrashIcon className="h-4 w-4 mr-1" />
                     Delete
                   </Button>
@@ -559,6 +761,284 @@ export default function PaymentsPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Payment Details Modal */}
+        {showPaymentDetails && selectedPayment && (
+          <div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                handleClosePaymentDetails();
+              }
+            }}
+          >
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-black">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <EyeIcon className="h-5 w-5 text-blue-600" />
+                    Payment Details
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClosePaymentDetails}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  {/* Payment Header */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-lg ${
+                        selectedPayment.paymentMethod === 'cash' ? 'bg-green-100 text-green-600' :
+                        selectedPayment.paymentMethod === 'card' ? 'bg-blue-100 text-blue-600' :
+                        selectedPayment.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-600' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {getPaymentMethodIcon(selectedPayment.paymentMethod)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg capitalize">
+                          {selectedPayment.paymentMethod.replace('_', ' ')} Payment
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          selectedPayment.paymentType === 'credit' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {selectedPayment.paymentType.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-3xl font-bold ${getPaymentTypeColor(selectedPayment.paymentType)}`}>
+                        {selectedPayment.paymentType === 'credit' ? '+' : '-'}{formatCurrency(selectedPayment.amount)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Payment Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-3">Transaction Details</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Description</label>
+                          <p className="text-foreground">{selectedPayment.description}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Reference</label>
+                          <p className="text-foreground font-mono">{selectedPayment.reference}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Customer</label>
+                          <p className="text-foreground">{selectedPayment.customer}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-3">Payment Information</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Payment Method</label>
+                          <p className="text-foreground capitalize">{selectedPayment.paymentMethod.replace('_', ' ')}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Payment Type</label>
+                          <p className="text-foreground capitalize">{selectedPayment.paymentType}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Date</label>
+                          <p className="text-foreground">{formatDate(selectedPayment.createdAt)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Details */}
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-3">Additional Information</h4>
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-muted-foreground">Branch:</span>
+                          <span className="ml-2 text-foreground capitalize">{selectedPayment.branch}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-muted-foreground">Created By:</span>
+                          <span className="ml-2 text-foreground">{selectedPayment.createdBy}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-muted-foreground">Created At:</span>
+                          <span className="ml-2 text-foreground">{formatDate(selectedPayment.createdAt)}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-muted-foreground">Updated At:</span>
+                          <span className="ml-2 text-foreground">{formatDate(selectedPayment.updatedAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleClosePaymentDetails}
+                    className="border-2 border-gray-200 hover:border-gray-300"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowPaymentDetails(false);
+                      handleEditPayment(selectedPayment);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <PencilIcon className="h-4 w-4 mr-2" />
+                    Edit Payment
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Edit Payment Modal */}
+        {showEditPayment && editingPayment && (
+          <div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                handleCloseEditPayment();
+              }
+            }}
+          >
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-black">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <PencilIcon className="h-5 w-5 text-blue-600" />
+                    Edit Payment
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCloseEditPayment}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </Button>
+                </div>
+                <CardDescription className="text-muted-foreground">
+                  Update payment transaction details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="edit-amount" className="text-sm font-semibold text-foreground">Amount</Label>
+                    <Input
+                      id="edit-amount"
+                      type="number"
+                      value={editPayment.amount}
+                      onChange={(e) => setEditPayment(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="Enter amount"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-paymentMethod" className="text-sm font-semibold text-foreground">Payment Method</Label>
+                    <Select
+                      id="edit-paymentMethod"
+                      options={paymentMethodOptions}
+                      value={editPayment.paymentMethod}
+                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentMethod: value as any }))}
+                      placeholder="Select payment method"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-paymentType" className="text-sm font-semibold text-foreground">Payment Type</Label>
+                    <Select
+                      id="edit-paymentType"
+                      options={paymentTypeOptions}
+                      value={editPayment.paymentType}
+                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentType: value as any }))}
+                      placeholder="Select payment type"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-customer" className="text-sm font-semibold text-foreground">Customer</Label>
+                    <Input
+                      id="edit-customer"
+                      value={editPayment.customer}
+                      onChange={(e) => setEditPayment(prev => ({ ...prev, customer: e.target.value }))}
+                      placeholder="Enter customer name"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="edit-description" className="text-sm font-semibold text-foreground">Description</Label>
+                    <Input
+                      id="edit-description"
+                      value={editPayment.description}
+                      onChange={(e) => setEditPayment(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter payment description"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-reference" className="text-sm font-semibold text-foreground">Reference</Label>
+                    <Input
+                      id="edit-reference"
+                      value={editPayment.reference}
+                      onChange={(e) => setEditPayment(prev => ({ ...prev, reference: e.target.value }))}
+                      placeholder="Transaction reference"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-notes" className="text-sm font-semibold text-foreground">Notes</Label>
+                    <Input
+                      id="edit-notes"
+                      value={editPayment.notes}
+                      onChange={(e) => setEditPayment(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Additional notes"
+                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCloseEditPayment}
+                    className="border-2 border-gray-200 hover:border-gray-300"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleUpdatePayment}
+                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  >
+                    Update Payment
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationComponent />
       </div>
     </DashboardLayout>
   );

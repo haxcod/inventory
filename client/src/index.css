@@ -94,155 +94,222 @@
   color-scheme: dark;
 }
 
+/* Force dark mode on all elements with !important */
+html.dark * {
+  color-scheme: dark !important;
+}
+
+/* Force dark mode background on all elements */
+html.dark .bg-background {
+  background-color: #000000 !important;
+}
+
+html.dark .bg-card {
+  background-color: #000000 !important;
+}
+
+html.dark .bg-muted {
+  background-color: #111111 !important;
+}
+
+/* Force dark mode text on all elements */
+html.dark .text-foreground {
+  color: #ffffff !important;
+}
+
+html.dark .text-muted-foreground {
+  color: #9ca3af !important;
+}
+
+/* Force border colors in dark mode */
+html.dark .border {
+  border-color: #374151 !important;
+}
+
+html.dark .border-border {
+  border-color: #374151 !important;
+}
+
+/* Force light border colors in light mode */
+html:not(.dark) .border {
+  border-color: #e5e7eb !important;
+}
+
+html:not(.dark) .border-border {
+  border-color: #e5e7eb !important;
+}
+
+/* Force all dark mode styles with higher specificity */
+html.dark body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.dark .min-h-screen {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Force light mode styles */
+html:not(.dark) body {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .min-h-screen {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Force dark mode on all components */
 .dark * {
-  border-color: hsl(var(--border));
+  color-scheme: dark;
 }
 
-/* Specific overrides for card headers in dark mode */
-.dark .bg-gradient-to-r.from-blue-50.to-indigo-50,
-.dark .bg-gradient-to-r.from-purple-50.to-pink-50,
-.dark .bg-gradient-to-r.from-green-50.to-emerald-50,
-.dark .bg-gradient-to-r.from-orange-50.to-yellow-50,
-.dark .bg-gradient-to-r.from-red-50.to-pink-50,
-.dark .bg-gradient-to-r.from-indigo-50.to-purple-50,
-.dark .bg-gradient-to-r.from-gray-50.to-gray-100,
-.dark .bg-gradient-to-r.from-emerald-50.to-teal-50 {
-  background: linear-gradient(to right, #111827, #000000) !important;
+/* Ensure proper contrast in dark mode */
+.dark .text-gray-900 {
+  color: #ffffff !important;
 }
 
-/* Base styles using direct CSS instead of @apply */
-* {
-  border-color: hsl(var(--border));
+.dark .text-gray-700 {
+  color: #d1d5db !important;
 }
 
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  margin: 0;
-  min-height: 100vh;
+.dark .text-gray-600 {
+  color: #9ca3af !important;
 }
 
-/* Custom styles for specific components that need additional styling */
-
-/* Sidebar button styling */
-.sidebar-button {
-  position: relative;
-  overflow: hidden;
+.dark .text-gray-500 {
+  color: #6b7280 !important;
 }
 
-.sidebar-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.sidebar-button:hover::before {
-  left: 100%;
-}
-
-.sidebar-button-active {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
-  transform: translateX(4px);
-}
-
-.sidebar-button-inactive {
-  background: transparent;
-  border: 1px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.sidebar-button-inactive:hover {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border-color: #bfdbfe;
-  transform: translateX(2px);
-}
-
-/* Dark theme sidebar button styling */
-.dark .sidebar-button::before {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-}
-
-.dark .sidebar-button-active {
-  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-  box-shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.4);
-}
-
-.dark .sidebar-button-inactive:hover {
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-  border-color: #4b5563;
-}
-
-/* Additional dark theme sidebar improvements */
-.dark .sidebar-button {
-  color: #e5e7eb;
-}
-
-.dark .sidebar-button:hover {
-  color: #ffffff;
-}
-
-/* Dark theme sidebar scrollbar */
-.dark ::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #1f2937;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 3px;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
-
-/* Force sidebar background colors */
-.sidebar-container {
-  background-color: #ffffff !important;
-}
-
-.dark .sidebar-container {
+/* Force background colors for all elements */
+.dark .bg-white {
   background-color: #000000 !important;
 }
 
-/* Additional sidebar background overrides */
-[class*="sidebar-container"] {
-  background-color: #ffffff !important;
+.dark .bg-gray-50 {
+  background-color: #111111 !important;
 }
 
-.dark [class*="sidebar-container"] {
+.dark .bg-gray-100 {
+  background-color: #1f2937 !important;
+}
+
+/* Force dark mode on all Tailwind classes */
+.dark .bg-slate-50 {
+  background-color: #111111 !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-slate-200 {
+  background-color: #374151 !important;
+}
+
+.dark .bg-slate-800 {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-slate-900 {
+  background-color: #111827 !important;
+}
+
+/* Force text colors for all Tailwind classes */
+.dark .text-slate-900 {
+  color: #ffffff !important;
+}
+
+.dark .text-slate-800 {
+  color: #f9fafb !important;
+}
+
+.dark .text-slate-700 {
+  color: #d1d5db !important;
+}
+
+.dark .text-slate-600 {
+  color: #9ca3af !important;
+}
+
+.dark .text-slate-500 {
+  color: #6b7280 !important;
+}
+
+/* Force Select component backgrounds */
+.dark .bg-white {
   background-color: #000000 !important;
 }
 
-/* Force all sidebar elements to use proper colors */
-.dark .sidebar-container * {
-  color: #e5e7eb !important;
+.dark .bg-gray-100 {
+  background-color: #1f2937 !important;
 }
 
-.dark .sidebar-container .text-blue-600 {
-  color: #60a5fa !important;
+.dark .bg-gray-800 {
+  background-color: #1f2937 !important;
 }
 
-.dark .sidebar-container .text-blue-400 {
-  color: #60a5fa !important;
+.dark .bg-gray-700 {
+  background-color: #374151 !important;
 }
 
-/* Force sidebar text colors */
-.sidebar-text {
-  color: #374151 !important;
+.dark .bg-blue-50 {
+  background-color: #1e3a8a !important;
 }
 
-.dark .sidebar-text {
-  color: #e5e7eb !important;
+/* Force all background colors in dark mode */
+.dark .bg-background {
+  background-color: #000000 !important;
+}
+
+.dark .bg-card {
+  background-color: #000000 !important;
+}
+
+.dark .bg-muted {
+  background-color: #111111 !important;
+}
+
+/* Force light mode background colors */
+html:not(.dark) .bg-background {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .bg-card {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .bg-muted {
+  background-color: #f9fafb !important;
+}
+
+/* Force all text colors in dark mode */
+.dark .text-foreground {
+  color: #ffffff !important;
+}
+
+.dark .text-muted-foreground {
+  color: #9ca3af !important;
+}
+
+/* Force light mode text colors */
+html:not(.dark) .text-foreground {
+  color: #111827 !important;
+}
+
+html:not(.dark) .text-muted-foreground {
+  color: #6b7280 !important;
+}
+
+/* Force border colors in dark mode */
+.dark .border {
+  border-color: #374151 !important;
+}
+
+.dark .border-border {
+  border-color: #374151 !important;
 }
 
 /* Custom scrollbar */
@@ -252,115 +319,218 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: hsl(var(--muted-foreground));
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: hsl(var(--foreground));
 }
 
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: #475569;
+/* Enhanced modal blur effects */
+.modal-backdrop {
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
 }
 
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+.modal-backdrop-high {
+  backdrop-filter: blur(16px) saturate(200%);
+  -webkit-backdrop-filter: blur(16px) saturate(200%);
 }
 
-/* Animation classes */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
+/* Ensure blur works on all browsers */
+.backdrop-blur-lg {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-.animate-bounce-in {
-  animation: bounceIn 0.6s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(16px)) {
+  .backdrop-blur-lg {
+    background-color: rgba(0, 0, 0, 0.7) !important;
   }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes bounceIn {
-  0% {
-    transform: scale(0.3);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  70% {
-    transform: scale(0.9);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Mobile sidebar overlay blur effect */
-.mobile-overlay {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark .mobile-overlay {
-  background: rgba(0, 0, 0, 0.1);
 }
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
-  /* Better touch targets */
   .mobile-touch-target {
     min-height: 44px;
     min-width: 44px;
   }
   
-  /* Improved text readability on mobile */
   .mobile-text {
+    font-size: 14px;
     line-height: 1.5;
   }
   
-  /* Better spacing for mobile cards */
   .mobile-card {
-    margin-bottom: 1rem;
+    padding: 12px;
   }
   
-  /* Responsive tables */
   .mobile-table {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    font-size: 12px;
   }
   
-  /* Mobile-friendly buttons */
   .mobile-button {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    min-height: 44px;
+    padding: 8px 16px;
+    font-size: 14px;
   }
+}
+
+/* Mobile sidebar blur effect */
+.mobile-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.dark .mobile-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Sidebar dark theme improvements */
+.dark .sidebar-button::before {
+  background-color: #1f2937 !important;
+}
+
+.dark .sidebar-button-active {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+.dark .sidebar-button-inactive:hover {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+.dark .sidebar-text {
+  color: #e5e7eb !important;
+}
+
+/* Sidebar light theme improvements */
+html:not(.dark) .sidebar-button::before {
+  background-color: #e5e7eb !important;
+}
+
+html:not(.dark) .sidebar-button-active {
+  background-color: #e5e7eb !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .sidebar-button-inactive:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .sidebar-text {
+  color: #374151 !important;
+}
+
+/* Active sidebar item styles */
+html:not(.dark) .sidebar-button-active {
+  background-color: #e5e7eb !important;
+  color: #111827 !important;
+  border-left-color: #3b82f6 !important;
+}
+
+.dark .sidebar-button-active {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+  border-left-color: #ffffff !important;
+}
+
+/* Sidebar button hover states */
+html:not(.dark) .sidebar-button:hover:not(.sidebar-button-active) {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.dark .sidebar-button:hover:not(.sidebar-button-active) {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+/* Sidebar button general styles */
+html:not(.dark) .sidebar-button {
+  color: #374151 !important;
+}
+
+.dark .sidebar-button {
+  color: #e5e7eb !important;
+}
+
+/* Force sidebar background colors */
+.dark .bg-gray-900 {
+  background-color: #000000 !important;
+}
+
+.dark .bg-gray-800 {
+  background-color: #111111 !important;
+}
+
+/* Force light mode sidebar colors */
+html:not(.dark) .bg-gray-900 {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .bg-gray-800 {
+  background-color: #f9fafb !important;
+}
+
+/* Additional sidebar background overrides */
+.dark .sidebar-container {
+  background-color: #000000 !important;
+}
+
+.dark .sidebar-mobile-header {
+  background-color: #000000 !important;
+  border-color: #374151 !important;
+}
+
+/* Light mode sidebar overrides */
+html:not(.dark) .sidebar-container {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .sidebar-mobile-header {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Force Select component backgrounds */
+.dark .bg-white {
+  background-color: #000000 !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-gray-800 {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-gray-700 {
+  background-color: #374151 !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: #1e3a8a !important;
 }

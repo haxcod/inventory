@@ -42,3 +42,4 @@ router.delete('/:id', requirePermission('delete'), deleteProduct);
 
 export default router;
 
+

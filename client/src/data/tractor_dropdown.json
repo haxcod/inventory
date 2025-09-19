@@ -1,0 +1,3546 @@
+[
+  {
+    "model": "SWARAJ 733NSM",
+    "variant": "733FEFYSOHSOXR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 733FE",
+    "variant": "733F6PXFD5540BA",
+    "aggregators": [
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 733FE",
+    "variant": "733FEPXPOSHS5406A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 733FE",
+    "variant": "733FEPXPDSHS540RA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 830TARG",
+    "variant": "630CIEPR",
+    "aggregators": [
+      "BODY",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 830TARG",
+    "variant": "630CNIEPR",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 830TARG",
+    "variant": "600DIEPR",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ CODE",
+    "variant": "CODEBRXPCS210",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ CODE",
+    "variant": "CODEBRXKC521DGC",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ CODE",
+    "variant": "CODESRXXR5210",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 960",
+    "variant": "988TCGXICRPS5400",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 960",
+    "variant": "988TCGXICRPS54004",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "965WXQIRPS54004",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "983NAGXDCRPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "963NAGXDCRPS540DBM",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "983NAGXDCRSSPSS400",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "963NAGXICRPS54004",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "863NAGKMIRPS54004",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "883NAGICRPSS54004",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "963NAGXICRPS540BM4",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 963NA",
+    "variant": "963NAGKMIRP55400",
+    "aggregators": [
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 900FE",
+    "variant": "960GXDCRPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 900FE",
+    "variant": "960GXDCRPS540DFC",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 900FE",
+    "variant": "960GXDCHSSPS540D",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 900FE",
+    "variant": "960TXDCRP5540DFC",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 855NSM",
+    "variant": "855GMSORQPSOTR",
+    "aggregators": [
+      "BRAKE",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS",
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING"
+    ]
+  },
+  {
+    "model": "SWARAJ 855NSM",
+    "variant": "855GMSIORPSDTCR",
+    "aggregators": [
+      "CLUTCH",
+      "BODY",
+      "BRAKE",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855NSM",
+    "variant": "855GVIORPSOTCR",
+    "aggregators": [
+      "BRAKE",
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855NSM",
+    "variant": "855TMSIORPSDTCR",
+    "aggregators": [
+      "BRAKE",
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855NSM",
+    "variant": "85STYIORPSDTCR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855NSM",
+    "variant": "855GMSORPSLITCRA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855KM",
+    "variant": "855KMGXDICRPS5400D",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 855KM",
+    "variant": "855XMTXDCRPSS40DT",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855BXDC540",
+    "aggregators": [
+      "BRAKE",
+      "BODY",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855BXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855FXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXDCRPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXDCRPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GKSCPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855RXDC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "856RXDCR540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855T)DC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXDCR540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TADCRPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXDCRPS5400T",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXICRPS540DT4",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXBC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXSCP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXICRPS5400R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXICRSSPS5400R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXICRPS540DTR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXIRPS54004",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXIRPSS400FCR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXIRPS540DTFCR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXICRP5540DFCR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855T)XDCRPS5400TFC",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXICRPS540DTFCR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GAMIRPS54005R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXMIRPS5400SRL",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXMIRPS540DTSR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXMIRP55400TSAL",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXDCRPS540E",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXIRBP5540DCLR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855GXIRP5540DCRL",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXIRBPSS400TCLR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 855FE",
+    "variant": "855TXIRP5540DTCRL",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FENS",
+    "variant": "735FEFYDOHSOXB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FELLT",
+    "variant": "736RXPOS540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FELLT",
+    "variant": "735LXSTA540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FELLT",
+    "variant": "735PXPD5540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FELLT",
+    "variant": "756PXPOSA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FEER",
+    "variant": "736FEERJX540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FEER",
+    "variant": "735FEERJXP554DA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FEER",
+    "variant": "735FEERIKH5540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FEE",
+    "variant": "735FEE/XPS540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FEE",
+    "variant": "735FEEJX540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXDC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXDCPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 843",
+    "variant": "724XMLXSTAS40",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843",
+    "variant": "6431XSCPDS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXDCF55408",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXSCBS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XT.JKSCSSP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXSCSSPS540S",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJESC540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJKSCSSS40A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXDC540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXSCBSP55405A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXSCSSP554GA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XT",
+    "variant": "735XTJXDCPS540SA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "735XMLXPOS",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "735XMLXPOSS",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "736XMLXPOSR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "735XMLXSTA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "735XMLXSTA540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "736XMPXPDS",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "736КЫРАРОBPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "735XMPXPOSR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "735XMPXTN540",
+    "aggregators": [
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735XM",
+    "variant": "735XMRXSTA",
+    "aggregators": []
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "7351XP05540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "GEARBOX"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "736LXPD5",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735LXSTA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735LXSTA540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "GEARBOX"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735PXPDS",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735PXP08640",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "GEARBOX"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735PXPDSP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "GEARBOX"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735PXTASS",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "755RXPD5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "GEARBOX"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735JXP05540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 735FE",
+    "variant": "735FEJXDCHS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724 4WD",
+    "variant": "TR724DD4WDPSWR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM ORCHARD",
+    "variant": "724XMPXORCH",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "GEARBOX",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM ORCHARD",
+    "variant": "724XMOPXPSR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "GEARBOX",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM ORCHARD",
+    "variant": "724XMOPXPS540R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "GEARBOX",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724NT",
+    "variant": "724XMOPX540NTR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM",
+    "variant": "724XMOPX540NTB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM",
+    "variant": "724XMPX5400A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM",
+    "variant": "724XMPX540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM",
+    "variant": "724XMLX5404",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM",
+    "variant": "724XMLXA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 724XM",
+    "variant": "724XMLXSTA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 717ES",
+    "variant": "TR717ESSWARAJ",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "WHEEL",
+      "TRANSMISSION",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 717",
+    "variant": "TR7173WARAJ",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE",
+      "WHEEL",
+      "TRANSMISSION"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843JXSCFD55404",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843JXSCPDSP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843JXSCPS5406",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "8431XSCPS54058",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICAL"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843/XSCPS540SR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843PXSCP05540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843XM/XSC5406",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843KMXSC540R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "643XMJXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843JXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 843LLT",
+    "variant": "843JXSCPDSPSS40A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 841XM",
+    "variant": "841XMJXDC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 841XM",
+    "variant": "841XMJXDC540FB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 841XM",
+    "variant": "B41XMIXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 841XM",
+    "variant": "841XM/XSC540FB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 841XM",
+    "variant": "841XMPX5C540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 841XM",
+    "variant": "841XMJXSC540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM LLT",
+    "variant": "834XMPXPD5540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM LLT",
+    "variant": "834XMRX540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM LLT",
+    "variant": "834XMJXPOS540BA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM LLT",
+    "variant": "834XMJXPDSPS5408",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM LLT",
+    "variant": "834XMIXPD5540RA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM LLT",
+    "variant": "854XMLXPDS540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM LLT",
+    "variant": "834XMXPDSPS5405A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM",
+    "variant": "834XMJXPDSPS540BDA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM",
+    "variant": "834XMLKA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM",
+    "variant": "834XMLXPOS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM",
+    "variant": "834XMLXSTA",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 834XM",
+    "variant": "834XMPXPDS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 825XM",
+    "variant": "825XMLX540A",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "SWARAJ 825XM",
+    "variant": "825XMLX540V1",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744NSM",
+    "variant": "744FYDORPSDB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744NSM",
+    "variant": "744TYDORPSB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744NSM",
+    "variant": "744TYDORPSOTB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744NSM",
+    "variant": "744TYDORPSR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744NSM",
+    "variant": "744TYIGRPSITE",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744NSM",
+    "variant": "744TYIORPSOTC48",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744NSM",
+    "variant": "744TYSIORPSDB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XT",
+    "variant": "744XTRTXDCRPS540DT",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XT",
+    "variant": "744XTTXDCRPS540DT",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XT",
+    "variant": "744XTTXDCRPS540DTR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XT",
+    "variant": "744XTTXDCRPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XT",
+    "variant": "744X77X0CRPS5400R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XT",
+    "variant": "744XTTXDC540",
+    "aggregators": []
+  },
+  {
+    "model": "744XT",
+    "variant": "744XTTXSCPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XT",
+    "variant": "744XTTXIRP55400T",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "HYDRAULIC",
+      "AXLE",
+      "GEARBOX",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744XM",
+    "variant": "744XMFXDCPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744XM",
+    "variant": "744XMFXDCPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744XM",
+    "variant": "744XMFXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744XM",
+    "variant": "744XMTXDCRP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744XM",
+    "variant": "744XMTXDCRPS5408",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744XM",
+    "variant": "744XMTXDCRPS540R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "7448X2C540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744BXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXDC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXDCRPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FX5C",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCPS",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCP58",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCPSR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCR",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCTN540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXSCTNP8540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744RXDC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744TXDC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744TXDCRPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744T)DCRPS54004",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744TXDCRPS5400T",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744TX50540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744TXSCPSS40",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXDC540P",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXDCRPS5400PB",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744FXDCRP:55400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744TXDCRPS5406",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "744FE",
+    "variant": "744T)DCRPS540R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742XT",
+    "variant": "742XTTXDCRPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742XT",
+    "variant": "742X77XDCRPSS400R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742XT",
+    "variant": "742XTFXDCRPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742XT",
+    "variant": "742KTFXDCRPSS40DR",
+    "aggregators": []
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXSCPD5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXSCPDSPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXSCPDS540R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXSCRPDSP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXSC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXSCRPS540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXDC540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXDCRPS5400",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXDCRPS5400R",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ELECTRICAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXDCRP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  },
+  {
+    "model": "742FE",
+    "variant": "742FXDCRPDSP5540",
+    "aggregators": [
+      "BODY",
+      "BRAKE",
+      "CLUTCH",
+      "DIFFERENTIAL",
+      "ENGINE",
+      "GEARBOX",
+      "HYDRAULIC",
+      "STEERING",
+      "OTHER",
+      "AXLE",
+      "ELECTRICALS"
+    ]
+  }
+]

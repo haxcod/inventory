@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
-import { Select } from '../components/ui/Select';
-import type { SelectOption } from '../components/ui/Select';
+import { QRScanner } from '../components/ui/QRScanner';
+import { QRMachine } from '../components/ui/QRMachine';
+import { VoiceInput } from '../components/ui/VoiceInput';
+import { ModernInvoice } from '../components/ui/ModernInvoice';
 import type { Invoice, Product } from '../types';
 import { formatCurrency } from '../lib/utils';
 import { 
@@ -14,7 +16,8 @@ import {
   QrCodeIcon,
   MicrophoneIcon,
   ShoppingCartIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  ComputerDesktopIcon
 } from '@heroicons/react/24/outline';
 
 export default function BillingPage() {
@@ -23,9 +26,14 @@ export default function BillingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewInvoice, setShowNewInvoice] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showQRMachine, setShowQRMachine] = useState(false);
+  const [showVoiceInput, setShowVoiceInput] = useState(false);
+  const [showModernInvoice, setShowModernInvoice] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [newInvoice, setNewInvoice] = useState({
     customer: { name: '', email: '', phone: '', address: '' },
-    items: [] as any[],
+    items: [] as Array<{product: string, quantity: number, price: number, total: number}>,
     paymentMethod: 'cash' as 'cash' | 'card' | 'upi' | 'bank_transfer',
     notes: '',
   });
@@ -93,6 +101,7 @@ export default function BillingPage() {
           _id: '1',
           name: 'iPhone 15 Pro',
           sku: 'IPH15P-001',
+          qrCode: 'IPH15P-001',
           price: 99999,
           costPrice: 80000,
           stock: 25,
@@ -110,6 +119,7 @@ export default function BillingPage() {
           _id: '2',
           name: 'Samsung Galaxy S24',
           sku: 'SGS24-001',
+          qrCode: 'SGS24-001',
           price: 79999,
           costPrice: 65000,
           stock: 15,
@@ -117,6 +127,42 @@ export default function BillingPage() {
           maxStock: 60,
           category: 'Electronics',
           brand: 'Samsung',
+          unit: 'pieces',
+          branch: 'main',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: '3',
+          name: 'MacBook Pro M3',
+          sku: 'MBP-M3-001',
+          qrCode: 'MBP-M3-001',
+          price: 149999,
+          costPrice: 120000,
+          stock: 8,
+          minStock: 2,
+          maxStock: 20,
+          category: 'Electronics',
+          brand: 'Apple',
+          unit: 'pieces',
+          branch: 'main',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: '4',
+          name: 'Dell XPS 13',
+          sku: 'DXP13-001',
+          qrCode: 'DXP13-001',
+          price: 89999,
+          costPrice: 70000,
+          stock: 12,
+          minStock: 3,
+          maxStock: 25,
+          category: 'Electronics',
+          brand: 'Dell',
           unit: 'pieces',
           branch: 'main',
           isActive: true,
@@ -164,6 +210,133 @@ export default function BillingPage() {
     }
   };
 
+  const handleQRScan = (qrCode: string) => {
+    console.log('QR Code scanned:', qrCode);
+    
+    // Find product by QR code
+    const product = products.find(p => p.qrCode === qrCode || p.sku === qrCode || p._id === qrCode);
+    
+    if (product) {
+      // Auto-add product to invoice
+      addItemToInvoice(product);
+      
+      // Show success message (you can replace with toast notification)
+      alert(`Product "${product.name}" added to invoice!`);
+      
+      // Open new invoice form if not already open
+      if (!showNewInvoice) {
+        setShowNewInvoice(true);
+      }
+    } else {
+      // Product not found, show error
+      alert(`Product with QR code "${qrCode}" not found. Please check the QR code or add the product first.`);
+    }
+  };
+
+  const handleQRMachine = (qrCode: string) => {
+    console.log('QR Machine input:', qrCode);
+    
+    // Find product by QR code
+    const product = products.find(p => p.qrCode === qrCode || p.sku === qrCode || p._id === qrCode);
+    
+    if (product) {
+      // Auto-add product to invoice
+      addItemToInvoice(product);
+      
+      // Show success message (you can replace with toast notification)
+      alert(`Product "${product.name}" added to invoice!`);
+      
+      // Open new invoice form if not already open
+      if (!showNewInvoice) {
+        setShowNewInvoice(true);
+      }
+    } else {
+      // Product not found, show error
+      alert(`Product with QR code "${qrCode}" not found. Please check the QR code or add the product first.`);
+    }
+  };
+
+  const handleQuickInvoice = () => {
+    if (newInvoice.items.length === 0) {
+      alert('No items to create invoice');
+      return;
+    }
+    
+    // Auto-fill customer if empty
+    if (!newInvoice.customer.name) {
+      setNewInvoice(prev => ({
+        ...prev,
+        customer: { ...prev.customer, name: 'Walk-in Customer' }
+      }));
+    }
+    
+    // Create invoice immediately
+    handleCreateInvoice();
+  };
+
+  const handleVoiceResult = (text: string) => {
+    console.log('Voice input:', text);
+    // TODO: Parse voice command and perform action
+    // For now, just add to search or customer name
+    if (text.toLowerCase().includes('customer')) {
+      setNewInvoice(prev => ({
+        ...prev,
+        customer: { ...prev.customer, name: text }
+      }));
+    } else {
+      setSearchTerm(text);
+    }
+  };
+
+  const handleCreateInvoice = () => {
+    if (newInvoice.items.length === 0) {
+      alert('Please add at least one item to the invoice');
+      return;
+    }
+    
+    // Create new invoice object
+    const invoiceNumber = `INV-${Date.now()}`;
+    const { subtotal, tax, total } = calculateTotal();
+    
+    const newInvoiceData: Invoice = {
+      _id: Date.now().toString(),
+      invoiceNumber,
+      customer: newInvoice.customer,
+      items: newInvoice.items,
+      subtotal,
+      tax,
+      discount: 0,
+      total,
+      paymentMethod: newInvoice.paymentMethod,
+      paymentStatus: 'pending',
+      branch: 'main',
+      createdBy: 'user1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    // Add to invoices list
+    setInvoices(prev => [newInvoiceData, ...prev]);
+    
+    // Show modern invoice
+    setSelectedInvoice(newInvoiceData);
+    setShowModernInvoice(true);
+    
+    // Reset form
+    setShowNewInvoice(false);
+    setNewInvoice({
+      customer: { name: '', email: '', phone: '', address: '' },
+      items: [],
+      paymentMethod: 'cash',
+      notes: '',
+    });
+  };
+
+  const handleViewInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowModernInvoice(true);
+  };
+
   const calculateTotal = () => {
     const subtotal = newInvoice.items.reduce((sum, item) => sum + item.total, 0);
     const tax = subtotal * 0.12; // 12% tax
@@ -189,30 +362,39 @@ export default function BillingPage() {
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold">
                 Billing & Invoicing
-              </h1>
+            </h1>
               <p className="mt-2 text-green-100 dark:text-gray-300 text-sm sm:text-base">
-                Manage invoices and billing operations
-              </p>
-            </div>
+              Manage invoices and billing operations
+            </p>
+          </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button 
                 variant="outline" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
-                onClick={() => setShowNewInvoice(!showNewInvoice)}
+                onClick={() => setShowQRScanner(true)}
               >
                 <QrCodeIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">QR Scan</span>
-                <span className="sm:hidden">QR</span>
-              </Button>
+                <span className="hidden sm:inline">Camera Scan</span>
+                <span className="sm:hidden">Camera</span>
+            </Button>
               <Button 
                 variant="outline" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
-                onClick={() => setShowNewInvoice(!showNewInvoice)}
+                onClick={() => setShowQRMachine(true)}
+              >
+                <ComputerDesktopIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Machine Scan</span>
+                <span className="sm:hidden">Machine</span>
+            </Button>
+              <Button 
+                variant="outline" 
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                onClick={() => setShowVoiceInput(true)}
               >
                 <MicrophoneIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Voice</span>
                 <span className="sm:hidden">Mic</span>
-              </Button>
+            </Button>
               <Button 
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-green-400 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                 onClick={() => setShowNewInvoice(!showNewInvoice)}
@@ -220,7 +402,7 @@ export default function BillingPage() {
                 <PlusIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">New Invoice</span>
                 <span className="sm:hidden">New</span>
-              </Button>
+            </Button>
             </div>
           </div>
         </div>
@@ -244,46 +426,46 @@ export default function BillingPage() {
                     </div>
                     <h3 className="text-base sm:text-lg font-semibold text-foreground">Customer Details</h3>
                   </div>
-                  <div className="space-y-4">
-                    <div>
+                <div className="space-y-4">
+                  <div>
                       <Label htmlFor="customerName" className="text-xs sm:text-sm font-semibold text-foreground">Customer Name</Label>
-                      <Input
-                        id="customerName"
-                        value={newInvoice.customer.name}
-                        onChange={(e) => setNewInvoice(prev => ({
-                          ...prev,
-                          customer: { ...prev.customer, name: e.target.value }
-                        }))}
-                        placeholder="Enter customer name"
+                    <Input
+                      id="customerName"
+                      value={newInvoice.customer.name}
+                      onChange={(e) => setNewInvoice(prev => ({
+                        ...prev,
+                        customer: { ...prev.customer, name: e.target.value }
+                      }))}
+                      placeholder="Enter customer name"
                         className="mt-2 h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                      />
-                    </div>
-                    <div>
+                    />
+                  </div>
+                  <div>
                       <Label htmlFor="customerEmail" className="text-xs sm:text-sm font-semibold text-foreground">Email</Label>
-                      <Input
-                        id="customerEmail"
-                        type="email"
-                        value={newInvoice.customer.email}
-                        onChange={(e) => setNewInvoice(prev => ({
-                          ...prev,
-                          customer: { ...prev.customer, email: e.target.value }
-                        }))}
-                        placeholder="Enter email"
+                    <Input
+                      id="customerEmail"
+                      type="email"
+                      value={newInvoice.customer.email}
+                      onChange={(e) => setNewInvoice(prev => ({
+                        ...prev,
+                        customer: { ...prev.customer, email: e.target.value }
+                      }))}
+                      placeholder="Enter email"
                         className="mt-2 h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                      />
-                    </div>
-                    <div>
+                    />
+                  </div>
+                  <div>
                       <Label htmlFor="customerPhone" className="text-xs sm:text-sm font-semibold text-foreground">Phone</Label>
-                      <Input
-                        id="customerPhone"
-                        value={newInvoice.customer.phone}
-                        onChange={(e) => setNewInvoice(prev => ({
-                          ...prev,
-                          customer: { ...prev.customer, phone: e.target.value }
-                        }))}
-                        placeholder="Enter phone number"
+                    <Input
+                      id="customerPhone"
+                      value={newInvoice.customer.phone}
+                      onChange={(e) => setNewInvoice(prev => ({
+                        ...prev,
+                        customer: { ...prev.customer, phone: e.target.value }
+                      }))}
+                      placeholder="Enter phone number"
                         className="mt-2 h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                      />
+                    />
                     </div>
                   </div>
                 </div>
@@ -304,15 +486,36 @@ export default function BillingPage() {
                           <p className="text-xs sm:text-sm text-muted-foreground">
                             {formatCurrency(product.price)} | Stock: {product.stock}
                           </p>
+                          {product.qrCode && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <QrCodeIcon className="h-3 w-3 text-blue-500" />
+                              <span className="text-xs text-muted-foreground font-mono">
+                                QR: {product.qrCode}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => addItemToInvoice(product)}
-                          disabled={product.stock === 0}
-                          className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                          Add
-                        </Button>
+                        <div className="flex gap-2">
+                          {product.qrCode && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setShowQRScanner(true)}
+                              className="text-xs"
+                            >
+                              <QrCodeIcon className="h-3 w-3 mr-1" />
+                              Scan
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            onClick={() => addItemToInvoice(product)}
+                            disabled={product.stock === 0}
+                            className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          >
+                            Add
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -322,11 +525,20 @@ export default function BillingPage() {
               {/* Invoice Items */}
               {newInvoice.items.length > 0 && (
                 <div className="mt-8">
-                  <div className="flex items-center space-x-2 mb-6">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                      <DocumentTextIcon className="h-4 w-4 text-purple-600" />
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                        <DocumentTextIcon className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground">Invoice Items</h3>
                     </div>
-                    <h3 className="text-base sm:text-lg font-semibold text-foreground">Invoice Items</h3>
+                    <Button
+                      onClick={handleQuickInvoice}
+                      className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-2"
+                    >
+                      <QrCodeIcon className="h-3 w-3 mr-1" />
+                      Quick Invoice
+                    </Button>
                   </div>
                   <div className="space-y-3">
                     {newInvoice.items.map((item, index) => (
@@ -370,13 +582,16 @@ export default function BillingPage() {
                         <div className="flex justify-between text-lg sm:text-xl font-bold">
                           <span className="text-foreground">Total:</span>
                           <span className="text-green-600">{formatCurrency(calculateTotal().total)}</span>
-                        </div>
-                      </div>
+                    </div>
+                    </div>
                     </div>
                   </div>
 
                   <div className="mt-6 flex gap-4">
-                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-green-400">
+                <Button 
+                  onClick={handleCreateInvoice}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-green-400"
+                >
                   Create Invoice
                 </Button>
                     <Button 
@@ -458,10 +673,11 @@ export default function BillingPage() {
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    onClick={() => handleViewInvoice(invoice)}
                     className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
                   >
                     <DocumentTextIcon className="h-4 w-4 mr-2" />
-                    View
+                    View Invoice
                   </Button>
                   <Button 
                     variant="outline" 
@@ -511,6 +727,40 @@ export default function BillingPage() {
           </Card>
         )}
       </div>
+
+      {/* QR Scanner Modal */}
+      <QRScanner
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleQRScan}
+      />
+
+      {/* QR Machine Modal */}
+      <QRMachine
+        isOpen={showQRMachine}
+        onClose={() => setShowQRMachine(false)}
+        onScan={handleQRMachine}
+      />
+
+      {/* Voice Input Modal */}
+      <VoiceInput
+        isOpen={showVoiceInput}
+        onClose={() => setShowVoiceInput(false)}
+        onResult={handleVoiceResult}
+      />
+
+      {/* Modern Invoice Modal */}
+      {selectedInvoice && (
+        <ModernInvoice
+          isOpen={showModernInvoice}
+          onClose={() => {
+            setShowModernInvoice(false);
+            setSelectedInvoice(null);
+          }}
+          invoice={selectedInvoice}
+          products={products}
+        />
+      )}
     </DashboardLayout>
   );
 }
