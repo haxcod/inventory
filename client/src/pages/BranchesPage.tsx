@@ -6,17 +6,14 @@ import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import type { Branch } from '../types';
 import { formatDate } from '../lib/utils';
+import apiService from '../lib/api';
 import { 
   MagnifyingGlassIcon, 
   PlusIcon,
   BuildingOfficeIcon,
   EyeIcon,
   PencilIcon,
-  TrashIcon,
-  MapPinIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  UserIcon
+  TrashIcon
 } from '@heroicons/react/24/outline';
 
 export default function BranchesPage() {
@@ -39,44 +36,13 @@ export default function BranchesPage() {
   const fetchBranches = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now
-      const mockBranches: Branch[] = [
-        {
-          _id: '1',
-          name: 'Main Branch',
-          address: '123 Main Street, Downtown, City 12345',
-          phone: '+1-555-0123',
-          email: 'main@inventorypro.com',
-          manager: 'John Smith',
-          isActive: true,
-          createdAt: new Date('2024-01-01'),
-          updatedAt: new Date('2024-01-01'),
-        },
-        {
-          _id: '2',
-          name: 'North Branch',
-          address: '456 North Avenue, Uptown, City 12346',
-          phone: '+1-555-0124',
-          email: 'north@inventorypro.com',
-          manager: 'Jane Doe',
-          isActive: true,
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15'),
-        },
-        {
-          _id: '3',
-          name: 'South Branch',
-          address: '789 South Boulevard, Midtown, City 12347',
-          phone: '+1-555-0125',
-          email: 'south@inventorypro.com',
-          manager: 'Bob Johnson',
-          isActive: false,
-          createdAt: new Date('2024-02-01'),
-          updatedAt: new Date('2024-02-01'),
-        },
-      ];
-
-      setBranches(mockBranches);
+      // Real API call
+      const response = await apiService.branches.getAll();
+      if (response.data.success) {
+        setBranches(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch branches');
+      }
     } catch (error) {
       console.error('Error fetching branches:', error);
     } finally {
@@ -84,7 +50,7 @@ export default function BranchesPage() {
     }
   };
 
-  const filteredBranches = branches.filter(branch =>
+  const filteredBranches = (Array.isArray(branches) ? branches : []).filter(branch =>
     branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     branch.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
     branch.manager?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,25 +59,27 @@ export default function BranchesPage() {
 
   const handleCreateBranch = async () => {
     try {
-      // Mock API call
+      // Real API call
       const branchData = {
         ...newBranch,
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
       
-      console.log('Creating branch:', branchData);
-      setShowNewBranch(false);
-      setNewBranch({
-        name: '',
-        address: '',
-        phone: '',
-        email: '',
-        manager: '',
-      });
-      // Refresh branches list
-      fetchBranches();
+      const response = await apiService.branches.create(branchData);
+      if (response.data.success) {
+        setShowNewBranch(false);
+        setNewBranch({
+          name: '',
+          address: '',
+          phone: '',
+          email: '',
+          manager: '',
+        });
+        // Refresh branches list
+        fetchBranches();
+      } else {
+        throw new Error(response.data.message || 'Failed to create branch');
+      }
     } catch (error) {
       console.error('Error creating branch:', error);
     }
@@ -129,22 +97,50 @@ export default function BranchesPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-              Branches
-            </h1>
-            <p className="mt-2 text-sm sm:text-base" style={{color: 'hsl(var(--muted-foreground))'}}>
-              Manage your business branches and locations
-            </p>
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-gray-900 dark:to-black rounded-xl p-4 sm:p-6 text-white shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                Branches
+              </h1>
+              <p className="mt-2 text-blue-100 dark:text-gray-300 text-sm sm:text-base">
+                Manage your business branches and locations
+              </p>
+            </div>
+            <Button 
+              onClick={() => setShowNewBranch(true)} 
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-blue-400 w-full sm:w-auto"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Add Branch
+            </Button>
           </div>
-          <Button onClick={() => setShowNewBranch(true)} className="w-full sm:w-auto">
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Add Branch
-          </Button>
         </div>
+
+        {/* Search and Filters */}
+        <Card className="hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="search" className="text-sm font-semibold text-foreground">
+                  Search Branches
+                </Label>
+                <div className="relative mt-2">
+                  <MagnifyingGlassIcon className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                  <Input
+                    id="search"
+                    placeholder="Search by name, address, manager, or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 sm:pl-12 h-10 sm:h-12 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -159,7 +155,7 @@ export default function BranchesPage() {
                     Total Branches
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {branches.length}
+                    {(Array.isArray(branches) ? branches : []).length}
                   </p>
                 </div>
               </div>
@@ -177,7 +173,7 @@ export default function BranchesPage() {
                     Active Branches
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {branches.filter(b => b.isActive).length}
+                    {(Array.isArray(branches) ? branches : []).filter(b => b.isActive).length}
                   </p>
                 </div>
               </div>
@@ -195,7 +191,7 @@ export default function BranchesPage() {
                     Inactive Branches
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {branches.filter(b => !b.isActive).length}
+                    {(Array.isArray(branches) ? branches : []).filter(b => !b.isActive).length}
                   </p>
                 </div>
               </div>
@@ -293,91 +289,82 @@ export default function BranchesPage() {
         </Card>
 
         {/* Branches Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredBranches.map((branch) => (
-            <Card key={branch._id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <BuildingOfficeIcon className="h-5 w-5" />
-                      {branch.name}
-                    </CardTitle>
-                    <CardDescription>
-                      {branch.isActive ? (
-                        <span className="text-green-600">Active</span>
-                      ) : (
-                        <span className="text-red-600">Inactive</span>
-                      )}
-                    </CardDescription>
+            <Card key={branch._id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
+              <CardHeader className="pb-4 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                        <BuildingOfficeIcon className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg sm:text-xl font-bold text-foreground group-hover:text-blue-600 transition-colors">
+                          {branch.name}
+                        </CardTitle>
+                        <CardDescription className="text-muted-foreground mt-1">
+                          {branch.address}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold self-start ${
+                    branch.isActive 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  }`}>
+                    {branch.isActive ? 'Active' : 'Inactive'}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 p-4 sm:p-6">
                 <div className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <MapPinIcon className="h-4 w-4 mt-1" style={{color: 'hsl(var(--muted-foreground))'}} />
-                    <div>
-                      <p className="text-xs sm:text-sm font-medium">Address</p>
-                      <p className="text-xs sm:text-sm" style={{color: 'hsl(var(--muted-foreground))'}}>
-                        {branch.address}
-                      </p>
-                    </div>
-                  </div>
-
                   {branch.phone && (
-                    <div className="flex items-center gap-2">
-                      <PhoneIcon className="h-4 w-4" style={{color: 'hsl(var(--muted-foreground))'}} />
-                      <div>
-                        <p className="text-xs sm:text-sm font-medium">Phone</p>
-                        <p className="text-xs sm:text-sm" style={{color: 'hsl(var(--muted-foreground))'}}>
-                          {branch.phone}
-                        </p>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Phone:</span>
+                      <span className="text-sm font-semibold text-foreground">{branch.phone}</span>
                     </div>
                   )}
-
                   {branch.email && (
-                    <div className="flex items-center gap-2">
-                      <EnvelopeIcon className="h-4 w-4" style={{color: 'hsl(var(--muted-foreground))'}} />
-                      <div>
-                        <p className="text-xs sm:text-sm font-medium">Email</p>
-                        <p className="text-xs sm:text-sm" style={{color: 'hsl(var(--muted-foreground))'}}>
-                          {branch.email}
-                        </p>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Email:</span>
+                      <span className="text-sm font-semibold text-foreground truncate max-w-[150px]">{branch.email}</span>
                     </div>
                   )}
-
                   {branch.manager && (
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="h-4 w-4" style={{color: 'hsl(var(--muted-foreground))'}} />
-                      <div>
-                        <p className="text-sm font-medium">Manager</p>
-                        <p className="text-xs sm:text-sm" style={{color: 'hsl(var(--muted-foreground))'}}>
-                          {branch.manager}
-                        </p>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Manager:</span>
+                      <span className="text-sm font-semibold text-foreground">{branch.manager}</span>
                     </div>
                   )}
-
-                  <div className="pt-2 border-t">
-                    <p className="text-xs" style={{color: 'hsl(var(--muted-foreground))'}}>
-                      Created: {formatDate(branch.createdAt)}
-                    </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Created:</span>
+                    <span className="text-sm font-semibold text-foreground">{formatDate(branch.createdAt)}</span>
                   </div>
                 </div>
-
-                <div className="mt-4 flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                <div className="mt-6 flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
+                  >
                     <EyeIcon className="h-4 w-4 mr-1" />
                     View
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200"
+                  >
                     <PencilIcon className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <Button variant="outline" size="sm" className="text-red-600">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
+                  >
                     <TrashIcon className="h-4 w-4" />
                   </Button>
                 </div>
@@ -386,15 +373,17 @@ export default function BranchesPage() {
           ))}
         </div>
 
-        {filteredBranches.length === 0 && (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <BuildingOfficeIcon className="h-12 w-12 mx-auto mb-4" style={{color: 'hsl(var(--muted-foreground))'}} />
-              <p style={{color: 'hsl(var(--muted-foreground))'}}>
-                {searchTerm ? 'No branches found matching your search.' : 'No branches available.'}
-              </p>
-            </CardContent>
-          </Card>
+        {/* No Branches Found */}
+        {filteredBranches.length === 0 && !isLoading && (
+          <div className="text-center py-10">
+            <p className="text-lg text-gray-500 dark:text-gray-400">No branches found matching your criteria.</p>
+            <Button 
+              onClick={() => setShowNewBranch(true)} 
+              className="mt-4 bg-blue-600 hover:bg-blue-700"
+            >
+              Add New Branch
+            </Button>
+          </div>
         )}
       </div>
     </DashboardLayout>

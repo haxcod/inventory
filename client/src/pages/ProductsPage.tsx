@@ -1,84 +1,126 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
+import { ProductTransferModal } from '../components/ui/ProductTransferModal';
 import type { Product } from '../types';
 import { formatCurrency, formatNumber } from '../lib/utils';
-import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, MagnifyingGlassIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useConfirmations } from '../hooks/useConfirmations';
+import apiService from '../lib/api';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  const authContext = useAuth();
+  const confirmationsContext = useConfirmations();
+  
+  const user = authContext?.user;
+  const showSuccess = confirmationsContext?.showSuccess || (() => {});
+  const showError = confirmationsContext?.showError || (() => {});
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setIsLoading(true);
-      // Mock data for now
-      const mockProducts: Product[] = [
-        {
-          _id: '1',
-          name: 'iPhone 15 Pro',
-          description: 'Latest iPhone with advanced features',
-          sku: 'IPH15P-001',
-          category: 'Electronics',
-          brand: 'Apple',
-          price: 99999,
-          costPrice: 85000,
-          stock: 25,
-          minStock: 5,
-          maxStock: 100,
-          unit: 'pieces',
-          branch: 'main',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          _id: '2',
-          name: 'Samsung Galaxy S24',
-          description: 'Premium Android smartphone',
-          sku: 'SGS24-001',
-          category: 'Electronics',
-          brand: 'Samsung',
-          price: 79999,
-          costPrice: 70000,
-          stock: 15,
-          minStock: 3,
-          maxStock: 50,
-          unit: 'pieces',
-          branch: 'main',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-      setProducts(mockProducts);
+      setError(null);
+      // Real API call
+      const response = await apiService.products.getAll();
+      if (response.data.success) {
+        setProducts(response.data.data || []);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch products');
+      }
+      
     } catch (error) {
       console.error('Error fetching products:', error);
+      setError('Failed to fetch products. Please try again.');
+      setProducts([]); // Set empty array as fallback
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const filteredProducts = products.filter(product =>
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Ensure products is always an array
+  const safeProducts = Array.isArray(products) ? products : [];
+  
+  const filteredProducts = safeProducts.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleTransferProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setShowTransferModal(true);
+  };
+
+  const handleCloseTransferModal = () => {
+    setShowTransferModal(false);
+    setSelectedProduct(null);
+  };
+
+  const handleTransfer = async (transferData: {
+    productId: string;
+    fromBranch: string;
+    toBranch: string;
+    quantity: number;
+    reason: string;
+    notes?: string;
+  }) => {
+    try {
+      // Real API call
+      const response = await apiService.transfers.create(transferData);
+      if (response.data.success) {
+        // Refresh products to get updated stock
+        await fetchProducts();
+        showSuccess(`Successfully transferred ${transferData.quantity} ${selectedProduct?.unit} of ${selectedProduct?.name} to the destination branch.`);
+      } else {
+        throw new Error(response.data.message || 'Transfer failed');
+      }
+    } catch (error) {
+      console.error('Error transferring product:', error);
+      showError('Failed to transfer product. Please try again.');
+    }
+  };
+
+  // Check if user can transfer products (admin or team member)
+  const canTransfer = user?.role === 'admin' || (user?.role === 'user' && user?.permissions?.includes('transfer_products'));
 
   if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-red-500 text-xl mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Products</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+            <Button onClick={fetchProducts} className="bg-blue-600 hover:bg-blue-700">
+              Try Again
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -181,7 +223,7 @@ export default function ProductsPage() {
                     <span className="font-semibold text-foreground">{product.brand}</span>
                   </div>
                 </div>
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 flex gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -196,6 +238,17 @@ export default function ProductsPage() {
                   >
                     View
                   </Button>
+                  {canTransfer && product.stock > 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleTransferProduct(product)}
+                      className="border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200"
+                      title="Transfer to another branch"
+                    >
+                      <ArrowRightIcon className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -226,6 +279,14 @@ export default function ProductsPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Product Transfer Modal */}
+        <ProductTransferModal
+          isOpen={showTransferModal}
+          onClose={handleCloseTransferModal}
+          product={selectedProduct}
+          onTransfer={handleTransfer}
+        />
       </div>
     </DashboardLayout>
   );

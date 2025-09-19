@@ -192,4 +192,82 @@ export const getPaymentReport = async (filters = {}) => {
     }
 };
 
+// Get profit/loss report
+export const getProfitLossReport = async (filters = {}) => {
+    try {
+        const query = {};
+        
+        // Apply date filters
+        if (filters.startDate || filters.endDate) {
+            query.createdAt = {};
+            if (filters.startDate) {
+                query.createdAt.$gte = new Date(filters.startDate);
+            }
+            if (filters.endDate) {
+                query.createdAt.$lte = new Date(filters.endDate);
+            }
+        }
+        
+        if (filters.branch) {
+            query.branch = filters.branch;
+        }
+
+        const invoices = await Invoice.find(query)
+            .populate('branch', 'name')
+            .sort({ createdAt: -1 });
+
+        const payments = await Payment.find(query)
+            .populate('branch', 'name')
+            .sort({ createdAt: -1 });
+
+        // Calculate revenue from invoices
+        const totalRevenue = invoices.reduce((sum, invoice) => sum + invoice.total, 0);
+        
+        // Calculate expenses from payments (debit payments)
+        const totalExpenses = payments
+            .filter(payment => payment.paymentType === 'debit')
+            .reduce((sum, payment) => sum + payment.amount, 0);
+
+        const netProfit = totalRevenue - totalExpenses;
+
+        // Group by month for chart data
+        const monthlyData = {};
+        invoices.forEach(invoice => {
+            const month = invoice.createdAt.toISOString().substring(0, 7); // YYYY-MM
+            if (!monthlyData[month]) {
+                monthlyData[month] = { month, revenue: 0, expenses: 0, profit: 0 };
+            }
+            monthlyData[month].revenue += invoice.total;
+        });
+
+        payments.forEach(payment => {
+            if (payment.paymentType === 'debit') {
+                const month = payment.createdAt.toISOString().substring(0, 7);
+                if (monthlyData[month]) {
+                    monthlyData[month].expenses += payment.amount;
+                }
+            }
+        });
+
+        // Calculate profit for each month
+        Object.values(monthlyData).forEach(month => {
+            month.profit = month.revenue - month.expenses;
+        });
+
+        const chartData = Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
+
+        return {
+            summary: {
+                totalRevenue,
+                totalExpenses,
+                netProfit,
+                profitMargin: totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(2) : 0
+            },
+            chartData
+        };
+    } catch (error) {
+        throw new Error(`Failed to get profit/loss report: ${error.message}`);
+    }
+};
+
 

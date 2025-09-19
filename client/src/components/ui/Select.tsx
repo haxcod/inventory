@@ -16,7 +16,6 @@ export interface SelectProps {
   disabled?: boolean;
   className?: string;
   id?: string;
-  name?: string;
   error?: boolean;
   errorMessage?: string;
 }
@@ -29,7 +28,6 @@ export const Select: React.FC<SelectProps> = ({
   disabled = false,
   className,
   id,
-  name,
   error = false,
   errorMessage,
 }) => {
@@ -119,7 +117,6 @@ export const Select: React.FC<SelectProps> = ({
     <div className="relative" ref={selectRef}>
       <div
         id={id}
-        name={name}
          className={cn(
            "relative w-full px-4 py-3 text-left bg-white dark:bg-black border-2 rounded-xl shadow-sm cursor-pointer transition-all duration-200",
            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
@@ -165,7 +162,7 @@ export const Select: React.FC<SelectProps> = ({
              options.map((option, index) => (
                <div
                  key={option.value}
-                 ref={el => optionRefs.current[index] = el}
+                 ref={el => { optionRefs.current[index] = el; }}
                  className={cn(
                    "relative px-4 py-3 cursor-pointer transition-colors duration-150",
                    "hover:bg-gray-100 dark:hover:bg-gray-800",

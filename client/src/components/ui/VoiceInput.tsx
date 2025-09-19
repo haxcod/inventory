@@ -2,6 +2,37 @@ import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon, MicrophoneIcon, StopIcon } from '@heroicons/react/24/outline';
 import { Button } from './Button';
 
+// Speech Recognition types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onstart: (() => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 interface VoiceInputProps {
   isOpen: boolean;
   onClose: () => void;
@@ -44,7 +75,7 @@ export function VoiceInput({ isOpen, onClose, onResult }: VoiceInputProps) {
       setError(null);
     };
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
       let interimTranscript = '';
 
@@ -60,7 +91,7 @@ export function VoiceInput({ isOpen, onClose, onResult }: VoiceInputProps) {
       setTranscript(finalTranscript || interimTranscript);
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error:', event.error);
       setError(`Speech recognition error: ${event.error}`);
       setIsListening(false);
@@ -191,10 +222,3 @@ export function VoiceInput({ isOpen, onClose, onResult }: VoiceInputProps) {
   );
 }
 
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}

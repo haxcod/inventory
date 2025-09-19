@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -19,12 +19,17 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { useConfirmations } from '../context/ConfirmationContext';
+import { useConfirmations } from '../hooks/useConfirmations';
+import { useAuth } from '../context/AuthContext';
+import apiService from '../lib/api';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const { user } = useAuth();
+  const { confirmDelete, showSuccess, showError } = useConfirmations();
   const [typeFilter, setTypeFilter] = useState('all');
   const [methodFilter, setMethodFilter] = useState('all');
   const [showNewPayment, setShowNewPayment] = useState(false);
@@ -32,7 +37,6 @@ export default function PaymentsPage() {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [showEditPayment, setShowEditPayment] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const { confirmDelete, showSuccess, showError } = useConfirmations();
   const [newPayment, setNewPayment] = useState({
     amount: '',
     paymentMethod: 'cash' as 'cash' | 'card' | 'upi' | 'bank_transfer',
@@ -78,9 +82,28 @@ export default function PaymentsPage() {
     { value: 'bank_transfer', label: 'Bank Transfer' }
   ];
 
+  const fetchPayments = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      // Real API call
+      const response = await apiService.payments.getAll();
+      if (response.data.success) {
+        setPayments(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch payments');
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      // Use a fallback error handling instead of showError to avoid dependency
+      setPayments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [fetchPayments]);
 
   // Prevent body scroll when modals are open
   useEffect(() => {
@@ -96,84 +119,30 @@ export default function PaymentsPage() {
     };
   }, [showNewPayment, showEditPayment, showPaymentDetails]);
 
-  const fetchPayments = async () => {
-    try {
-      setIsLoading(true);
-      // Mock data for now
-      const mockPayments: Payment[] = [
-        {
-          _id: '1',
-          amount: 500000, // 5L
-          paymentMethod: 'upi',
-          paymentType: 'credit',
-          description: 'Payment for Invoice INV-001',
-          reference: 'TXN123456789',
-          customer: 'John Doe',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15'),
-        },
-        {
-          _id: '2',
-          amount: 250000, // 2.5L
-          paymentMethod: 'card',
-          paymentType: 'credit',
-          description: 'Partial payment for Invoice INV-002',
-          reference: 'CARD987654321',
-          customer: 'Jane Smith',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-14'),
-          updatedAt: new Date('2024-01-14'),
-        },
-        {
-          _id: '3',
-          amount: 10000,
-          paymentMethod: 'cash',
-          paymentType: 'debit',
-          description: 'Refund for returned item',
-          reference: 'REF123456',
-          customer: 'Bob Johnson',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-13'),
-          updatedAt: new Date('2024-01-13'),
-        },
-        {
-          _id: '4',
-          amount: 75000,
-          paymentMethod: 'bank_transfer',
-          paymentType: 'credit',
-          description: 'Payment for bulk order',
-          reference: 'BANK456789',
-          customer: 'Alice Brown',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-12'),
-          updatedAt: new Date('2024-01-12'),
-        },
-      ];
+  const filteredPayments = useMemo(() => {
+    return (Array.isArray(payments) ? payments : []).filter(payment => {
+      const matchesSearch = 
+        payment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.reference?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesType = typeFilter === 'all' || payment.paymentType === typeFilter;
+      const matchesMethod = methodFilter === 'all' || payment.paymentMethod === methodFilter;
+      
+      return matchesSearch && matchesType && matchesMethod;
+    });
+  }, [payments, searchTerm, typeFilter, methodFilter]);
 
-      setPayments(mockPayments);
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = 
-      payment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.reference?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = typeFilter === 'all' || payment.paymentType === typeFilter;
-    const matchesMethod = methodFilter === 'all' || payment.paymentMethod === methodFilter;
-    
-    return matchesSearch && matchesType && matchesMethod;
-  });
+  // Memoize stats calculations to prevent unnecessary re-renders
+  const stats = useMemo(() => {
+    const safePayments = Array.isArray(payments) ? payments : [];
+    return {
+      totalAmount: safePayments.reduce((sum, payment) => sum + payment.amount, 0),
+      totalPayments: safePayments.length,
+      creditAmount: safePayments.filter(p => p.paymentType === 'credit').reduce((sum, p) => sum + p.amount, 0),
+      debitAmount: safePayments.filter(p => p.paymentType === 'debit').reduce((sum, p) => sum + p.amount, 0),
+    };
+  }, [payments]);
 
   const getPaymentMethodIcon = (method: string) => {
     switch (method) {
@@ -196,16 +165,17 @@ export default function PaymentsPage() {
 
   const handleCreatePayment = async () => {
     try {
-      // Mock API call
+      // Real API call
       const paymentData = {
         ...newPayment,
         amount: parseFloat(newPayment.amount),
         branch: 'main',
-        createdBy: 'user1',
+        createdBy: user?._id || 'user1',
       };
       
-      console.log('Creating payment:', paymentData);
-      setShowNewPayment(false);
+      const response = await apiService.payments.create(paymentData);
+      if (response.data.success) {
+        // Reset form
       setNewPayment({
         amount: '',
         paymentMethod: 'cash',
@@ -215,28 +185,20 @@ export default function PaymentsPage() {
         customer: '',
         notes: '',
       });
+        
+        setShowNewPayment(false);
+        
       // Refresh payments list
-      fetchPayments();
-      
-      // Show success message
-      showConfirmation({
-        title: 'Payment Created',
-        message: `Payment of ${formatCurrency(paymentData.amount)} has been successfully created.`,
-        type: 'success',
-        confirmText: 'OK',
-        showCancel: false,
-        onConfirm: () => {}
-      });
+        await fetchPayments();
+        
+        // Show success message
+        showSuccess(`Payment of ${formatCurrency(paymentData.amount)} has been successfully created.`);
+      } else {
+        throw new Error(response.data.message || 'Payment creation failed');
+      }
     } catch (error) {
       console.error('Error creating payment:', error);
-      showConfirmation({
-        title: 'Create Failed',
-        message: 'There was an error creating the payment. Please try again.',
-        type: 'error',
-        confirmText: 'OK',
-        showCancel: false,
-        onConfirm: () => {}
-      });
+      showError('There was an error creating the payment. Please try again.');
     }
   };
 
@@ -282,9 +244,8 @@ export default function PaymentsPage() {
     try {
       if (!editingPayment) return;
 
-      // Mock API call
-      const updatedPayment = {
-        ...editingPayment,
+      // Real API call
+      const paymentData = {
         amount: parseFloat(editPayment.amount),
         paymentMethod: editPayment.paymentMethod,
         paymentType: editPayment.paymentType,
@@ -292,13 +253,15 @@ export default function PaymentsPage() {
         reference: editPayment.reference,
         customer: editPayment.customer,
         notes: editPayment.notes,
-        updatedAt: new Date(),
       };
       
-      console.log('Updating payment:', updatedPayment);
-      
-      // Update the payment in the list
-      setPayments(prev => prev.map(p => p._id === editingPayment._id ? updatedPayment : p));
+      const response = await apiService.payments.update(editingPayment._id, paymentData);
+      if (response.data.success) {
+        // Update the payment in the list
+        setPayments(prev => prev.map(p => p._id === editingPayment._id ? { ...p, ...paymentData } : p));
+      } else {
+        throw new Error(response.data.message || 'Failed to update payment');
+      }
       
       setShowEditPayment(false);
       setEditingPayment(null);
@@ -317,43 +280,25 @@ export default function PaymentsPage() {
   };
 
   const handleDeletePayment = async (paymentId: string) => {
-    const payment = payments.find(p => p._id === paymentId);
+    const payment = (Array.isArray(payments) ? payments : []).find(p => p._id === paymentId);
     const paymentName = payment ? `${payment.customer} - ${formatCurrency(payment.amount)}` : 'this payment';
     
-    showConfirmation({
-      title: 'Delete Payment',
-      message: `Are you sure you want to delete ${paymentName}? This action cannot be undone.`,
-      type: 'warning',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      onConfirm: async () => {
-        try {
-          // Mock API call
-          console.log('Deleting payment:', paymentId);
-          
+    confirmDelete(paymentName, async () => {
+      try {
+        // Real API call
+        const response = await apiService.payments.delete(paymentId);
+        if (response.data.success) {
           // Remove the payment from the list
           setPayments(prev => prev.filter(p => p._id !== paymentId));
           
           // Show success message
-          showConfirmation({
-            title: 'Payment Deleted',
-            message: 'The payment has been successfully deleted.',
-            type: 'success',
-            confirmText: 'OK',
-            showCancel: false,
-            onConfirm: () => {}
-          });
-        } catch (error) {
-          console.error('Error deleting payment:', error);
-          showConfirmation({
-            title: 'Delete Failed',
-            message: 'There was an error deleting the payment. Please try again.',
-            type: 'error',
-            confirmText: 'OK',
-            showCancel: false,
-            onConfirm: () => {}
-          });
+          showSuccess('The payment has been successfully deleted.');
+        } else {
+          throw new Error(response.data.message || 'Failed to delete payment');
         }
+      } catch (error) {
+        console.error('Error deleting payment:', error);
+        showError('There was an error deleting the payment. Please try again.');
       }
     });
   };
@@ -406,7 +351,7 @@ export default function PaymentsPage() {
                     Total Payments
                   </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {payments.length}
+                    {stats.totalPayments}
                   </p>
                   </div>
                 </div>
@@ -429,7 +374,7 @@ export default function PaymentsPage() {
                     Total Amount
                   </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
+                    {formatCurrency(stats.totalAmount)}
                   </p>
                   </div>
                 </div>
@@ -452,7 +397,7 @@ export default function PaymentsPage() {
                     Credits
                   </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {formatCurrency(payments.filter(p => p.paymentType === 'credit').reduce((sum, p) => sum + p.amount, 0))}
+                    {formatCurrency(stats.creditAmount)}
                   </p>
                   </div>
                 </div>
@@ -475,7 +420,7 @@ export default function PaymentsPage() {
                     Debits
                   </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {formatCurrency(payments.filter(p => p.paymentType === 'debit').reduce((sum, p) => sum + p.amount, 0))}
+                    {formatCurrency(stats.debitAmount)}
                   </p>
                   </div>
                 </div>
@@ -536,7 +481,7 @@ export default function PaymentsPage() {
                     id="paymentMethod"
                       options={paymentMethodOptions}
                     value={newPayment.paymentMethod}
-                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentMethod: value as any }))}
+                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentMethod: value as 'cash' | 'card' | 'upi' | 'bank_transfer' }))}
                       placeholder="Select payment method"
                       className="mt-2"
                     />
@@ -547,7 +492,7 @@ export default function PaymentsPage() {
                     id="paymentType"
                       options={paymentTypeOptions}
                     value={newPayment.paymentType}
-                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentType: value as any }))}
+                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentType: value as 'credit' | 'debit' }))}
                       placeholder="Select payment type"
                       className="mt-2"
                     />
@@ -606,7 +551,7 @@ export default function PaymentsPage() {
                     className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   >
                     Create Payment
-                  </Button>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -960,7 +905,7 @@ export default function PaymentsPage() {
                       id="edit-paymentMethod"
                       options={paymentMethodOptions}
                       value={editPayment.paymentMethod}
-                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentMethod: value as any }))}
+                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentMethod: value as 'cash' | 'card' | 'upi' | 'bank_transfer' }))}
                       placeholder="Select payment method"
                       className="mt-2"
                     />
@@ -971,7 +916,7 @@ export default function PaymentsPage() {
                       id="edit-paymentType"
                       options={paymentTypeOptions}
                       value={editPayment.paymentType}
-                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentType: value as any }))}
+                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentType: value as 'credit' | 'debit' }))}
                       placeholder="Select payment type"
                       className="mt-2"
                     />
@@ -1037,8 +982,6 @@ export default function PaymentsPage() {
           </div>
         )}
 
-        {/* Confirmation Modal */}
-        <ConfirmationComponent />
       </div>
     </DashboardLayout>
   );

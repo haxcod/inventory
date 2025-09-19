@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ConfirmationModal, ConfirmationType } from '../components/ui/ConfirmationModal';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useContext, type ReactNode } from 'react';
+import { ConfirmationModal, type ConfirmationType } from '../components/ui/ConfirmationModal';
 
 interface ConfirmationConfig {
   title: string;
@@ -18,15 +19,8 @@ interface ConfirmationContextType {
   setLoading: (loading: boolean) => void;
 }
 
-const ConfirmationContext = createContext<ConfirmationContextType | undefined>(undefined);
+export const ConfirmationContext = createContext<ConfirmationContextType | undefined>(undefined);
 
-export const useConfirmation = () => {
-  const context = useContext(ConfirmationContext);
-  if (!context) {
-    throw new Error('useConfirmation must be used within a ConfirmationProvider');
-  }
-  return context;
-};
 
 interface ConfirmationProviderProps {
   children: ReactNode;
@@ -102,83 +96,12 @@ export const ConfirmationProvider: React.FC<ConfirmationProviderProps> = ({ chil
   );
 };
 
-// Utility functions for common confirmations
-export const useConfirmations = () => {
-  const { showConfirmation } = useConfirmation();
-
-  const confirmDelete = (itemName: string, onConfirm: () => void) => {
-    showConfirmation({
-      title: 'Delete Confirmation',
-      message: `Are you sure you want to delete ${itemName}? This action cannot be undone.`,
-      type: 'warning',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      onConfirm
-    });
-  };
-
-  const confirmSave = (onConfirm: () => void) => {
-    showConfirmation({
-      title: 'Save Changes',
-      message: 'Are you sure you want to save these changes?',
-      type: 'question',
-      confirmText: 'Save',
-      cancelText: 'Cancel',
-      onConfirm
-    });
-  };
-
-  const confirmDiscard = (onConfirm: () => void) => {
-    showConfirmation({
-      title: 'Discard Changes',
-      message: 'Are you sure you want to discard your changes? This action cannot be undone.',
-      type: 'warning',
-      confirmText: 'Discard',
-      cancelText: 'Cancel',
-      onConfirm
-    });
-  };
-
-  const showSuccess = (message: string) => {
-    showConfirmation({
-      title: 'Success',
-      message,
-      type: 'success',
-      confirmText: 'OK',
-      showCancel: false,
-      onConfirm: () => {}
-    });
-  };
-
-  const showError = (message: string) => {
-    showConfirmation({
-      title: 'Error',
-      message,
-      type: 'error',
-      confirmText: 'OK',
-      showCancel: false,
-      onConfirm: () => {}
-    });
-  };
-
-  const showInfo = (title: string, message: string) => {
-    showConfirmation({
-      title,
-      message,
-      type: 'info',
-      confirmText: 'OK',
-      showCancel: false,
-      onConfirm: () => {}
-    });
-  };
-
-  return {
-    confirmDelete,
-    confirmSave,
-    confirmDiscard,
-    showSuccess,
-    showError,
-    showInfo,
-    showConfirmation
-  };
+// Export the hook from the same file
+export const useConfirmation = () => {
+  const context = useContext(ConfirmationContext);
+  if (!context) {
+    throw new Error('useConfirmation must be used within a ConfirmationProvider');
+  }
+  return context;
 };
+

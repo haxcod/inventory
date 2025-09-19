@@ -51,6 +51,7 @@ export default function DashboardPage() {
   const [salesData, setSalesData] = useState<ChartData[]>([]);
   const [productData, setProductData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -61,78 +62,58 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       
-      // Set default data first
+      // Set default values first
       setStats({
-        totalSales: 1250000, // 12.5L
-        totalProducts: 1250, // 1.3k
-        totalInvoices: 250, // 250
-        totalRevenue: 15000000, // 1.5cr
-        salesGrowth: 12.5,
-        productGrowth: 8.2,
-        invoiceGrowth: 15.3,
-        revenueGrowth: 18.7,
+        totalSales: 0,
+        totalProducts: 0,
+        totalInvoices: 0,
+        totalRevenue: 0,
+        salesGrowth: 0,
+        productGrowth: 0,
+        invoiceGrowth: 0,
+        revenueGrowth: 0,
       });
 
-      setSalesData([
-        { name: 'Mon', sales: 12000, value: 12000 },
-        { name: 'Tue', sales: 15000, value: 15000 },
-        { name: 'Wed', sales: 18000, value: 18000 },
-        { name: 'Thu', sales: 14000, value: 14000 },
-        { name: 'Fri', sales: 16000, value: 16000 },
-        { name: 'Sat', sales: 20000, value: 20000 },
-        { name: 'Sun', sales: 17000, value: 17000 },
-      ]);
-
-      setProductData([
-        { name: 'Electronics', totalProducts: 15, value: 15 },
-        { name: 'Clothing', totalProducts: 12, value: 12 },
-        { name: 'Books', totalProducts: 8, value: 8 },
-        { name: 'Home & Garden', totalProducts: 10, value: 10 },
-      ]);
+      setSalesData([]);
+      setProductData([]);
       
-      // Try to fetch real data (will fallback to defaults if API fails)
+      // Fetch real dashboard data
       try {
-        const salesResponse = await apiService.reports.sales({ period: 'daily' });
-        const salesData = salesResponse.data;
+        const response = await apiService.dashboard.getData({ period: 'monthly' });
         
-        const stockResponse = await apiService.reports.stock();
-        const stockData = stockResponse.data;
-
-        if (salesData.success) {
-          const summary = salesData.data.summary;
+        if (response.data.success) {
+          const dashboardData = response.data.data;
+          
+          // Update stats with real data
           setStats({
-            totalSales: summary.totalSales || 125000,
-            totalProducts: stockData.data?.summary?.totalProducts || 45,
-            totalInvoices: summary.totalInvoices || 23,
-            totalRevenue: summary.totalSales || 125000,
-            salesGrowth: 12.5,
-            productGrowth: 8.2,
-            invoiceGrowth: 15.3,
-            revenueGrowth: 18.7,
+            totalSales: dashboardData.stats.totalSales,
+            totalProducts: dashboardData.stats.totalProducts,
+            totalInvoices: dashboardData.stats.totalInvoices,
+            totalRevenue: dashboardData.stats.totalRevenue,
+            salesGrowth: dashboardData.stats.salesGrowth,
+            productGrowth: dashboardData.stats.productGrowth,
+            invoiceGrowth: dashboardData.stats.invoiceGrowth,
+            revenueGrowth: dashboardData.stats.revenueGrowth,
           });
 
-          setSalesData(salesData.data.dailySales || [
-            { name: 'Mon', sales: 12000 },
-            { name: 'Tue', sales: 15000 },
-            { name: 'Wed', sales: 18000 },
-            { name: 'Thu', sales: 14000 },
-            { name: 'Fri', sales: 16000 },
-            { name: 'Sat', sales: 20000 },
-            { name: 'Sun', sales: 17000 },
-          ]);
-          setProductData(stockData.data?.categoryStock || [
-            { name: 'Electronics', totalProducts: 15 },
-            { name: 'Clothing', totalProducts: 12 },
-            { name: 'Books', totalProducts: 8 },
-            { name: 'Home & Garden', totalProducts: 10 },
-          ]);
+          // Update chart data
+          if (dashboardData.salesData) {
+            setSalesData(dashboardData.salesData);
+          }
+
+          if (dashboardData.productData) {
+            setProductData(dashboardData.productData);
+          }
         }
-      } catch {
-        // API calls failed, using default data
+      } catch (apiError) {
+        console.warn('API data not available, using defaults:', apiError);
+        setError('Failed to load dashboard data. Using default values.');
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -143,6 +124,23 @@ export default function DashboardPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-red-500 text-xl mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Dashboard</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+            <Button onClick={fetchDashboardData} className="bg-blue-600 hover:bg-blue-700">
+              Try Again
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );

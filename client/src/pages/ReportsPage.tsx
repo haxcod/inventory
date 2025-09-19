@@ -7,6 +7,7 @@ import { Label } from '../components/ui/Label';
 import { Select } from '../components/ui/Select';
 import type { SelectOption } from '../components/ui/Select';
 import { formatCurrency } from '../lib/utils';
+import apiService from '../lib/api';
 import { 
   ChartBarIcon,
   DocumentArrowDownIcon,
@@ -16,10 +17,27 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import * as XLSX from 'xlsx';
 
 interface ReportData {
-  sales: any[];
-  products: any[];
-  revenue: any[];
-  profitLoss: any[];
+  sales: Array<{
+    name: string;
+    sales: number;
+    orders: number;
+  }>;
+  products: Array<{
+    name: string;
+    value: number;
+    totalProducts: number;
+  }>;
+  revenue: Array<{
+    name: string;
+    revenue: number;
+    profit: number;
+  }>;
+  profitLoss: Array<{
+    name: string;
+    revenue: number;
+    expenses: number;
+    profit: number;
+  }>;
 }
 
 export default function ReportsPage() {
@@ -60,39 +78,21 @@ export default function ReportsPage() {
     try {
       setIsLoading(true);
       
-      // Mock data for different reports
-      const mockData = {
-        sales: [
-          { name: 'Jan', sales: 120000, orders: 45 },
-          { name: 'Feb', sales: 150000, orders: 52 },
-          { name: 'Mar', sales: 180000, orders: 68 },
-          { name: 'Apr', sales: 160000, orders: 58 },
-          { name: 'May', sales: 200000, orders: 75 },
-          { name: 'Jun', sales: 220000, orders: 82 }
-        ],
-        products: [
-          { name: 'Electronics', value: 35, count: 120 },
-          { name: 'Clothing', value: 25, count: 85 },
-          { name: 'Books', value: 20, count: 65 },
-          { name: 'Home & Garden', value: 20, count: 70 }
-        ],
-        revenue: [
-          { name: 'Q1', revenue: 450000, profit: 90000 },
-          { name: 'Q2', revenue: 580000, profit: 116000 },
-          { name: 'Q3', revenue: 620000, profit: 124000 },
-          { name: 'Q4', revenue: 700000, profit: 140000 }
-        ],
-        profitLoss: [
-          { name: 'Jan', revenue: 120000, expenses: 80000, profit: 40000 },
-          { name: 'Feb', revenue: 150000, expenses: 95000, profit: 55000 },
-          { name: 'Mar', revenue: 180000, expenses: 110000, profit: 70000 },
-          { name: 'Apr', revenue: 160000, expenses: 100000, profit: 60000 },
-          { name: 'May', revenue: 200000, expenses: 120000, profit: 80000 },
-          { name: 'Jun', revenue: 220000, expenses: 130000, profit: 90000 }
-        ]
+      // Real API calls for different reports
+      const [salesResponse, stockResponse, profitLossResponse] = await Promise.all([
+        apiService.reports.sales({ period: 'monthly' }),
+        apiService.reports.stock(),
+        apiService.reports.profitLoss({ startDate: '2024-01-01', endDate: '2024-12-31' })
+      ]);
+
+      const reportData = {
+        sales: salesResponse.data.success ? salesResponse.data.data : [],
+        products: stockResponse.data.success ? stockResponse.data.data : [],
+        revenue: salesResponse.data.success ? salesResponse.data.data : [], // Use sales data for revenue
+        profitLoss: profitLossResponse.data.success ? profitLossResponse.data.data : []
       };
 
-      setReportData(mockData);
+      setReportData(reportData);
     } catch (error) {
       console.error('Error fetching report data:', error);
     } finally {
@@ -107,12 +107,12 @@ export default function ReportsPage() {
       setIsExporting(true);
       
       // Prepare data based on selected report
-      let worksheetData: any[] = [];
+      let worksheetData: Array<Record<string, string | number>> = [];
       let fileName = '';
       
       switch (selectedReport) {
         case 'sales':
-          worksheetData = reportData.sales.map(item => ({
+          worksheetData = (Array.isArray(reportData.sales) ? reportData.sales : []).map(item => ({
             'Month': item.name,
             'Sales Amount': item.sales,
             'Number of Orders': item.orders
@@ -120,7 +120,7 @@ export default function ReportsPage() {
           fileName = 'Sales_Report';
           break;
         case 'revenue':
-          worksheetData = reportData.revenue.map(item => ({
+          worksheetData = (Array.isArray(reportData.revenue) ? reportData.revenue : []).map(item => ({
             'Quarter': item.name,
             'Revenue': item.revenue,
             'Profit': item.profit
@@ -128,7 +128,7 @@ export default function ReportsPage() {
           fileName = 'Revenue_Report';
           break;
         case 'profitLoss':
-          worksheetData = reportData.profitLoss.map(item => ({
+          worksheetData = (Array.isArray(reportData.profitLoss) ? reportData.profitLoss : []).map(item => ({
             'Month': item.name,
             'Revenue': item.revenue,
             'Expenses': item.expenses,
@@ -137,10 +137,10 @@ export default function ReportsPage() {
           fileName = 'Profit_Loss_Report';
           break;
         case 'stock':
-          worksheetData = reportData.products.map(item => ({
+          worksheetData = (Array.isArray(reportData.products) ? reportData.products : []).map(item => ({
             'Category': item.name,
             'Percentage': item.value,
-            'Count': item.count
+            'Count': item.totalProducts
           }));
           fileName = 'Stock_Report';
           break;
@@ -183,10 +183,10 @@ export default function ReportsPage() {
       }
 
       // Get summary data
-      const totalSales = reportData.sales.reduce((sum, item) => sum + item.sales, 0);
-      const totalRevenue = reportData.revenue.reduce((sum, item) => sum + item.revenue, 0);
-      const totalProfit = reportData.profitLoss.reduce((sum, item) => sum + item.profit, 0);
-      const totalProducts = reportData.products.reduce((sum, item) => sum + item.count, 0);
+      const totalSales = (Array.isArray(reportData.sales) ? reportData.sales : []).reduce((sum, item) => sum + item.sales, 0);
+      const totalRevenue = (Array.isArray(reportData.revenue) ? reportData.revenue : []).reduce((sum, item) => sum + item.revenue, 0);
+      const totalProfit = (Array.isArray(reportData.profitLoss) ? reportData.profitLoss : []).reduce((sum, item) => sum + item.profit, 0);
+      const totalProducts = (Array.isArray(reportData.products) ? reportData.products : []).reduce((sum, item) => sum + item.totalProducts, 0);
 
       // Create clean printable HTML without charts
       const printHTML = `
@@ -380,7 +380,7 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody>
-            ${reportData.sales.map(item => `
+            ${(Array.isArray(reportData.sales) ? reportData.sales : []).map(item => `
               <tr>
                 <td>${item.name}</td>
                 <td>${formatCurrency(item.sales)}</td>
@@ -402,7 +402,7 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody>
-            ${reportData.revenue.map(item => `
+            ${(Array.isArray(reportData.revenue) ? reportData.revenue : []).map(item => `
               <tr>
                 <td>${item.name}</td>
                 <td>${formatCurrency(item.revenue)}</td>
@@ -425,7 +425,7 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody>
-            ${reportData.profitLoss.map(item => `
+            ${(Array.isArray(reportData.profitLoss) ? reportData.profitLoss : []).map(item => `
               <tr>
                 <td>${item.name}</td>
                 <td>${formatCurrency(item.revenue)}</td>
@@ -448,11 +448,11 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody>
-            ${reportData.products.map(item => `
+            ${(Array.isArray(reportData.products) ? reportData.products : []).map(item => `
               <tr>
                 <td>${item.name}</td>
                 <td>${item.value}%</td>
-                <td>${item.count}</td>
+                <td>${item.totalProducts}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -528,7 +528,7 @@ export default function ReportsPage() {
         <CardContent className="p-6">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={reportData.sales}>
+              <LineChart data={Array.isArray(reportData.sales) ? reportData.sales : []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
                   dataKey="name" 
@@ -571,7 +571,7 @@ export default function ReportsPage() {
           <CardContent className="p-6">
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={reportData.sales}>
+                <BarChart data={Array.isArray(reportData.sales) ? reportData.sales : []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="name" 
@@ -607,7 +607,7 @@ export default function ReportsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={reportData.products}
+                    data={Array.isArray(reportData.products) ? reportData.products : []}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -616,7 +616,7 @@ export default function ReportsPage() {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                      {reportData.products.map((_, index) => (
+                      {(Array.isArray(reportData.products) ? reportData.products : []).map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -647,7 +647,7 @@ export default function ReportsPage() {
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={reportData.revenue}>
+              <BarChart data={Array.isArray(reportData.revenue) ? reportData.revenue : []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -674,7 +674,7 @@ export default function ReportsPage() {
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={reportData.profitLoss}>
+              <LineChart data={Array.isArray(reportData.profitLoss) ? reportData.profitLoss : []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -726,12 +726,12 @@ export default function ReportsPage() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={(entry: any) => `${entry.name} ${entry.count}`}
+                  label={(entry: any) => `${entry.name} ${entry.totalProducts}`}
                   outerRadius={80}
                   fill="#8884d8"
-                  dataKey="count"
+                  dataKey="totalProducts"
                 >
-                      {reportData.products.map((_, index) => (
+                      {(Array.isArray(reportData.products) ? reportData.products : []).map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -763,11 +763,11 @@ export default function ReportsPage() {
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold">
                 Reports & Analytics
-              </h1>
+            </h1>
               <p className="mt-2 text-purple-100 dark:text-gray-300 text-sm sm:text-base">
                 Comprehensive insights and analytics for your business
-              </p>
-            </div>
+            </p>
+          </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button 
                 variant="outline" 
@@ -778,7 +778,7 @@ export default function ReportsPage() {
                 <DocumentArrowDownIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Excel'}</span>
                 <span className="sm:hidden">{isExporting ? 'Exporting...' : 'Excel'}</span>
-              </Button>
+            </Button>
               <Button 
                 variant="outline" 
                 onClick={printReport}
@@ -788,7 +788,7 @@ export default function ReportsPage() {
                 <PrinterIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">{isExporting ? 'Preparing...' : 'Print'}</span>
                 <span className="sm:hidden">{isExporting ? 'Preparing...' : 'Print'}</span>
-              </Button>
+            </Button>
             </div>
           </div>
         </div>
@@ -845,10 +845,10 @@ export default function ReportsPage() {
 
         {/* Report Content */}
         <div>
-          {selectedReport === 'sales' && renderSalesReport()}
-          {selectedReport === 'revenue' && renderRevenueReport()}
-          {selectedReport === 'profitLoss' && renderProfitLossReport()}
-          {selectedReport === 'stock' && renderStockReport()}
+        {selectedReport === 'sales' && renderSalesReport()}
+        {selectedReport === 'revenue' && renderRevenueReport()}
+        {selectedReport === 'profitLoss' && renderProfitLossReport()}
+        {selectedReport === 'stock' && renderStockReport()}
         </div>
 
         {/* Summary Cards */}
@@ -856,17 +856,17 @@ export default function ReportsPage() {
           <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+              <div className="flex items-center">
                   <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
                     <ChartBarIcon className="h-8 w-8 text-white" />
-                  </div>
-                  <div className="ml-4">
+                </div>
+                <div className="ml-4">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Total Sales
-                    </p>
+                    Total Sales
+                  </p>
                     <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
-                      {formatCurrency(reportData.sales.reduce((sum, item) => sum + item.sales, 0))}
-                    </p>
+                      {formatCurrency((Array.isArray(reportData.sales) ? reportData.sales : []).reduce((sum, item) => sum + item.sales, 0))}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -879,17 +879,17 @@ export default function ReportsPage() {
           <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+              <div className="flex items-center">
                   <div className="p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg">
                     <span className="text-white font-bold text-xl">₹</span>
-                  </div>
-                  <div className="ml-4">
+                </div>
+                <div className="ml-4">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Total Revenue
-                    </p>
+                    Total Revenue
+                  </p>
                     <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
-                      {formatCurrency(reportData.revenue.reduce((sum, item) => sum + item.revenue, 0))}
-                    </p>
+                      {formatCurrency((Array.isArray(reportData.revenue) ? reportData.revenue : []).reduce((sum, item) => sum + item.revenue, 0))}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -902,17 +902,17 @@ export default function ReportsPage() {
           <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+              <div className="flex items-center">
                   <div className="p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
                     <span className="text-white font-bold text-xl">+</span>
-                  </div>
-                  <div className="ml-4">
+                </div>
+                <div className="ml-4">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Total Profit
-                    </p>
+                    Total Profit
+                  </p>
                     <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
-                      {formatCurrency(reportData.profitLoss.reduce((sum, item) => sum + item.profit, 0))}
-                    </p>
+                      {formatCurrency((Array.isArray(reportData.profitLoss) ? reportData.profitLoss : []).reduce((sum, item) => sum + item.profit, 0))}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -925,17 +925,17 @@ export default function ReportsPage() {
           <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+              <div className="flex items-center">
                   <div className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg">
                     <span className="text-white font-bold text-xl">📦</span>
-                  </div>
-                  <div className="ml-4">
+                </div>
+                <div className="ml-4">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Total Products
-                    </p>
+                    Total Products
+                  </p>
                     <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
-                      {reportData.products.reduce((sum, item) => sum + item.count, 0)}
-                    </p>
+                      {(Array.isArray(reportData.products) ? reportData.products : []).reduce((sum, item) => sum + item.totalProducts, 0)}
+                  </p>
                   </div>
                 </div>
                 <div className="text-right">

@@ -71,4 +71,28 @@ export const getPaymentReport = async (req, res) => {
     }
 };
 
+// Get profit/loss report
+export const getProfitLossReport = async (req, res) => {
+    try {
+        const { startDate, endDate, branch } = req.query;
+        
+        const filters = {};
+        if (startDate) filters.startDate = startDate;
+        if (endDate) filters.endDate = endDate;
+        if (branch) filters.branch = branch;
+
+        const report = await reportService.getProfitLossReport(filters);
+        
+        res.json({
+            success: true,
+            data: report
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ConfirmationProvider } from './context/ConfirmationContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -17,10 +18,11 @@ import AddProductPage from './pages/AddProductPage';
 
 function App() {
   return (
-    <ConfirmationProvider>
-      <BrowserRouter>
-        <div className="min-h-screen">
-        <Routes>
+    <ErrorBoundary>
+      <ConfirmationProvider>
+        <BrowserRouter>
+          <div className="min-h-screen">
+          <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -121,9 +123,10 @@ function App() {
             },
           }}
         />
-        </div>
-      </BrowserRouter>
-    </ConfirmationProvider>
+          </div>
+        </BrowserRouter>
+      </ConfirmationProvider>
+    </ErrorBoundary>
   );
 }
 

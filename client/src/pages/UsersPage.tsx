@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import type { User } from '../types';
 import { formatDate } from '../lib/utils';
+import apiService from '../lib/api';
 import { 
   MagnifyingGlassIcon, 
   PlusIcon,
@@ -15,8 +16,7 @@ import {
   TrashIcon,
   EnvelopeIcon,
   ShieldCheckIcon,
-  UserCircleIcon,
-  CalendarIcon
+  UserCircleIcon
 } from '@heroicons/react/24/outline';
 
 export default function UsersPage() {
@@ -40,63 +40,13 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now
-      const mockUsers: User[] = [
-        {
-          _id: '1',
-          name: 'John Smith',
-          email: 'john@inventorypro.com',
-          password: 'hashedpassword',
-          role: 'admin',
-          permissions: ['read', 'write', 'delete', 'admin'],
-          branch: 'main',
-          isActive: true,
-          lastLogin: new Date('2024-01-15'),
-          createdAt: new Date('2024-01-01'),
-          updatedAt: new Date('2024-01-15'),
-        },
-        {
-          _id: '2',
-          name: 'Jane Doe',
-          email: 'jane@inventorypro.com',
-          password: 'hashedpassword',
-          role: 'user',
-          permissions: ['read', 'write'],
-          branch: 'north',
-          isActive: true,
-          lastLogin: new Date('2024-01-14'),
-          createdAt: new Date('2024-01-05'),
-          updatedAt: new Date('2024-01-14'),
-        },
-        {
-          _id: '3',
-          name: 'Bob Johnson',
-          email: 'bob@inventorypro.com',
-          password: 'hashedpassword',
-          role: 'user',
-          permissions: ['read'],
-          branch: 'south',
-          isActive: false,
-          lastLogin: new Date('2024-01-10'),
-          createdAt: new Date('2024-01-10'),
-          updatedAt: new Date('2024-01-12'),
-        },
-        {
-          _id: '4',
-          name: 'Alice Brown',
-          email: 'alice@inventorypro.com',
-          password: 'hashedpassword',
-          role: 'admin',
-          permissions: ['read', 'write', 'delete', 'admin'],
-          branch: 'main',
-          isActive: true,
-          lastLogin: new Date('2024-01-15'),
-          createdAt: new Date('2024-01-08'),
-          updatedAt: new Date('2024-01-15'),
-        },
-      ];
-
-      setUsers(mockUsers);
+      // Real API call
+      const response = await apiService.users.getAll();
+      if (response.data.success) {
+        setUsers(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch users');
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -104,7 +54,7 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = (Array.isArray(users) ? users : []).filter(user => {
     const matchesSearch = 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -118,32 +68,31 @@ export default function UsersPage() {
     return role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
   };
 
-  const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-  };
 
   const handleCreateUser = async () => {
     try {
-      // Mock API call
+      // Real API call
       const userData = {
         ...newUser,
         permissions: newUser.role === 'admin' ? ['read', 'write', 'delete', 'admin'] : ['read', 'write'],
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
       
-      console.log('Creating user:', userData);
-      setShowNewUser(false);
-      setNewUser({
-        name: '',
-        email: '',
-        password: '',
-        role: 'user',
-        branch: '',
-      });
-      // Refresh users list
-      fetchUsers();
+      const response = await apiService.users.create(userData);
+      if (response.data.success) {
+        setShowNewUser(false);
+        setNewUser({
+          name: '',
+          email: '',
+          password: '',
+          role: 'user',
+          branch: '',
+        });
+        // Refresh users list
+        fetchUsers();
+      } else {
+        throw new Error(response.data.message || 'Failed to create user');
+      }
     } catch (error) {
       console.error('Error creating user:', error);
     }
@@ -161,22 +110,65 @@ export default function UsersPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-              Users
-            </h1>
-            <p className="mt-2 text-sm sm:text-base" style={{color: 'hsl(var(--muted-foreground))'}}>
-              Manage user accounts and permissions
-            </p>
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-gray-900 dark:to-black rounded-xl p-4 sm:p-6 text-white shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                Users
+              </h1>
+              <p className="mt-2 text-blue-100 dark:text-gray-300 text-sm sm:text-base">
+                Manage user accounts and permissions
+              </p>
+            </div>
+            <Button 
+              onClick={() => setShowNewUser(true)} 
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-blue-400 w-full sm:w-auto"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Add User
+            </Button>
           </div>
-          <Button onClick={() => setShowNewUser(true)} className="w-full sm:w-auto">
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
         </div>
+
+        {/* Search and Filters */}
+        <Card className="hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Label htmlFor="search" className="text-sm font-semibold text-foreground">
+                  Search Users
+                </Label>
+                <div className="relative mt-2">
+                  <MagnifyingGlassIcon className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                  <Input
+                    id="search"
+                    placeholder="Search by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 sm:pl-12 h-10 sm:h-12 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                  />
+                </div>
+              </div>
+              <div className="sm:w-48">
+                <Label htmlFor="roleFilter" className="text-sm font-semibold text-foreground">
+                  Filter by Role
+                </Label>
+                <select
+                  id="roleFilter"
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="mt-2 w-full h-10 sm:h-12 px-3 sm:px-4 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="user">User</option>
+                </select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -191,7 +183,7 @@ export default function UsersPage() {
                     Total Users
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {users.length}
+                    {(Array.isArray(users) ? users : []).length}
                   </p>
                 </div>
               </div>
@@ -209,7 +201,7 @@ export default function UsersPage() {
                     Admins
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {users.filter(u => u.role === 'admin').length}
+                    {(Array.isArray(users) ? users : []).filter(u => u.role === 'admin').length}
                   </p>
                 </div>
               </div>
@@ -227,7 +219,7 @@ export default function UsersPage() {
                     Active Users
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {users.filter(u => u.isActive).length}
+                    {(Array.isArray(users) ? users : []).filter(u => u.isActive).length}
                   </p>
                 </div>
               </div>
@@ -245,7 +237,7 @@ export default function UsersPage() {
                     Regular Users
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {users.filter(u => u.role === 'user').length}
+                    {(Array.isArray(users) ? users : []).filter(u => u.role === 'user').length}
                   </p>
                 </div>
               </div>
@@ -367,86 +359,104 @@ export default function UsersPage() {
           </CardContent>
         </Card>
 
-        {/* Users List */}
-        <div className="space-y-4">
+        {/* Users Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredUsers.map((user) => (
-            <Card key={user._id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
+            <Card key={user._id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
+              <CardHeader className="pb-4 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                   <div className="flex-1">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center">
-                        <span className="text-white font-bold text-base sm:text-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                        <span className="text-white font-bold text-lg">
                           {user.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <h3 className="text-base sm:text-lg font-semibold">{user.name}</h3>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg sm:text-xl font-bold text-foreground group-hover:text-blue-600 transition-colors">
+                          {user.name}
+                        </CardTitle>
                         <div className="flex items-center gap-2 mt-1">
-                          <EnvelopeIcon className="h-4 w-4" style={{color: 'hsl(var(--muted-foreground))'}} />
-                          <span className="text-xs sm:text-sm" style={{color: 'hsl(var(--muted-foreground))'}}>
+                          <EnvelopeIcon className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-muted-foreground truncate">
                             {user.email}
                           </span>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                        {user.role}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(user.isActive)}`}>
-                        {user.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                      {user.branch && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {typeof user.branch === 'string' ? user.branch : user.branch.name}
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold self-start ${
+                    user.isActive 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  }`}>
+                    {user.isActive ? 'Active' : 'Inactive'}
+                  </div>
+                </div>
+                <CardDescription className="text-muted-foreground mt-2 text-sm">
+                  {user.branch ? (typeof user.branch === 'string' ? user.branch : user.branch.name) : 'No branch assigned'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 p-4 sm:p-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Role:</span>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Created:</span>
+                    <span className="text-sm font-semibold text-foreground">{formatDate(user.createdAt)}</span>
+                  </div>
+                  {user.lastLogin && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Last Login:</span>
+                      <span className="text-sm font-semibold text-foreground">{formatDate(user.lastLogin)}</span>
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Permissions:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {user.permissions.map((permission, index) => (
+                        <span key={index} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                          {permission}
                         </span>
-                      )}
-                    </div>
-
-                    <div className="mt-3 flex items-center gap-4 text-xs sm:text-sm" style={{color: 'hsl(var(--muted-foreground))'}}>
-                      <div className="flex items-center gap-1">
-                        <CalendarIcon className="h-4 w-4" />
-                        <span>Created: {formatDate(user.createdAt)}</span>
-                      </div>
-                      {user.lastLogin && (
-                        <div className="flex items-center gap-1">
-                          <span>Last login: {formatDate(user.lastLogin)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-2">
-                      <p className="text-sm font-medium">Permissions:</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {user.permissions.map((permission, index) => (
-                          <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                            {permission}
-                          </span>
-                        ))}
-                      </div>
+                      ))}
                     </div>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <PencilIcon className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-600">
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
+                </div>
+                <div className="mt-6 flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
+                  >
+                    <EyeIcon className="h-4 w-4 mr-1" />
+                    View
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200"
+                  >
+                    <PencilIcon className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {/* No Users Found */}
 
         {filteredUsers.length === 0 && (
           <Card>

@@ -2,7 +2,8 @@ import express from 'express';
 import {
     getSalesReport,
     getStockReport,
-    getPaymentReport
+    getPaymentReport,
+    getProfitLossReport
 } from '../controllers/report.controller.js';
 import { authenticateToken, requirePermission } from '../middleware/auth.js';
 
@@ -19,6 +20,9 @@ router.get('/stock', getStockReport);
 
 // GET /api/reports/payments - Get payment report
 router.get('/payments', getPaymentReport);
+
+// GET /api/reports/profit-loss - Get profit/loss report
+router.get('/profit-loss', getProfitLossReport);
 
 export default router;
 

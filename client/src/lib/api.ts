@@ -71,10 +71,10 @@ export const apiService = {
     getById: (id: string) =>
       axios.get(`/products/${id}`),
     
-    create: (productData: any) =>
+    create: (productData: Record<string, unknown>) =>
       axios.post('/products', productData),
     
-    update: (id: string, productData: any) =>
+    update: (id: string, productData: Record<string, unknown>) =>
       axios.put(`/products/${id}`, productData),
     
     delete: (id: string) =>
@@ -89,10 +89,10 @@ export const apiService = {
     getById: (id: string) =>
       axios.get(`/billing/invoices/${id}`),
     
-    create: (invoiceData: any) =>
+    create: (invoiceData: Record<string, unknown>) =>
       axios.post('/billing/invoices', invoiceData),
     
-    update: (id: string, invoiceData: any) =>
+    update: (id: string, invoiceData: Record<string, unknown>) =>
       axios.put(`/billing/invoices/${id}`, invoiceData),
     
     delete: (id: string) =>
@@ -122,10 +122,10 @@ export const apiService = {
     getById: (id: string) =>
       axios.get(`/branches/${id}`),
     
-    create: (branchData: any) =>
+    create: (branchData: Record<string, unknown>) =>
       axios.post('/branches', branchData),
     
-    update: (id: string, branchData: any) =>
+    update: (id: string, branchData: Record<string, unknown>) =>
       axios.put(`/branches/${id}`, branchData),
     
     delete: (id: string) =>
@@ -140,10 +140,10 @@ export const apiService = {
     getById: (id: string) =>
       axios.get(`/users/${id}`),
     
-    create: (userData: any) =>
+    create: (userData: Record<string, unknown>) =>
       axios.post('/users', userData),
     
-    update: (id: string, userData: any) =>
+    update: (id: string, userData: Record<string, unknown>) =>
       axios.put(`/users/${id}`, userData),
     
     delete: (id: string) =>
@@ -158,14 +158,39 @@ export const apiService = {
     getById: (id: string) =>
       axios.get(`/payments/${id}`),
     
-    create: (paymentData: any) =>
+    create: (paymentData: Record<string, unknown>) =>
       axios.post('/payments', paymentData),
     
-    update: (id: string, paymentData: any) =>
+    update: (id: string, paymentData: Record<string, unknown>) =>
       axios.put(`/payments/${id}`, paymentData),
     
     delete: (id: string) =>
       axios.delete(`/payments/${id}`),
+  },
+
+  // Product Transfer endpoints
+  transfers: {
+    create: (transferData: {
+      productId: string;
+      fromBranch: string;
+      toBranch: string;
+      quantity: number;
+      reason: string;
+      notes?: string;
+    }) =>
+      axios.post('/transfers', transferData),
+    
+    getAll: (params?: { page?: number; limit?: number; productId?: string; branch?: string }) =>
+      axios.get('/transfers', { params }),
+    
+    getById: (id: string) =>
+      axios.get(`/transfers/${id}`),
+  },
+
+  // Dashboard endpoints
+  dashboard: {
+    getData: (params?: { period?: string }) =>
+      axios.get('/dashboard', { params }),
   },
 };
 

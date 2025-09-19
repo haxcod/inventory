@@ -10,6 +10,7 @@ import { VoiceInput } from '../components/ui/VoiceInput';
 import { ModernInvoice } from '../components/ui/ModernInvoice';
 import type { Invoice, Product } from '../types';
 import { formatCurrency } from '../lib/utils';
+import apiService from '../lib/api';
 import { 
   PlusIcon, 
   MagnifyingGlassIcon, 
@@ -45,134 +46,23 @@ export default function BillingPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now
-      const mockInvoices: Invoice[] = [
-        {
-          _id: '1',
-          invoiceNumber: 'INV-001',
-          customer: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            phone: '+1234567890',
-            address: '123 Main St, City, State'
-          },
-          items: [
-            { product: 'iPhone 15 Pro', quantity: 1, price: 99999, total: 99999 },
-            { product: 'Case', quantity: 1, price: 2999, total: 2999 }
-          ],
-          subtotal: 102998,
-          tax: 12360,
-          discount: 0,
-          total: 115358,
-          paymentMethod: 'card',
-          paymentStatus: 'paid',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          _id: '2',
-          invoiceNumber: 'INV-002',
-          customer: {
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            phone: '+0987654321',
-            address: '456 Oak Ave, City, State'
-          },
-          items: [
-            { product: 'Samsung Galaxy S24', quantity: 1, price: 79999, total: 79999 }
-          ],
-          subtotal: 79999,
-          tax: 9600,
-          discount: 1000,
-          total: 88599,
-          paymentMethod: 'upi',
-          paymentStatus: 'pending',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
+      // Real API calls
+      const [invoicesResponse, productsResponse] = await Promise.all([
+        apiService.invoices.getAll(),
+        apiService.products.getAll()
+      ]);
 
-      const mockProducts: Product[] = [
-        {
-          _id: '1',
-          name: 'iPhone 15 Pro',
-          sku: 'IPH15P-001',
-          qrCode: 'IPH15P-001',
-          price: 99999,
-          costPrice: 80000,
-          stock: 25,
-          minStock: 5,
-          maxStock: 50,
-          category: 'Electronics',
-          brand: 'Apple',
-          unit: 'pieces',
-          branch: 'main',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          _id: '2',
-          name: 'Samsung Galaxy S24',
-          sku: 'SGS24-001',
-          qrCode: 'SGS24-001',
-          price: 79999,
-          costPrice: 65000,
-          stock: 15,
-          minStock: 5,
-          maxStock: 60,
-          category: 'Electronics',
-          brand: 'Samsung',
-          unit: 'pieces',
-          branch: 'main',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          _id: '3',
-          name: 'MacBook Pro M3',
-          sku: 'MBP-M3-001',
-          qrCode: 'MBP-M3-001',
-          price: 149999,
-          costPrice: 120000,
-          stock: 8,
-          minStock: 2,
-          maxStock: 20,
-          category: 'Electronics',
-          brand: 'Apple',
-          unit: 'pieces',
-          branch: 'main',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          _id: '4',
-          name: 'Dell XPS 13',
-          sku: 'DXP13-001',
-          qrCode: 'DXP13-001',
-          price: 89999,
-          costPrice: 70000,
-          stock: 12,
-          minStock: 3,
-          maxStock: 25,
-          category: 'Electronics',
-          brand: 'Dell',
-          unit: 'pieces',
-          branch: 'main',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
+      if (invoicesResponse.data.success) {
+        setInvoices(invoicesResponse.data.data);
+      } else {
+        throw new Error(invoicesResponse.data.message || 'Failed to fetch invoices');
+      }
 
-      setInvoices(mockInvoices);
-      setProducts(mockProducts);
+      if (productsResponse.data.success) {
+        setProducts(productsResponse.data.data);
+      } else {
+        throw new Error(productsResponse.data.message || 'Failed to fetch products');
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -180,7 +70,7 @@ export default function BillingPage() {
     }
   };
 
-  const filteredInvoices = invoices.filter(invoice =>
+  const filteredInvoices = (Array.isArray(invoices) ? invoices : []).filter(invoice =>
     invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase())

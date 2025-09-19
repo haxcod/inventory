@@ -8,6 +8,7 @@ import { Select } from '../components/ui/Select';
 import type { SelectOption } from '../components/ui/Select';
 import type { Invoice } from '../types';
 import { formatCurrency, formatDate } from '../lib/utils';
+import apiService from '../lib/api';
 import { 
   MagnifyingGlassIcon, 
   DocumentTextIcon,
@@ -46,81 +47,13 @@ export default function InvoicesPage() {
   const fetchInvoices = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now
-      const mockInvoices: Invoice[] = [
-        {
-          _id: '1',
-          invoiceNumber: 'INV-001',
-          customer: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            phone: '+1234567890',
-            address: '123 Main St, City, State'
-          },
-          items: [
-            { product: 'iPhone 15 Pro', quantity: 1, price: 99999, total: 99999 },
-            { product: 'Case', quantity: 1, price: 2999, total: 2999 }
-          ],
-          subtotal: 1029980, // 10.3L
-          tax: 123600, // 1.2L
-          discount: 0,
-          total: 1153580, // 11.5L
-          paymentMethod: 'card',
-          paymentStatus: 'paid',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15'),
-        },
-        {
-          _id: '2',
-          invoiceNumber: 'INV-002',
-          customer: {
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            phone: '+0987654321',
-            address: '456 Oak Ave, City, State'
-          },
-          items: [
-            { product: 'Samsung Galaxy S24', quantity: 1, price: 79999, total: 79999 }
-          ],
-          subtotal: 799990, // 8L
-          tax: 96000, // 96k
-          discount: 10000, // 10k
-          total: 885990, // 8.9L
-          paymentMethod: 'upi',
-          paymentStatus: 'pending',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-14'),
-          updatedAt: new Date('2024-01-14'),
-        },
-        {
-          _id: '3',
-          invoiceNumber: 'INV-003',
-          customer: {
-            name: 'Bob Johnson',
-            email: 'bob@example.com',
-            phone: '+1122334455',
-            address: '789 Pine St, City, State'
-          },
-          items: [
-            { product: 'MacBook Pro', quantity: 1, price: 199999, total: 199999 }
-          ],
-          subtotal: 199999,
-          tax: 24000,
-          discount: 5000,
-          total: 218999,
-          paymentMethod: 'bank_transfer',
-          paymentStatus: 'partial',
-          branch: 'main',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-13'),
-          updatedAt: new Date('2024-01-13'),
-        },
-      ];
-
-      setInvoices(mockInvoices);
+      // Real API call
+      const response = await apiService.invoices.getAll();
+      if (response.data.success) {
+        setInvoices(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch invoices');
+      }
     } catch (error) {
       console.error('Error fetching invoices:', error);
     } finally {
@@ -128,7 +61,7 @@ export default function InvoicesPage() {
     }
   };
 
-  const filteredInvoices = invoices.filter(invoice => {
+  const filteredInvoices = (Array.isArray(invoices) ? invoices : []).filter(invoice => {
     const matchesSearch = 
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -214,7 +147,7 @@ export default function InvoicesPage() {
                       Total Invoices
                     </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {invoices.length}
+                      {(Array.isArray(invoices) ? invoices : []).length}
                     </p>
                   </div>
                 </div>
@@ -237,7 +170,7 @@ export default function InvoicesPage() {
                       Total Amount
                     </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {formatCurrency(invoices.reduce((sum, inv) => sum + inv.total, 0))}
+                      {formatCurrency((Array.isArray(invoices) ? invoices : []).reduce((sum, inv) => sum + inv.total, 0))}
                     </p>
                   </div>
                 </div>
@@ -260,7 +193,7 @@ export default function InvoicesPage() {
                       Pending
                     </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {invoices.filter(inv => inv.paymentStatus === 'pending').length}
+                      {(Array.isArray(invoices) ? invoices : []).filter(inv => inv.paymentStatus === 'pending').length}
                     </p>
                   </div>
                 </div>
@@ -283,7 +216,7 @@ export default function InvoicesPage() {
                       Paid
                     </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                      {invoices.filter(inv => inv.paymentStatus === 'paid').length}
+                      {(Array.isArray(invoices) ? invoices : []).filter(inv => inv.paymentStatus === 'paid').length}
                     </p>
                   </div>
                 </div>

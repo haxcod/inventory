@@ -8,6 +8,7 @@ import { Select } from '../components/ui/Select';
 import type { SelectOption } from '../components/ui/Select';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import apiService from '../lib/api';
 import { 
   CogIcon,
   UserIcon,
@@ -91,10 +92,15 @@ export default function SettingsPage() {
     setIsLoading(true);
     
     try {
-      // Mock API call
-      console.log('Updating profile:', profileData);
-      toast.success('Profile updated successfully');
+      // Real API call
+      const response = await apiService.users.update(user?._id || '', profileData);
+      if (response.data.success) {
+        toast.success('Profile updated successfully');
+      } else {
+        throw new Error(response.data.message || 'Failed to update profile');
+      }
     } catch (error) {
+      console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
     } finally {
       setIsLoading(false);
@@ -112,15 +118,23 @@ export default function SettingsPage() {
     setIsLoading(true);
     
     try {
-      // Mock API call
-      console.log('Changing password');
-      toast.success('Password changed successfully');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+      // Real API call
+      const response = await apiService.users.update(user?._id || '', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
       });
+      if (response.data.success) {
+        toast.success('Password changed successfully');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      } else {
+        throw new Error(response.data.message || 'Failed to change password');
+      }
     } catch (error) {
+      console.error('Error changing password:', error);
       toast.error('Failed to change password');
     } finally {
       setIsLoading(false);
@@ -131,10 +145,17 @@ export default function SettingsPage() {
     setIsLoading(true);
     
     try {
-      // Mock API call
-      console.log('Updating notifications:', notificationSettings);
-      toast.success('Notification settings updated');
+      // Real API call
+      const response = await apiService.users.update(user?._id || '', {
+        preferences: { notifications: notificationSettings }
+      });
+      if (response.data.success) {
+        toast.success('Notification settings updated');
+      } else {
+        throw new Error(response.data.message || 'Failed to update notification settings');
+      }
     } catch (error) {
+      console.error('Error updating notifications:', error);
       toast.error('Failed to update notifications');
     } finally {
       setIsLoading(false);
@@ -145,10 +166,17 @@ export default function SettingsPage() {
     setIsLoading(true);
     
     try {
-      // Mock API call
-      console.log('Updating system settings:', systemSettings);
-      toast.success('System settings updated');
+      // Real API call
+      const response = await apiService.users.update(user?._id || '', {
+        systemSettings: systemSettings
+      });
+      if (response.data.success) {
+        toast.success('System settings updated');
+      } else {
+        throw new Error(response.data.message || 'Failed to update system settings');
+      }
     } catch (error) {
+      console.error('Error updating system settings:', error);
       toast.error('Failed to update system settings');
     } finally {
       setIsLoading(false);
