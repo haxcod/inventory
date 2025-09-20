@@ -246,44 +246,6 @@ export const apiService = {
     },
   },
 
-  // Reports endpoints
-  reports: {
-    sales: async (params?: { period?: string; startDate?: string; endDate?: string; branch?: string }) => {
-      try {
-        const response = await axios.get('/reports/sales', { params });
-        return response;
-      } catch (error) {
-        throw handleApiError(error, false);
-      }
-    },
-    
-    stock: async (params?: { branch?: string; category?: string }) => {
-      try {
-        const response = await axios.get('/reports/stock', { params });
-        return response;
-      } catch (error) {
-        throw handleApiError(error, false);
-      }
-    },
-    
-    payments: async (params?: { period?: string; startDate?: string; endDate?: string; branch?: string }) => {
-      try {
-        const response = await axios.get('/reports/payments', { params });
-        return response;
-      } catch (error) {
-        throw handleApiError(error, false);
-      }
-    },
-    
-    profitLoss: async (params?: { startDate?: string; endDate?: string; branch?: string }) => {
-      try {
-        const response = await axios.get('/reports/profit-loss', { params });
-        return response;
-      } catch (error) {
-        throw handleApiError(error, false);
-      }
-    },
-  },
 
   // Branches endpoints
   branches: {
@@ -471,6 +433,45 @@ export const apiService = {
     getData: async (params?: { period?: string }) => {
       const response = await axios.get('/dashboard', { params });
       return response;
+    },
+  },
+
+  // Report endpoints
+  reports: {
+    sales: async (params?: { dateFrom?: string; dateTo?: string; branch?: string }) => {
+      try {
+        const response = await axios.get('/reports/sales', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
+    
+    stock: async (params?: { branch?: string; category?: string }) => {
+      try {
+        const response = await axios.get('/reports/stock', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
+    
+    payments: async (params?: { dateFrom?: string; dateTo?: string; branch?: string }) => {
+      try {
+        const response = await axios.get('/reports/payments', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
+    
+    profitLoss: async (params?: { startDate?: string; endDate?: string; branch?: string }) => {
+      try {
+        const response = await axios.get('/reports/profit-loss', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
     },
   },
 };

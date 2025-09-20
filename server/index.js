@@ -15,6 +15,7 @@ import billingRoutes from './routes/billing.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import transferRoutes from './routes/transfer.routes.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -62,6 +63,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/transfers', transferRoutes);
 
 // 404 handler - catch all routes that don't match above
 app.use((req, res) => {

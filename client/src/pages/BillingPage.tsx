@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -23,10 +23,32 @@ import {
   DocumentTextIcon,
   ComputerDesktopIcon,
   TrashIcon,
-  XMarkIcon
+  XMarkIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
+interface InvoiceItem {
+  product: string;
+  productName?: string;
+  quantity: number;
+  price: number;
+  total: number;
+}
+
+interface NewInvoiceData {
+  customer: { 
+    name: string; 
+    email: string; 
+    phone: string; 
+    address: string; 
+  };
+  items: InvoiceItem[];
+  paymentMethod: 'cash' | 'card' | 'upi' | 'bank_transfer';
+  notes: string;
+}
+
 export default function BillingPage() {
+  // State management
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,166 +58,371 @@ export default function BillingPage() {
   const [showVoiceInput, setShowVoiceInput] = useState(false);
   const [showModernInvoice, setShowModernInvoice] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [newInvoice, setNewInvoice] = useState({
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productQuantity, setProductQuantity] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+
+  const [newInvoice, setNewInvoice] = useState<NewInvoiceData>({
     customer: { name: '', email: '', phone: '', address: '' },
-    items: [] as Array<{product: string, quantity: number, price: number, total: number}>,
-    paymentMethod: 'cash' as 'cash' | 'card' | 'upi' | 'bank_transfer',
+    items: [],
+    paymentMethod: 'cash',
     notes: '',
   });
 
-  // Use API hooks and confirmations
+  // Hooks
   const { showError, confirmDelete } = useConfirmations();
-  
+
+  // API hooks with proper error handling
   const {
     loading: isLoadingInvoices,
+    error: invoicesError,
     execute: fetchInvoices
-  } = useApiList<any>(apiService.invoices.getAll, {
+  } = useApiList<any>(apiService.invoices?.getAll || (() => Promise.resolve([])), {
     onSuccess: (data) => {
-      setInvoices((data as any)?.invoices || []);
+      try {
+        console.log('Invoices API Response:', data);
+        
+        // Handle different response structures
+        let invoicesList: Invoice[] = [];
+        
+        if (data?.data?.invoices) {
+          invoicesList = data.data.invoices;
+        } else if (data?.invoices) {
+          invoicesList = data.invoices;
+        } else if (Array.isArray(data)) {
+          invoicesList = data;
+        } else if (data?.data && Array.isArray(data.data)) {
+          invoicesList = data.data;
+        }
+
+        // Ensure each invoice has required properties
+        const processedInvoices = invoicesList.map((invoice: any) => ({
+          ...invoice,
+          _id: invoice._id || invoice.id,
+          invoiceNumber: invoice.invoiceNumber || `INV-${invoice._id?.slice(-6) || Math.random().toString(36).substr(2, 6)}`,
+          customer: invoice.customer || { name: 'Unknown Customer' },
+          items: invoice.items || [],
+          total: invoice.total || 0,
+          paymentMethod: invoice.paymentMethod || 'cash',
+          status: invoice.status || 'pending',
+          createdAt: invoice.createdAt || new Date().toISOString(),
+        }));
+
+        setInvoices(processedInvoices);
+        setError(null);
+      } catch (error) {
+        console.error('Error processing invoices:', error);
+        setError('Failed to process invoice data');
+        setInvoices([]);
+      }
     },
-    onError: () => {
-      showError('Failed to load invoices');
+    onError: (error) => {
+      console.error('Failed to load invoices:', error);
+      setError('Failed to load invoices. Please try again.');
+      setInvoices([]);
     }
   });
 
   const {
     loading: isLoadingProducts,
+    error: productsError,
     execute: fetchProducts
-  } = useApiList<any>(apiService.products.getAll, {
+  } = useApiList<any>(apiService.products?.getAll || (() => Promise.resolve([])), {
     onSuccess: (data) => {
-      setProducts((data as any)?.products || []);
+      try {
+        console.log('Products API Response:', data);
+        
+        // Handle different response structures
+        let productsList: Product[] = [];
+        
+        if (data?.data?.products) {
+          productsList = data.data.products;
+        } else if (data?.products) {
+          productsList = data.products;
+        } else if (Array.isArray(data)) {
+          productsList = data;
+        } else if (data?.data && Array.isArray(data.data)) {
+          productsList = data.data;
+        }
+
+        // Ensure each product has required properties
+        const processedProducts = productsList.map((product: any) => ({
+          ...product,
+          _id: product._id || product.id,
+          name: product.name || 'Unnamed Product',
+          price: typeof product.price === 'number' ? product.price : 0,
+          stock: typeof product.stock === 'number' ? product.stock : 0,
+        }));
+
+        setProducts(processedProducts);
+        setError(null);
+      } catch (error) {
+        console.error('Error processing products:', error);
+        setError('Failed to process product data');
+        setProducts([]);
+      }
     },
-    onError: () => {
-      showError('Failed to load products');
+    onError: (error) => {
+      console.error('Failed to load products:', error);
+      setError('Failed to load products. Please try again.');
+      setProducts([]);
     }
   });
 
   const {
     loading: isCreatingInvoice,
     execute: createInvoice
-  } = useApiCreate<Invoice>(apiService.invoices.create, {
-    onSuccess: () => {
+  } = useApiCreate<Invoice>(apiService.invoices?.create || (() => Promise.resolve({} as Invoice)), {
+    onSuccess: (data) => {
+      console.log('Invoice created:', data);
       setShowNewInvoice(false);
-      setNewInvoice({
-        customer: { name: '', email: '', phone: '', address: '' },
-        items: [],
-        paymentMethod: 'cash',
-        notes: '',
-      });
+      resetNewInvoiceForm();
       fetchInvoices();
+      // Show success message if needed
     },
-    onError: () => {
-      showError('Failed to create invoice');
+    onError: (error) => {
+      console.error('Failed to create invoice:', error);
+      showError('Failed to create invoice. Please try again.');
     }
   });
 
   const {
     loading: isDeletingInvoice,
     execute: deleteInvoice
-  } = useApiDelete(apiService.invoices.delete, {
+  } = useApiDelete(apiService.invoices?.delete || (() => Promise.resolve()), {
     onSuccess: () => {
       fetchInvoices();
+      // Show success message if needed
     },
-    onError: () => {
-      showError('Failed to delete invoice');
+    onError: (error) => {
+      console.error('Failed to delete invoice:', error);
+      showError('Failed to delete invoice. Please try again.');
     }
   });
 
-  // Load data on component mount
+  // Utility functions
+  const resetNewInvoiceForm = useCallback(() => {
+    setNewInvoice({
+      customer: { name: '', email: '', phone: '', address: '' },
+      items: [],
+      paymentMethod: 'cash',
+      notes: '',
+    });
+    setSelectedProduct(null);
+    setProductQuantity(1);
+  }, []);
+
+  // Load data on component mount with error handling
   useEffect(() => {
-    fetchInvoices();
-    fetchProducts();
+    const loadData = async () => {
+      try {
+        setError(null);
+        await Promise.all([
+          fetchInvoices(),
+          fetchProducts()
+        ]);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        setError('Failed to load data. Please refresh the page.');
+      }
+    };
+
+    loadData();
   }, [fetchInvoices, fetchProducts]);
 
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [productQuantity, setProductQuantity] = useState(1);
-
-  const handleAddProduct = () => {
-    if (!selectedProduct) return;
+  // Product handling functions
+  const handleAddProduct = useCallback(() => {
+    if (!selectedProduct || productQuantity <= 0) {
+      showError('Please select a product and enter a valid quantity');
+      return;
+    }
 
     const existingItemIndex = newInvoice.items.findIndex(
       item => item.product === selectedProduct._id
     );
 
+    const updatedItems = [...newInvoice.items];
+
     if (existingItemIndex >= 0) {
-      const updatedItems = [...newInvoice.items];
-      updatedItems[existingItemIndex].quantity += productQuantity;
-      updatedItems[existingItemIndex].total = updatedItems[existingItemIndex].quantity * selectedProduct.price;
-      setNewInvoice(prev => ({ ...prev, items: updatedItems }));
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        quantity: updatedItems[existingItemIndex].quantity + productQuantity,
+        total: (updatedItems[existingItemIndex].quantity + productQuantity) * selectedProduct.price,
+      };
     } else {
-      const newItem = {
+      const newItem: InvoiceItem = {
         product: selectedProduct._id,
+        productName: selectedProduct.name,
         quantity: productQuantity,
         price: selectedProduct.price,
         total: productQuantity * selectedProduct.price,
       };
-      setNewInvoice(prev => ({
-        ...prev,
-        items: [...prev.items, newItem]
-      }));
+      updatedItems.push(newItem);
     }
 
+    setNewInvoice(prev => ({ ...prev, items: updatedItems }));
     setSelectedProduct(null);
     setProductQuantity(1);
-  };
+  }, [selectedProduct, productQuantity, newInvoice.items, showError]);
 
-  const handleRemoveItem = (index: number) => {
+  const handleRemoveItem = useCallback((index: number) => {
     const updatedItems = newInvoice.items.filter((_, i) => i !== index);
     setNewInvoice(prev => ({ ...prev, items: updatedItems }));
-  };
+  }, [newInvoice.items]);
 
-  const handleCreateInvoice = async () => {
-    if (newInvoice.items.length === 0) {
-      showError('Please add at least one product');
-      return;
-    }
-
-    if (!newInvoice.customer.name) {
-      showError('Please enter customer name');
-      return;
-    }
-
-    const invoiceData = {
-      ...newInvoice,
-      total: newInvoice.items.reduce((sum, item) => sum + item.total, 0),
-      status: 'pending' as const,
-    };
-
-    await createInvoice(invoiceData);
-  };
-
-  const handleDeleteInvoice = async (invoice: Invoice) => {
-    confirmDelete(
-      `invoice #${invoice.invoiceNumber}`,
-      async () => {
-        await deleteInvoice(invoice._id);
+  // Invoice creation with validation
+  const handleCreateInvoice = useCallback(async () => {
+    try {
+      // Validation
+      if (newInvoice.items.length === 0) {
+        showError('Please add at least one product');
+        return;
       }
-    );
-  };
 
-  const handleQRScan = (data: string) => {
+      if (!newInvoice.customer.name.trim()) {
+        showError('Please enter customer name');
+        return;
+      }
+
+      // Calculate total
+      const total = newInvoice.items.reduce((sum, item) => sum + item.total, 0);
+
+      const invoiceData = {
+        ...newInvoice,
+        total,
+        status: 'pending' as const,
+        createdAt: new Date().toISOString(),
+      };
+
+      console.log('Creating invoice with data:', invoiceData);
+      await createInvoice(invoiceData);
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      showError('Failed to create invoice. Please try again.');
+    }
+  }, [newInvoice, createInvoice, showError]);
+
+  // Invoice deletion with confirmation
+  const handleDeleteInvoice = useCallback(async (invoice: Invoice) => {
+    try {
+      await confirmDelete(
+        `invoice #${invoice.invoiceNumber}`,
+        async () => {
+          await deleteInvoice(invoice._id);
+        }
+      );
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      showError('Failed to delete invoice. Please try again.');
+    }
+  }, [confirmDelete, deleteInvoice, showError]);
+
+  // QR and Voice handlers
+  const handleQRScan = useCallback((data: string) => {
     console.log('QR Code scanned:', data);
-    // Handle QR code data
-  };
+    try {
+      // Try to parse as JSON for product data
+      const parsedData = JSON.parse(data);
+      if (parsedData.productId) {
+        const product = products.find(p => p._id === parsedData.productId);
+        if (product) {
+          setSelectedProduct(product);
+          if (parsedData.quantity) {
+            setProductQuantity(parsedData.quantity);
+          }
+        }
+      }
+    } catch {
+      // If not JSON, treat as product search
+      const product = products.find(p => 
+        p.name.toLowerCase().includes(data.toLowerCase()) ||
+        p._id === data
+      );
+      if (product) {
+        setSelectedProduct(product);
+      }
+    }
+  }, [products]);
 
-  const handleVoiceInput = (text: string) => {
+  const handleVoiceInput = useCallback((text: string) => {
     console.log('Voice input:', text);
-    // Handle voice input
-  };
+    // Simple voice command processing
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('new invoice')) {
+      setShowNewInvoice(true);
+    } else if (lowerText.includes('search')) {
+      // Extract search term after "search"
+      const searchIndex = lowerText.indexOf('search') + 6;
+      const searchTerm = text.substring(searchIndex).trim();
+      if (searchTerm) {
+        setSearchTerm(searchTerm);
+      }
+    } else {
+      // Try to find product by name
+      const product = products.find(p => 
+        p.name.toLowerCase().includes(lowerText)
+      );
+      if (product) {
+        setSelectedProduct(product);
+      }
+    }
+  }, [products]);
 
+  // Filtered data
   const filteredInvoices = invoices.filter(invoice =>
     invoice.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+  const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0);
 
-  // Show loading if data is not yet available
-  if (isLoadingInvoices || !invoices || isLoadingProducts || !products) {
+  // Get product name for display
+  const getProductName = useCallback((productId: string) => {
+    const product = products.find(p => p._id === productId);
+    return product?.name || 'Unknown Product';
+  }, [products]);
+
+  // Loading state
+  if (isLoadingInvoices || isLoadingProducts) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading billing data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error || invoicesError || productsError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Card className="p-6 max-w-md w-full">
+            <CardContent className="text-center">
+              <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Something went wrong
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {error || invoicesError || productsError || 'Failed to load data'}
+              </p>
+              <Button 
+                onClick={() => {
+                  setError(null);
+                  fetchInvoices();
+                  fetchProducts();
+                }}
+                className="w-full"
+              >
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </DashboardLayout>
     );
@@ -260,7 +487,9 @@ export default function BillingPage() {
           <CardContent className="p-6">
             <div className="flex gap-4">
               <div className="flex-1">
-                <Label htmlFor="search" className="text-xs sm:text-sm font-semibold text-foreground">Search Invoices</Label>
+                <Label htmlFor="search" className="text-xs sm:text-sm font-semibold text-foreground">
+                  Search Invoices
+                </Label>
                 <div className="relative mt-1">
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
@@ -285,7 +514,9 @@ export default function BillingPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Invoices</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-blue-900 dark:text-blue-100">{filteredInvoices.length}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-900 dark:text-blue-100">
+                    {filteredInvoices.length}
+                  </p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                   <DocumentTextIcon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
@@ -299,7 +530,9 @@ export default function BillingPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Amount</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-green-900 dark:text-green-100">{formatCurrency(totalAmount)}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-900 dark:text-green-100">
+                    {formatCurrency(totalAmount)}
+                  </p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
                   <ShoppingCartIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
@@ -314,7 +547,7 @@ export default function BillingPage() {
                 <div>
                   <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Items</p>
                   <p className="text-2xl sm:text-3xl font-bold text-purple-900 dark:text-purple-100">
-                    {filteredInvoices.reduce((sum, inv) => sum + inv.items.length, 0)}
+                    {filteredInvoices.reduce((sum, inv) => sum + (inv.items?.length || 0), 0)}
                   </p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
@@ -330,7 +563,10 @@ export default function BillingPage() {
                 <div>
                   <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Avg Amount</p>
                   <p className="text-2xl sm:text-3xl font-bold text-orange-900 dark:text-orange-100">
-                    {filteredInvoices.length > 0 ? formatCurrency(totalAmount / filteredInvoices.length) : formatCurrency(0)}
+                    {filteredInvoices.length > 0 
+                      ? formatCurrency(totalAmount / filteredInvoices.length) 
+                      : formatCurrency(0)
+                    }
                   </p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
@@ -348,9 +584,14 @@ export default function BillingPage() {
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                 <DocumentTextIcon className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">No Invoices Found</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No Invoices Found
+              </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm sm:text-base">
-                {searchTerm ? 'No invoices match your search criteria.' : 'Get started by creating your first invoice.'}
+                {searchTerm 
+                  ? 'No invoices match your search criteria.' 
+                  : 'Get started by creating your first invoice.'
+                }
               </p>
               {!searchTerm && (
                 <Button 
@@ -378,8 +619,14 @@ export default function BillingPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                        Invoice
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        invoice.status === 'paid' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : invoice.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                      }`}>
+                        {invoice.status?.charAt(0).toUpperCase() + invoice.status?.slice(1) || 'Pending'}
                       </span>
                     </div>
                   </div>
@@ -388,21 +635,29 @@ export default function BillingPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500 dark:text-gray-400">Total:</span>
                       <span className="font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(invoice.total)}
+                        {formatCurrency(invoice.total || 0)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500 dark:text-gray-400">Date:</span>
                       <span className="text-gray-900 dark:text-white">
-                        {new Date(invoice.createdAt).toLocaleDateString()}
+                        {new Date(invoice.createdAt || new Date()).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500 dark:text-gray-400">Payment:</span>
                       <span className="text-gray-900 dark:text-white capitalize">
-                        {invoice.paymentMethod.replace('_', ' ')}
+                        {(invoice.paymentMethod || 'cash').replace('_', ' ')}
                       </span>
                     </div>
+                    {invoice.items && invoice.items.length > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Items:</span>
+                        <span className="text-gray-900 dark:text-white">
+                          {invoice.items.length} item{invoice.items.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex gap-2">
@@ -483,7 +738,7 @@ export default function BillingPage() {
                     
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="customerName">Customer Name</Label>
+                        <Label htmlFor="customerName">Customer Name *</Label>
                         <Input
                           id="customerName"
                           value={newInvoice.customer.name}
@@ -492,6 +747,7 @@ export default function BillingPage() {
                             customer: { ...prev.customer, name: e.target.value }
                           }))}
                           placeholder="Enter customer name"
+                          className={!newInvoice.customer.name.trim() ? 'border-red-300 focus:border-red-500' : ''}
                         />
                       </div>
                       
@@ -534,6 +790,38 @@ export default function BillingPage() {
                           placeholder="Enter address"
                         />
                       </div>
+
+                      <div>
+                        <Label htmlFor="paymentMethod">Payment Method</Label>
+                        <Select
+                          id="paymentMethod"
+                          options={[
+                            { value: 'cash', label: 'Cash' },
+                            { value: 'card', label: 'Card' },
+                            { value: 'upi', label: 'UPI' },
+                            { value: 'bank_transfer', label: 'Bank Transfer' }
+                          ]}
+                          value={newInvoice.paymentMethod}
+                          onChange={(value) => setNewInvoice(prev => ({
+                            ...prev,
+                            paymentMethod: value as 'cash' | 'card' | 'upi' | 'bank_transfer'
+                          }))}
+                          placeholder="Select payment method"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="notes">Notes</Label>
+                        <Input
+                          id="notes"
+                          value={newInvoice.notes}
+                          onChange={(e) => setNewInvoice(prev => ({
+                            ...prev,
+                            notes: e.target.value
+                          }))}
+                          placeholder="Additional notes (optional)"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -556,7 +844,7 @@ export default function BillingPage() {
                               { value: '', label: 'Choose a product' },
                               ...products.map(product => ({
                                 value: product._id,
-                                label: `${product.name} - ${formatCurrency(product.price)}`
+                                label: `${product.name} - ${formatCurrency(product.price)}${product.stock !== undefined ? ` (Stock: ${product.stock})` : ''}`
                               }))
                             ]}
                             value={selectedProduct?._id || ''}
@@ -565,7 +853,6 @@ export default function BillingPage() {
                               setSelectedProduct(product || null);
                             }}
                             placeholder="Choose a product"
-                            className="mt-2"
                           />
                         </div>
                         <div className="w-24">
@@ -574,62 +861,139 @@ export default function BillingPage() {
                             id="quantity"
                             type="number"
                             min="1"
+                            max={selectedProduct?.stock || undefined}
                             value={productQuantity}
-                            onChange={(e) => setProductQuantity(parseInt(e.target.value) || 1)}
+                            onChange={(e) => setProductQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                             placeholder="1"
                           />
                         </div>
                         <div className="flex items-end">
                           <Button
                             onClick={handleAddProduct}
-                            disabled={!selectedProduct}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
+                            disabled={!selectedProduct || productQuantity <= 0}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <PlusIcon className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                       
+                      {selectedProduct && (
+                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <strong>Selected:</strong> {selectedProduct.name}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <strong>Price:</strong> {formatCurrency(selectedProduct.price)} each
+                          </p>
+                          {selectedProduct.stock !== undefined && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <strong>Available:</strong> {selectedProduct.stock} units
+                            </p>
+                          )}
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <strong>Total:</strong> {formatCurrency(selectedProduct.price * productQuantity)}
+                          </p>
+                        </div>
+                      )}
+                      
                       {newInvoice.items.length > 0 && (
                         <div className="space-y-2">
-                          <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Added Items:</h4>
-                          {newInvoice.items.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                              <span className="text-sm">{item.product} x {item.quantity}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">{formatCurrency(item.total)}</span>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleRemoveItem(index)}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <TrashIcon className="h-3 w-3" />
-                                </Button>
+                          <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
+                            Added Items ({newInvoice.items.length}):
+                          </h4>
+                          <div className="max-h-40 overflow-y-auto space-y-2">
+                            {newInvoice.items.map((item, index) => (
+                              <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {item.productName || getProductName(item.product)}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {formatCurrency(item.price)} × {item.quantity}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {formatCurrency(item.total)}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRemoveItem(index)}
+                                    className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                                  >
+                                    <TrashIcon className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>
+                            ))}
+                          </div>
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-gray-900 dark:text-white">Total:</span>
+                              <span className="font-bold text-lg text-green-600 dark:text-green-400">
+                                {formatCurrency(newInvoice.items.reduce((sum, item) => sum + item.total, 0))}
+                              </span>
                             </div>
-                          ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {newInvoice.items.length === 0 && (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                          <ShoppingCartIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No items added yet</p>
+                          <p className="text-xs">Select a product above to get started</p>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 flex justify-end gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowNewInvoice(false)}
-                    className="px-6 py-2"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleCreateInvoice}
-                    disabled={isCreatingInvoice}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isCreatingInvoice ? 'Creating...' : 'Create Invoice'}
-                  </Button>
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <p>* Required fields</p>
+                      {newInvoice.items.length > 0 && (
+                        <p className="mt-1">
+                          {newInvoice.items.length} item{newInvoice.items.length > 1 ? 's' : ''} • 
+                          Total: <span className="font-semibold text-gray-900 dark:text-white">
+                            {formatCurrency(newInvoice.items.reduce((sum, item) => sum + item.total, 0))}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-3 w-full sm:w-auto">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowNewInvoice(false);
+                          resetNewInvoiceForm();
+                        }}
+                        className="flex-1 sm:flex-none px-6 py-2"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleCreateInvoice}
+                        disabled={isCreatingInvoice || newInvoice.items.length === 0 || !newInvoice.customer.name.trim()}
+                        className="flex-1 sm:flex-none bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isCreatingInvoice ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Creating...
+                          </div>
+                        ) : (
+                          <>
+                            <PlusIcon className="h-4 w-4 mr-2" />
+                            Create Invoice
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
