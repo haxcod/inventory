@@ -1,22 +1,39 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { 
-  ShoppingCartIcon, 
-  CubeIcon, 
-  CurrencyDollarIcon, 
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import {
+  ShoppingCartIcon,
+  CubeIcon,
+  CurrencyDollarIcon,
   ChartBarIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
-import { formatCurrency, formatNumber } from '../lib/utils';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { apiService } from '../lib/api';
-import { useApi } from '../hooks/useApi';
+} from "@heroicons/react/24/outline";
+import { formatCurrency, formatNumber } from "../lib/utils";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import { apiService } from "../lib/api";
+import { useApi } from "../hooks/useApi";
 
 interface DashboardStats {
   totalSales: number;
@@ -49,10 +66,10 @@ export default function DashboardPage() {
     data: dashboardData,
     loading: isLoading,
     error: dashboardError,
-    execute: fetchDashboardData
+    execute: fetchDashboardData,
   } = useApi(apiService.dashboard.getData, {
     onSuccess: (data: any) => {
-      console.log('Dashboard data received:', data);
+      console.log("Dashboard data received:", data);
       if (data?.stats) {
         setStats({
           totalSales: data.stats.totalSales || 0,
@@ -65,34 +82,38 @@ export default function DashboardPage() {
           revenueGrowth: data.stats.revenueGrowth || 0,
         });
       }
-      
+
       if (data?.salesData) {
-        setSalesData(data.salesData);
+        const cleaned = data.salesData.map((item, index) => ({
+          name: `${item.name},${index + 1}`, // e.g., "Sat #20"
+          sales: item.sales,
+        }));
+        setSalesData(cleaned);
       }
-      
+
       if (data?.productData) {
         setProductData(data.productData);
       }
     },
     onError: (error: string) => {
-      console.error('Dashboard data error:', error);
+      console.error("Dashboard data error:", error);
       // Set stats to null on error to show loading state
       setStats(null);
       setSalesData([]);
       setProductData([]);
-    }
+    },
   });
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchDashboardData({ period: 'monthly' });
+      fetchDashboardData({ period: "monthly" });
     }
   }, [isAuthenticated, fetchDashboardData]);
 
   // Fallback: Use dashboardData directly if onSuccess doesn't work
   useEffect(() => {
     if (dashboardData && !isLoading && !stats) {
-      console.log('Using dashboardData directly:', dashboardData);
+      console.log("Using dashboardData directly:", dashboardData);
       if (dashboardData?.stats) {
         setStats({
           totalSales: dashboardData.stats.totalSales || 0,
@@ -105,11 +126,11 @@ export default function DashboardPage() {
           revenueGrowth: dashboardData.stats.revenueGrowth || 0,
         });
       }
-      
+
       if (dashboardData?.salesData) {
         setSalesData(dashboardData.salesData);
       }
-      
+
       if (dashboardData?.productData) {
         setProductData(dashboardData.productData);
       }
@@ -120,7 +141,10 @@ export default function DashboardPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+          <div
+            className="animate-spin rounded-full h-16 w-16"
+            style={{ borderBottom: "2px solid hsl(var(--primary))" }}
+          ></div>
         </div>
       </DashboardLayout>
     );
@@ -133,10 +157,14 @@ export default function DashboardPage() {
           <Card className="p-8 text-center max-w-md">
             <CardContent>
               <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Dashboard</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{dashboardError}</p>
-              <Button 
-                onClick={() => fetchDashboardData({ period: 'monthly' })} 
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Error Loading Dashboard
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {dashboardError}
+              </p>
+              <Button
+                onClick={() => fetchDashboardData({ period: "monthly" })}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Try Again
@@ -150,40 +178,40 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      title: 'Total Sales',
+      title: "Total Sales",
       value: formatCurrency(stats.totalSales),
       growth: stats.salesGrowth,
       icon: ShoppingCartIcon,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100 dark:bg-green-900',
+      color: "text-green-600",
+      bgColor: "bg-green-100 dark:bg-green-900",
     },
     {
-      title: 'Total Products',
+      title: "Total Products",
       value: formatNumber(stats.totalProducts),
       growth: stats.productGrowth,
       icon: CubeIcon,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100 dark:bg-blue-900',
+      color: "text-blue-600",
+      bgColor: "bg-blue-100 dark:bg-blue-900",
     },
     {
-      title: 'Total Invoices',
+      title: "Total Invoices",
       value: formatNumber(stats.totalInvoices),
       growth: stats.invoiceGrowth,
       icon: ChartBarIcon,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100 dark:bg-purple-900',
+      color: "text-purple-600",
+      bgColor: "bg-purple-100 dark:bg-purple-900",
     },
     {
-      title: 'Total Revenue',
+      title: "Total Revenue",
       value: formatCurrency(stats.totalRevenue),
       growth: stats.revenueGrowth,
       icon: CurrencyDollarIcon,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100 dark:bg-orange-900',
+      color: "text-orange-600",
+      bgColor: "bg-orange-100 dark:bg-orange-900",
     },
   ];
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+  const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
 
   return (
     <DashboardLayout>
@@ -200,21 +228,32 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="text-left sm:text-right">
-              <p className="text-xs sm:text-sm text-blue-200 dark:text-gray-400">Last updated</p>
-              <p className="text-sm sm:text-lg font-semibold">{new Date().toLocaleTimeString()}</p>
+              <p className="text-xs sm:text-sm text-blue-200 dark:text-gray-400">
+                Last updated
+              </p>
+              <p className="text-sm sm:text-lg font-semibold">
+                {new Date().toLocaleTimeString()}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {statCards.map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+            <Card
+              key={index}
+              className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+            >
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start min-w-0 flex-1">
-                    <div className={`p-3 sm:p-4 rounded-xl ${stat.bgColor} dark:opacity-90 shadow-lg flex-shrink-0`}>
-                      <stat.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${stat.color}`} />
+                    <div
+                      className={`p-3 sm:p-4 rounded-xl ${stat.bgColor} dark:opacity-90 shadow-lg flex-shrink-0`}
+                    >
+                      <stat.icon
+                        className={`h-6 w-6 sm:h-8 sm:w-8 ${stat.color}`}
+                      />
                     </div>
                     <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                       <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -225,12 +264,14 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                      stat.growth > 0 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
+                  <div className="text-right hidden sm:flex-shrink-0 ml-2 sm:block">
+                    <div
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                        stat.growth > 0
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
                       {stat.growth > 0 ? (
                         <ArrowUpIcon className="h-3 w-3 mr-1 flex-shrink-0" />
                       ) : (
@@ -241,9 +282,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="mt-3 sm:mt-4">
-                  <p className="text-xs text-muted-foreground">
-                    vs last month
-                  </p>
+                  <p className="text-xs text-muted-foreground">vs last month</p>
                 </div>
               </CardContent>
             </Card>
@@ -254,11 +293,12 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Sales Chart */}
           <Card className="hover:shadow-lg transition-all duration-300">
-            
             <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-black p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Daily Sales</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl font-bold text-foreground">
+                    Daily Sales
+                  </CardTitle>
                   <CardDescription className="mt-1 text-muted-foreground text-sm">
                     Sales performance over the last 7 days
                   </CardDescription>
@@ -274,32 +314,35 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={salesData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="name" 
+                    <XAxis
+                      dataKey="name"
                       tick={{ fontSize: 12 }}
-                      axisLine={{ stroke: '#e0e0e0' }}
+                      axisLine={{ stroke: "#e0e0e0" }}
                     />
-                    <YAxis 
+                    <YAxis
                       tick={{ fontSize: 12 }}
-                      axisLine={{ stroke: '#e0e0e0' }}
+                      axisLine={{ stroke: "#e0e0e0" }}
                     />
-                    <Tooltip 
-                      formatter={(value: number) => [formatCurrency(value), 'Sales']}
+                    <Tooltip
+                      formatter={(value: number) => [
+                        formatCurrency(value),
+                        "Sales",
+                      ]}
                       labelFormatter={(label) => `Date: ${label}`}
                       contentStyle={{
-                        backgroundColor: '#fff',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        backgroundColor: "#fff",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                       }}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="sales" 
-                      stroke="#3B82F6" 
+                    <Line
+                      type="monotone"
+                      dataKey="sales"
+                      stroke="#3B82F6"
                       strokeWidth={3}
-                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+                      dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: "#3B82F6", strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -312,7 +355,9 @@ export default function DashboardPage() {
             <CardHeader className="pb-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-900 dark:to-black p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Product Categories</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl font-bold text-foreground">
+                    Product Categories
+                  </CardTitle>
                   <CardDescription className="mt-1 text-muted-foreground text-sm">
                     Distribution of products by category
                   </CardDescription>
@@ -330,23 +375,29 @@ export default function DashboardPage() {
                       data={productData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
+                      labelLine={true}
                       label={({ name, value }) => `${name}: ${value}`}
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="totalProducts"
                     >
                       {productData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => [`${value} products`, 'Count']}
+                    <Tooltip
+                      formatter={(value: number) => [
+                        `${value} products`,
+                        "Count",
+                      ]}
                       contentStyle={{
-                        backgroundColor: '#fff',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        backgroundColor: "#fff",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                       }}
                     />
                   </PieChart>
@@ -359,38 +410,48 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <Card className="hover:shadow-lg transition-all duration-300">
           <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
-            <CardTitle className="text-xl font-bold text-foreground">Quick Actions</CardTitle>
+            <CardTitle className="text-xl font-bold text-foreground">
+              Quick Actions
+            </CardTitle>
             <CardDescription className="mt-1 text-muted-foreground">
               Common tasks to get you started
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Button 
-                className="h-24 flex flex-col items-center justify-center space-y-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                onClick={() => navigate('/billing')}
+              <Button
+                className="h-24 flex flex-col items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                onClick={() => navigate("/billing")}
               >
                 <ShoppingCartIcon className="h-10 w-10" />
                 <span className="font-semibold text-lg">New Sale</span>
                 <span className="text-sm text-green-100">Create invoice</span>
               </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col items-center justify-center space-y-3 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                onClick={() => navigate('/products')}
+              <Button
+                variant="outline"
+                className="h-24 flex flex-col items-center justify-center border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                onClick={() => navigate("/products")}
               >
                 <CubeIcon className="h-10 w-10 text-blue-600" />
-                <span className="font-semibold text-lg text-blue-600">Add Product</span>
-                <span className="text-sm text-muted-foreground">Manage inventory</span>
+                <span className="font-semibold text-lg text-blue-600">
+                  Add Product
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Manage inventory
+                </span>
               </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col items-center justify-center space-y-3 border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                onClick={() => navigate('/reports')}
+              <Button
+                variant="outline"
+                className="h-24 flex flex-col items-center justify-center border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                onClick={() => navigate("/reports")}
               >
                 <ChartBarIcon className="h-10 w-10 text-purple-600" />
-                <span className="font-semibold text-lg text-purple-600">View Reports</span>
-                <span className="text-sm text-muted-foreground">Analytics & insights</span>
+                <span className="font-semibold text-lg text-purple-600">
+                  View Reports
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Analytics & insights
+                </span>
               </Button>
             </div>
           </CardContent>
