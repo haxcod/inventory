@@ -1,14 +1,17 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-require('dotenv').config();
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
 // Import models
-const User = require('./models/User');
-const Product = require('./models/Product');
-const Branch = require('./models/Branch');
-const Invoice = require('./models/Invoice');
-const Payment = require('./models/Payment');
-const StockMovement = require('./models/StockMovement');
+import User from './models/User.js';
+import Product from './models/Product.js';
+import Branch from './models/Branch.js';
+import Invoice from './models/Invoice.js';
+import Payment from './models/Payment.js';
+import StockMovement from './models/StockMovement.js';
+
+// Load environment variables
+dotenv.config();
 
 // Sample data
 const sampleBranches = [
@@ -166,12 +169,283 @@ const sampleProducts = [
     unit: 'pieces',
     branch: null, // Will be set to east branch
     isActive: true
+  },
+  {
+    name: 'Nike Air Max 270',
+    description: 'Comfortable running shoes',
+    sku: 'NAM270-001',
+    category: 'Footwear',
+    brand: 'Nike',
+    price: 12999,
+    costPrice: 9000,
+    stock: 50,
+    minStock: 15,
+    maxStock: 200,
+    unit: 'pairs',
+    branch: null, // Will be set to main branch
+    isActive: true
+  },
+  {
+    name: 'Adidas Ultraboost 22',
+    description: 'Premium running shoes with boost technology',
+    sku: 'AUB22-001',
+    category: 'Footwear',
+    brand: 'Adidas',
+    price: 15999,
+    costPrice: 12000,
+    stock: 30,
+    minStock: 8,
+    maxStock: 100,
+    unit: 'pairs',
+    branch: null, // Will be set to north branch
+    isActive: true
+  },
+  {
+    name: 'Levi\'s 501 Original Jeans',
+    description: 'Classic straight-fit jeans',
+    sku: 'L501-001',
+    category: 'Clothing',
+    brand: 'Levi\'s',
+    price: 4999,
+    costPrice: 3500,
+    stock: 75,
+    minStock: 20,
+    maxStock: 300,
+    unit: 'pieces',
+    branch: null, // Will be set to south branch
+    isActive: true
+  },
+  {
+    name: 'Uniqlo Heattech T-Shirt',
+    description: 'Thermal base layer t-shirt',
+    sku: 'UHT-001',
+    category: 'Clothing',
+    brand: 'Uniqlo',
+    price: 1999,
+    costPrice: 1200,
+    stock: 100,
+    minStock: 30,
+    maxStock: 500,
+    unit: 'pieces',
+    branch: null, // Will be set to east branch
+    isActive: true
+  },
+  {
+    name: 'KitchenAid Stand Mixer',
+    description: 'Professional stand mixer for baking',
+    sku: 'KSM-001',
+    category: 'Home & Kitchen',
+    brand: 'KitchenAid',
+    price: 45999,
+    costPrice: 35000,
+    stock: 8,
+    minStock: 2,
+    maxStock: 25,
+    unit: 'pieces',
+    branch: null, // Will be set to main branch
+    isActive: true
+  },
+  {
+    name: 'Instant Pot Duo 7-in-1',
+    description: 'Electric pressure cooker with multiple functions',
+    sku: 'IPD7-001',
+    category: 'Home & Kitchen',
+    brand: 'Instant Pot',
+    price: 12999,
+    costPrice: 9000,
+    stock: 15,
+    minStock: 5,
+    maxStock: 50,
+    unit: 'pieces',
+    branch: null, // Will be set to north branch
+    isActive: true
+  },
+  {
+    name: 'Dyson V15 Detect Vacuum',
+    description: 'Cordless vacuum with laser dust detection',
+    sku: 'DV15-001',
+    category: 'Home & Kitchen',
+    brand: 'Dyson',
+    price: 59999,
+    costPrice: 45000,
+    stock: 12,
+    minStock: 3,
+    maxStock: 30,
+    unit: 'pieces',
+    branch: null, // Will be set to south branch
+    isActive: true
+  }
+];
+
+const sampleInvoices = [
+  {
+    invoiceNumber: 'INV-001',
+    customer: {
+      name: 'John Doe',
+      email: 'john.doe@email.com',
+      phone: '+91-9876543210',
+      address: '123 Customer Street, City'
+    },
+    items: [
+      {
+        product: null, // Will be set to iPhone 15 Pro
+        quantity: 2,
+        price: 99999,
+        discount: 0,
+        total: 199998
+      },
+      {
+        product: null, // Will be set to Sony WH-1000XM5
+        quantity: 1,
+        price: 29999,
+        discount: 0,
+        total: 29999
+      }
+    ],
+    subtotal: 229997,
+    tax: 41399.46,
+    discount: 0,
+    total: 271396.46,
+    paymentMethod: 'upi',
+    paymentStatus: 'paid',
+    notes: 'Bulk order for corporate client',
+    branch: null, // Will be set to main branch
+    createdBy: null // Will be set to admin user
+  },
+  {
+    invoiceNumber: 'INV-002',
+    customer: {
+      name: 'Jane Smith',
+      email: 'jane.smith@email.com',
+      phone: '+91-9876543211',
+      address: '456 Business Avenue, City'
+    },
+    items: [
+      {
+        product: null, // Will be set to MacBook Pro M3
+        quantity: 1,
+        price: 199999,
+        discount: 0,
+        total: 199999
+      }
+    ],
+    subtotal: 199999,
+    tax: 35999.82,
+    discount: 0,
+    total: 235998.82,
+    paymentMethod: 'card',
+    paymentStatus: 'pending',
+    notes: 'High-value laptop sale',
+    branch: null, // Will be set to main branch
+    createdBy: null // Will be set to admin user
+  },
+  {
+    invoiceNumber: 'INV-003',
+    customer: {
+      name: 'Bob Johnson',
+      email: 'bob.johnson@email.com',
+      phone: '+91-9876543212',
+      address: '789 Retail Road, City'
+    },
+    items: [
+      {
+        product: null, // Will be set to Samsung Galaxy S24
+        quantity: 3,
+        price: 79999,
+        discount: 0,
+        total: 239997
+      },
+      {
+        product: null, // Will be set to Logitech MX Master 3S
+        quantity: 2,
+        price: 8999,
+        discount: 0,
+        total: 17998
+      }
+    ],
+    subtotal: 257995,
+    tax: 46439.1,
+    discount: 0,
+    total: 304434.1,
+    paymentMethod: 'cash',
+    paymentStatus: 'pending',
+    notes: 'Retail store order',
+    branch: null, // Will be set to north branch
+    createdBy: null // Will be set to manager user
+  },
+  {
+    invoiceNumber: 'INV-004',
+    customer: {
+      name: 'Sarah Wilson',
+      email: 'sarah.wilson@email.com',
+      phone: '+91-9876543213',
+      address: '321 Fashion Street, City'
+    },
+    items: [
+      {
+        product: null, // Will be set to Nike Air Max 270
+        quantity: 2,
+        price: 12999,
+        discount: 1000,
+        total: 24998
+      },
+      {
+        product: null, // Will be set to Levi's 501 Original Jeans
+        quantity: 3,
+        price: 4999,
+        discount: 0,
+        total: 14997
+      }
+    ],
+    subtotal: 39995,
+    tax: 7199.1,
+    discount: 1000,
+    total: 46194.1,
+    paymentMethod: 'card',
+    paymentStatus: 'paid',
+    notes: 'Fashion retail order with discount',
+    branch: null, // Will be set to south branch
+    createdBy: null // Will be set to staff user
+  },
+  {
+    invoiceNumber: 'INV-005',
+    customer: {
+      name: 'Mike Chen',
+      email: 'mike.chen@email.com',
+      phone: '+91-9876543214',
+      address: '654 Home Avenue, City'
+    },
+    items: [
+      {
+        product: null, // Will be set to KitchenAid Stand Mixer
+        quantity: 1,
+        price: 45999,
+        discount: 2000,
+        total: 43999
+      },
+      {
+        product: null, // Will be set to Instant Pot Duo 7-in-1
+        quantity: 1,
+        price: 12999,
+        discount: 0,
+        total: 12999
+      }
+    ],
+    subtotal: 56998,
+    tax: 10259.64,
+    discount: 2000,
+    total: 65257.64,
+    paymentMethod: 'bank_transfer',
+    paymentStatus: 'partial',
+    notes: 'Home kitchen equipment order',
+    branch: null, // Will be set to east branch
+    createdBy: null // Will be set to manager user
   }
 ];
 
 const samplePayments = [
   {
-    amount: 500000,
+    amount: 271396.46,
     paymentMethod: 'upi',
     paymentType: 'credit',
     description: 'Payment for Invoice INV-001',
@@ -182,7 +456,7 @@ const samplePayments = [
     notes: 'Full payment received via UPI'
   },
   {
-    amount: 250000,
+    amount: 100000,
     paymentMethod: 'card',
     paymentType: 'credit',
     description: 'Partial payment for Invoice INV-002',
@@ -190,7 +464,7 @@ const samplePayments = [
     customer: 'Jane Smith',
     branch: null, // Will be set to main branch
     createdBy: null, // Will be set to admin user
-    notes: 'Card payment processed'
+    notes: 'Card payment processed - partial'
   },
   {
     amount: 10000,
@@ -213,6 +487,61 @@ const samplePayments = [
     branch: null, // Will be set to north branch
     createdBy: null, // Will be set to manager user
     notes: 'Bank transfer received'
+  },
+  {
+    amount: 50000,
+    paymentMethod: 'upi',
+    paymentType: 'credit',
+    description: 'Advance payment for future order',
+    reference: 'ADV789123',
+    customer: 'Charlie Wilson',
+    branch: null, // Will be set to south branch
+    createdBy: null, // Will be set to staff user
+    notes: 'Advance payment received'
+  },
+  {
+    amount: 46194.1,
+    paymentMethod: 'card',
+    paymentType: 'credit',
+    description: 'Payment for Invoice INV-004',
+    reference: 'CARD456789',
+    customer: 'Sarah Wilson',
+    branch: null, // Will be set to south branch
+    createdBy: null, // Will be set to staff user
+    notes: 'Fashion retail payment processed'
+  },
+  {
+    amount: 30000,
+    paymentMethod: 'bank_transfer',
+    paymentType: 'credit',
+    description: 'Partial payment for Invoice INV-005',
+    reference: 'BANK789123',
+    customer: 'Mike Chen',
+    branch: null, // Will be set to east branch
+    createdBy: null, // Will be set to manager user
+    notes: 'Partial payment for kitchen equipment'
+  },
+  {
+    amount: 15000,
+    paymentMethod: 'cash',
+    paymentType: 'credit',
+    description: 'Walk-in customer payment',
+    reference: 'CASH001',
+    customer: 'Emma Davis',
+    branch: null, // Will be set to main branch
+    createdBy: null, // Will be set to admin user
+    notes: 'Cash payment for miscellaneous items'
+  },
+  {
+    amount: 25000,
+    paymentMethod: 'upi',
+    paymentType: 'debit',
+    description: 'Refund for damaged goods',
+    reference: 'REF789456',
+    customer: 'Tom Anderson',
+    branch: null, // Will be set to north branch
+    createdBy: null, // Will be set to manager user
+    notes: 'Refund processed for damaged Nike shoes'
   }
 ];
 
@@ -267,6 +596,20 @@ async function seedDatabase() {
     const createdPayments = await Payment.insertMany(paymentsWithReferences);
     console.log(`Created ${createdPayments.length} payments`);
 
+    // Create invoices
+    console.log('Creating invoices...');
+    const invoicesWithReferences = sampleInvoices.map((invoice, index) => ({
+      ...invoice,
+      items: invoice.items.map(item => ({
+        ...item,
+        product: createdProducts[index % createdProducts.length]._id
+      })),
+      branch: createdBranches[index % createdBranches.length]._id,
+      createdBy: createdUsers[index % createdUsers.length]._id
+    }));
+    const createdInvoices = await Invoice.insertMany(invoicesWithReferences);
+    console.log(`Created ${createdInvoices.length} invoices`);
+
     // Create stock movements
     console.log('Creating stock movements...');
     const stockMovements = createdProducts.map((product, index) => ({
@@ -286,6 +629,7 @@ async function seedDatabase() {
     console.log(`- Branches: ${createdBranches.length}`);
     console.log(`- Users: ${createdUsers.length}`);
     console.log(`- Products: ${createdProducts.length}`);
+    console.log(`- Invoices: ${createdInvoices.length}`);
     console.log(`- Payments: ${createdPayments.length}`);
     console.log(`- Stock Movements: ${stockMovements.length}`);
 

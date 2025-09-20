@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -10,6 +10,9 @@ import { ArrowLeftIcon, CheckIcon, XMarkIcon, PlusIcon, CubeIcon, QrCodeIcon, Pr
 import { Link } from 'react-router-dom';
 import QRCode from 'qrcode';
 import tractorData from '../data/tractor_dropdown.json';
+import { useApiCreate, useApiList } from '../hooks/useApi';
+import { useConfirmations } from '../hooks/useConfirmations';
+import { apiService } from '../lib/api';
 
 interface ProductData {
   model: string;
@@ -42,16 +45,55 @@ const AddProductPage: React.FC = () => {
   const [generatedQRCodes, setGeneratedQRCodes] = useState<string[]>([]);
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [showQRPreview, setShowQRPreview] = useState(false);
+
+  // Use API hooks and confirmations
+  const { showSuccess, showError } = useConfirmations();
+  
+  const {
+    execute: createProduct,
+    loading: isCreatingProduct
+  } = useApiCreate(apiService.products.create, {
+    onSuccess: () => {
+      showSuccess('Product created successfully!');
+    },
+    itemName: 'Product'
+  });
+
+  // Fetch branches for dropdown
+  const {
+    data: branches,
+    loading: isLoadingBranches,
+    error: branchesError,
+    execute: fetchBranches
+  } = useApiList<{_id: string, name: string, address: string}>(apiService.branches.getAll, {
+    onSuccess: (data: {_id: string, name: string, address: string}[]) => {
+      console.log('Branches loaded successfully:', data.length);
+    },
+    onError: (error: string) => {
+      console.error('Failed to load branches:', error);
+    }
+  });
   const [productForm, setProductForm] = useState({
     name: '',
     sku: '',
     price: '',
     quantity: '',
     category: '',
-    description: ''
+    description: '',
+    costPrice: '',
+    minStock: '',
+    maxStock: '',
+    unit: 'pieces',
+    brand: '',
+    branch: 'main'
   });
 
   const productData: ProductData[] = tractorData;
+
+  // Fetch branches on component mount
+  useEffect(() => {
+    fetchBranches();
+  }, [fetchBranches]);
 
   const handleCategorySelect = (category: 'rotovator' | 'tractor' | 'service') => {
     setSelectedProduct({
@@ -62,6 +104,12 @@ const AddProductPage: React.FC = () => {
     });
     setShowModels(true);
     setShowVariants(false);
+    
+    // Auto-populate category in form
+    setProductForm(prev => ({
+      ...prev,
+      category: category
+    }));
   };
 
   const handleModelSelect = (model: string) => {
@@ -243,32 +291,71 @@ const AddProductPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Generate QR codes based on quantity
-    if (productForm.quantity && parseInt(productForm.quantity) > 0) {
+    // Debug: Log form values
+    console.log('Form validation - Current form values:', {
+      name: productForm.name,
+      sku: productForm.sku,
+      price: productForm.price,
+      quantity: productForm.quantity,
+      category: productForm.category
+    });
+    
+    // Validate required fields with specific error messages
+    const missingFields = [];
+    if (!productForm.name || productForm.name.trim() === '') missingFields.push('Product Name');
+    if (!productForm.sku || productForm.sku.trim() === '') missingFields.push('SKU');
+    if (!productForm.price || productForm.price.trim() === '') missingFields.push('Price');
+    if (!productForm.quantity || productForm.quantity.trim() === '') missingFields.push('Quantity');
+    
+    if (missingFields.length > 0) {
+      console.log('Validation failed - missing required fields:', missingFields);
+      showError(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    if (parseInt(productForm.quantity) <= 0) {
+      showError('Please enter a valid quantity');
+      return;
+    }
+
+    try {
       setIsGeneratingQR(true);
-      try {
-        const baseQRData = `${productForm.sku || productForm.name}-${Date.now()}`;
-        const qrCodes = await generateMultipleQRCodes(baseQRData, parseInt(productForm.quantity));
-        setGeneratedQRCodes(qrCodes);
-        setShowQRPreview(true);
-        
-        // Here you would typically save the product to your backend
-        console.log('Product Form:', productForm);
-        console.log('Selected Product:', selectedProduct);
-        console.log('Generated QR Codes:', qrCodes.length);
-        
-        // Show success message
-        console.log('QR Codes generated:', qrCodes);
-        console.log('Show QR Preview:', true);
-        alert(`Product created successfully! Generated ${qrCodes.length} QR codes. Check below to view and print them.`);
-      } catch (error) {
-        console.error('Error generating QR codes:', error);
-        alert('Error generating QR codes. Please try again.');
-      } finally {
-        setIsGeneratingQR(false);
-      }
-    } else {
-      alert('Please enter a valid quantity to generate QR codes.');
+      
+      // Generate QR codes based on quantity
+      const baseQRData = `${productForm.sku || productForm.name}-${Date.now()}`;
+      const qrCodes = await generateMultipleQRCodes(baseQRData, parseInt(productForm.quantity));
+      setGeneratedQRCodes(qrCodes);
+      setShowQRPreview(true);
+      
+      // Create product data for API
+      const productData = {
+        name: productForm.name,
+        sku: productForm.sku,
+        price: parseFloat(productForm.price),
+        costPrice: parseFloat(productForm.costPrice || '0'),
+        stock: parseInt(productForm.quantity),
+        minStock: parseInt(productForm.minStock || '0'),
+        maxStock: parseInt(productForm.maxStock || '1000'),
+        unit: productForm.unit || 'pieces',
+        category: productForm.category || 'General',
+        brand: productForm.brand || '',
+        description: productForm.description || '',
+        branch: productForm.branch || 'main',
+        isActive: true
+      };
+
+      // Create product using API hook
+      await createProduct(productData);
+      
+      console.log('Product Form:', productForm);
+      console.log('Selected Product:', selectedProduct);
+      console.log('Generated QR Codes:', qrCodes.length);
+      
+    } catch (error) {
+      console.error('Error creating product:', error);
+      showError('Error creating product. Please try again.');
+    } finally {
+      setIsGeneratingQR(false);
     }
   };
 
@@ -752,32 +839,34 @@ const AddProductPage: React.FC = () => {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="name">Product Name</Label>
+                    <Label htmlFor="name">Product Name *</Label>
                     <Input
                       id="name"
                       name="name"
-                      value={productForm.name || (selectedProduct.category ? `${selectedProduct.category.charAt(0).toUpperCase() + selectedProduct.category.slice(1)}` : '')}
+                      value={productForm.name}
                       onChange={handleInputChange}
                       placeholder="Enter product name"
+                      size="lg"
                       required
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="sku">SKU</Label>
+                    <Label htmlFor="sku">SKU *</Label>
                     <Input
                       id="sku"
                       name="sku"
-                      value={productForm.sku || (selectedProduct.variant ? selectedProduct.variant : selectedProduct.model || '')}
+                      value={productForm.sku}
                       onChange={handleInputChange}
                       placeholder="Enter SKU"
+                      size="lg"
                       required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="price">Price</Label>
+                      <Label htmlFor="price">Price *</Label>
                       <Input
                         id="price"
                         name="price"
@@ -785,11 +874,14 @@ const AddProductPage: React.FC = () => {
                         value={productForm.price}
                         onChange={handleInputChange}
                         placeholder="0.00"
+                        size="lg"
                         required
+                        min="0"
+                        step="0.01"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="quantity">Quantity</Label>
+                      <Label htmlFor="quantity">Quantity *</Label>
                       <Input
                         id="quantity"
                         name="quantity"
@@ -797,7 +889,9 @@ const AddProductPage: React.FC = () => {
                         value={productForm.quantity}
                         onChange={handleInputChange}
                         placeholder="0"
+                        size="lg"
                         required
+                        min="1"
                       />
                     </div>
                   </div>
@@ -814,6 +908,33 @@ const AddProductPage: React.FC = () => {
                       ]}
                       placeholder="Select category"
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="branch">Branch</Label>
+                    {isLoadingBranches ? (
+                      <div className="flex items-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-md">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <span className="text-sm text-gray-500">Loading branches...</span>
+                      </div>
+                    ) : branchesError ? (
+                      <div className="p-3 border border-red-300 dark:border-red-600 rounded-md bg-red-50 dark:bg-red-900/20">
+                        <span className="text-sm text-red-600 dark:text-red-400">Failed to load branches</span>
+                      </div>
+                    ) : (
+                      <Select
+                        value={productForm.branch}
+                        onChange={(value) => setProductForm(prev => ({ ...prev, branch: value }))}
+                        options={[
+                          { label: 'Main Branch', value: 'main' },
+                          ...(Array.isArray(branches) ? branches.map(branch => ({
+                            label: branch.name,
+                            value: branch._id
+                          })) : [])
+                        ]}
+                        placeholder="Select branch"
+                      />
+                    )}
                   </div>
 
                   <div>
@@ -902,13 +1023,13 @@ const AddProductPage: React.FC = () => {
                   <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <Button 
                       type="submit" 
-                      disabled={isGeneratingQR}
+                      disabled={isGeneratingQR || isCreatingProduct}
                       className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isGeneratingQR ? (
+                      {(isGeneratingQR || isCreatingProduct) ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                          Generating QR Codes...
+                          {isCreatingProduct ? 'Creating Product...' : 'Generating QR Codes...'}
                         </>
                       ) : (
                         <>

@@ -4,9 +4,10 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../lib/api';
+import { processApiLogin } from '../lib/responseHandler';
+import { handleApiError } from '../lib/errorHandler';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -27,20 +28,26 @@ export default function LoginPage() {
 
     try {
       const response = await apiService.auth.login(formData);
+      const processedResponse = processApiLogin(response);
 
-      if (response.data.success) {
-        login(response.data.data.user, response.data.data.token);
-        toast.success('Login successful! Redirecting...');
-        setTimeout(() => {
-          navigate(from, { replace: true });
-        }, 1000);
+      if (processedResponse.success && processedResponse.data) {
+        // Extract user and token from the response data
+        const { user, token } = processedResponse.data as any;
+        
+        if (user && token) {
+          login(user, token);
+          setTimeout(() => {
+            navigate(from, { replace: true });
+          }, 1000);
+        } else {
+          throw new Error('Invalid response data structure');
+        }
       } else {
-        console.error('Login failed:', response.data.message);
-        toast.error(response.data.message || 'Login failed');
+        throw new Error(processedResponse.error?.message || 'Login failed');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error('An error occurred during login');
+      const apiError = handleApiError(error, true);
+      console.error('Login error:', apiError);
     } finally {
       setIsLoading(false);
     }

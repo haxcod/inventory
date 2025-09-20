@@ -8,7 +8,9 @@ import { Select } from '../components/ui/Select';
 import type { SelectOption } from '../components/ui/Select';
 import type { Invoice } from '../types';
 import { formatCurrency, formatDate } from '../lib/utils';
-import apiService from '../lib/api';
+import { apiService } from '../lib/api';
+import { useApiList, useApiDelete } from '../hooks/useApi';
+import { useConfirmations } from '../hooks/useConfirmations';
 import { 
   MagnifyingGlassIcon, 
   DocumentTextIcon,
@@ -16,14 +18,43 @@ import {
   EyeIcon,
   PencilIcon,
   TrashIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+
+  const { confirmDelete } = useConfirmations();
+
+  // Use API hooks for invoices
+  const {
+    data: invoicesResponse,
+    loading: isLoading,
+    error: invoicesError,
+    execute: fetchInvoices
+  } = useApiList<any>(apiService.invoices.getAll, {
+    onSuccess: (data: any) => {
+      console.log('Invoices loaded successfully:', data);
+    },
+    onError: (error: string) => {
+      console.error('Failed to load invoices:', error);
+    }
+  });
+
+  // Extract invoices array from response
+  const invoices = (invoicesResponse as any)?.invoices || [];
+
+  const {
+    execute: deleteInvoice,
+    loading: isDeletingInvoice
+  } = useApiDelete(apiService.invoices.delete, {
+    onSuccess: () => {
+      fetchInvoices(); // Refresh the list
+    },
+    itemName: 'Invoice'
+  });
 
   const statusFilterOptions: SelectOption[] = [
     { value: 'all', label: 'All Status' },
@@ -42,23 +73,12 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [fetchInvoices]);
 
-  const fetchInvoices = async () => {
-    try {
-      setIsLoading(true);
-      // Real API call
-      const response = await apiService.invoices.getAll();
-      if (response.data.success) {
-        setInvoices(response.data.data);
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch invoices');
-      }
-    } catch (error) {
-      console.error('Error fetching invoices:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleDeleteInvoice = (invoice: Invoice) => {
+    confirmDelete(`Invoice #${invoice.invoiceNumber}`, async () => {
+      await deleteInvoice(invoice._id);
+    });
   };
 
   const filteredInvoices = (Array.isArray(invoices) ? invoices : []).filter(invoice => {
@@ -103,6 +123,36 @@ export default function InvoicesPage() {
   };
 
   if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (invoicesError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="p-8 text-center max-w-md">
+            <CardContent>
+              <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Invoices</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{invoicesError}</p>
+              <Button onClick={() => fetchInvoices()} className="bg-blue-600 hover:bg-blue-700">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading if no data yet
+  if (isLoading || !invoices) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -241,7 +291,8 @@ export default function InvoicesPage() {
                     placeholder="Search by invoice number, customer name, or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-10 sm:h-12 text-sm sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    size="lg"
+                    className="pl-12"
                   />
                 </div>
               </div>
@@ -349,8 +400,15 @@ export default function InvoicesPage() {
                           <Button variant="ghost" size="sm" className="text-purple-600 hover:bg-purple-50 hover:text-purple-700">
                             <PrinterIcon className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            onClick={() => handleDeleteInvoice(invoice)}
+                            disabled={isDeletingInvoice}
+                          >
                             <TrashIcon className="h-4 w-4" />
+                            {isDeletingInvoice ? 'Deleting...' : 'Delete'}
                           </Button>
                         </div>
                       </td>

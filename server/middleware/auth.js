@@ -76,7 +76,8 @@ export const requirePermission = (permission) => {
             });
         }
 
-        if (!req.user.permissions.includes(permission)) {
+        // Check if user has 'all' permissions or the specific permission
+        if (!req.user.permissions.includes('all') && !req.user.permissions.includes(permission)) {
             return res.status(403).json({
                 success: false,
                 message: `Permission '${permission}' required`

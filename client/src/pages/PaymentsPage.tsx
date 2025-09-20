@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -18,18 +18,57 @@ import {
   EyeIcon,
   PencilIcon,
   TrashIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { useConfirmations } from '../hooks/useConfirmations';
 import { useAuth } from '../context/AuthContext';
-import apiService from '../lib/api';
+import { apiService } from '../lib/api';
+import { useApiList, useApiCreate, useApiDelete } from '../hooks/useApi';
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
   const { user } = useAuth();
-  const { confirmDelete, showSuccess, showError } = useConfirmations();
+  const { confirmDelete, showError } = useConfirmations();
+
+  // Use API hooks for payments
+  const {
+    data: paymentsResponse,
+    loading: isLoading,
+    error: paymentsError,
+    execute: fetchPayments
+  } = useApiList<any>(apiService.payments.getAll, {
+    onSuccess: (data: any) => {
+      console.log('Payments loaded successfully:', data);
+    },
+    onError: (error: string) => {
+      console.error('Failed to load payments:', error);
+    }
+  });
+
+  // Extract payments array from response
+  const payments = (paymentsResponse as any)?.payments || [];
+
+  const {
+    execute: createPayment,
+    loading: isCreatingPayment
+  } = useApiCreate<Payment>(apiService.payments.create, {
+    onSuccess: () => {
+      fetchPayments(); // Refresh the list
+    },
+    itemName: 'Payment'
+  });
+
+
+  const {
+    execute: deletePayment,
+    loading: isDeletingPayment
+  } = useApiDelete(apiService.payments.delete, {
+    onSuccess: () => {
+      fetchPayments(); // Refresh the list
+    },
+    itemName: 'Payment'
+  });
   const [typeFilter, setTypeFilter] = useState('all');
   const [methodFilter, setMethodFilter] = useState('all');
   const [showNewPayment, setShowNewPayment] = useState(false);
@@ -81,25 +120,6 @@ export default function PaymentsPage() {
     { value: 'upi', label: 'UPI' },
     { value: 'bank_transfer', label: 'Bank Transfer' }
   ];
-
-  const fetchPayments = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      // Real API call
-      const response = await apiService.payments.getAll();
-      if (response.data.success) {
-        setPayments(response.data.data);
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch payments');
-      }
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      // Use a fallback error handling instead of showError to avoid dependency
-      setPayments([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     fetchPayments();
@@ -164,42 +184,31 @@ export default function PaymentsPage() {
   };
 
   const handleCreatePayment = async () => {
-    try {
-      // Real API call
-      const paymentData = {
-        ...newPayment,
-        amount: parseFloat(newPayment.amount),
-        branch: 'main',
-        createdBy: user?._id || 'user1',
-      };
-      
-      const response = await apiService.payments.create(paymentData);
-      if (response.data.success) {
-        // Reset form
-      setNewPayment({
-        amount: '',
-        paymentMethod: 'cash',
-        paymentType: 'credit',
-        description: '',
-        reference: '',
-        customer: '',
-        notes: '',
-      });
-        
-        setShowNewPayment(false);
-        
-      // Refresh payments list
-        await fetchPayments();
-        
-        // Show success message
-        showSuccess(`Payment of ${formatCurrency(paymentData.amount)} has been successfully created.`);
-      } else {
-        throw new Error(response.data.message || 'Payment creation failed');
-      }
-    } catch (error) {
-      console.error('Error creating payment:', error);
-      showError('There was an error creating the payment. Please try again.');
+    if (!user) {
+      showError('User not authenticated');
+      return;
     }
+
+    const paymentData = {
+      ...newPayment,
+      amount: parseFloat(newPayment.amount),
+      branch: 'main', // You might want to get this from branches API
+      createdBy: user._id,
+    };
+
+    await createPayment(paymentData);
+    
+    // Reset form on success
+    setNewPayment({
+      amount: '',
+      paymentMethod: 'cash',
+      paymentType: 'credit',
+      description: '',
+      reference: '',
+      customer: '',
+      notes: '',
+    });
+    setShowNewPayment(false);
   };
 
   const handleViewPayment = (payment: Payment) => {
@@ -257,8 +266,7 @@ export default function PaymentsPage() {
       
       const response = await apiService.payments.update(editingPayment._id, paymentData);
       if (response.data.success) {
-        // Update the payment in the list
-        setPayments(prev => prev.map(p => p._id === editingPayment._id ? { ...p, ...paymentData } : p));
+        // Payment updated successfully - the list will refresh automatically via API hooks
       } else {
         throw new Error(response.data.message || 'Failed to update payment');
       }
@@ -284,26 +292,41 @@ export default function PaymentsPage() {
     const paymentName = payment ? `${payment.customer} - ${formatCurrency(payment.amount)}` : 'this payment';
     
     confirmDelete(paymentName, async () => {
-      try {
-        // Real API call
-        const response = await apiService.payments.delete(paymentId);
-        if (response.data.success) {
-          // Remove the payment from the list
-          setPayments(prev => prev.filter(p => p._id !== paymentId));
-          
-          // Show success message
-          showSuccess('The payment has been successfully deleted.');
-        } else {
-          throw new Error(response.data.message || 'Failed to delete payment');
-        }
-      } catch (error) {
-        console.error('Error deleting payment:', error);
-        showError('There was an error deleting the payment. Please try again.');
-      }
+      await deletePayment(paymentId);
     });
   };
 
   if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (paymentsError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="p-8 text-center max-w-md">
+            <CardContent>
+              <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Payments</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{paymentsError}</p>
+              <Button onClick={() => fetchPayments()} className="bg-blue-600 hover:bg-blue-700">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading if no data yet
+  if (isLoading || !payments) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -472,7 +495,8 @@ export default function PaymentsPage() {
                     value={newPayment.amount}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
                     placeholder="Enter amount"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                    size="lg"
+                    className="mt-2"
                   />
                 </div>
                 <div>
@@ -504,7 +528,8 @@ export default function PaymentsPage() {
                     value={newPayment.customer}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, customer: e.target.value }))}
                     placeholder="Enter customer name"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                    size="lg"
+                    className="mt-2"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -514,7 +539,8 @@ export default function PaymentsPage() {
                     value={newPayment.description}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Enter payment description"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                    size="lg"
+                    className="mt-2"
                   />
                 </div>
                 <div>
@@ -524,7 +550,8 @@ export default function PaymentsPage() {
                     value={newPayment.reference}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, reference: e.target.value }))}
                     placeholder="Transaction reference"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                    size="lg"
+                    className="mt-2"
                   />
                 </div>
                 <div>
@@ -534,7 +561,8 @@ export default function PaymentsPage() {
                     value={newPayment.notes}
                     onChange={(e) => setNewPayment(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="Additional notes"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                    size="lg"
+                    className="mt-2"
                   />
                 </div>
               </div>
@@ -548,9 +576,10 @@ export default function PaymentsPage() {
                 </Button>
                   <Button 
                     onClick={handleCreatePayment}
+                    disabled={isCreatingPayment}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   >
-                    Create Payment
+                    {isCreatingPayment ? 'Creating...' : 'Create Payment'}
                 </Button>
               </div>
             </CardContent>
@@ -571,7 +600,8 @@ export default function PaymentsPage() {
                     placeholder="Search by description, customer, or reference..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 text-lg border-2 border-gray-200 focus:border-emerald-500 rounded-xl"
+                    size="lg"
+                    className="pl-12"
                   />
                 </div>
               </div>
@@ -669,9 +699,10 @@ export default function PaymentsPage() {
                     size="sm" 
                     className="text-red-600 hover:bg-red-50 hover:text-red-700"
                     onClick={() => handleDeletePayment(payment._id)}
+                    disabled={isDeletingPayment}
                   >
                     <TrashIcon className="h-4 w-4 mr-1" />
-                    Delete
+                    {isDeletingPayment ? 'Deleting...' : 'Delete'}
                   </Button>
                 </div>
               </CardContent>
@@ -813,11 +844,19 @@ export default function PaymentsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="font-medium text-muted-foreground">Branch:</span>
-                          <span className="ml-2 text-foreground capitalize">{selectedPayment.branch}</span>
+                          <span className="ml-2 text-foreground capitalize">
+                            {typeof selectedPayment.branch === 'object' && selectedPayment.branch?.name 
+                              ? selectedPayment.branch.name 
+                              : selectedPayment.branch || 'Main Branch'}
+                          </span>
                         </div>
                         <div>
                           <span className="font-medium text-muted-foreground">Created By:</span>
-                          <span className="ml-2 text-foreground">{selectedPayment.createdBy}</span>
+                          <span className="ml-2 text-foreground">
+                            {typeof selectedPayment.createdBy === 'object' && selectedPayment.createdBy?.name 
+                              ? selectedPayment.createdBy.name 
+                              : selectedPayment.createdBy || 'Unknown User'}
+                          </span>
                         </div>
                         <div>
                           <span className="font-medium text-muted-foreground">Created At:</span>
@@ -896,7 +935,8 @@ export default function PaymentsPage() {
                       value={editPayment.amount}
                       onChange={(e) => setEditPayment(prev => ({ ...prev, amount: e.target.value }))}
                       placeholder="Enter amount"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      size="lg"
+                      className="mt-2"
                     />
                   </div>
                   <div>
@@ -928,7 +968,8 @@ export default function PaymentsPage() {
                       value={editPayment.customer}
                       onChange={(e) => setEditPayment(prev => ({ ...prev, customer: e.target.value }))}
                       placeholder="Enter customer name"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      size="lg"
+                      className="mt-2"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -938,7 +979,8 @@ export default function PaymentsPage() {
                       value={editPayment.description}
                       onChange={(e) => setEditPayment(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Enter payment description"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      size="lg"
+                      className="mt-2"
                     />
                   </div>
                   <div>
@@ -948,7 +990,8 @@ export default function PaymentsPage() {
                       value={editPayment.reference}
                       onChange={(e) => setEditPayment(prev => ({ ...prev, reference: e.target.value }))}
                       placeholder="Transaction reference"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      size="lg"
+                      className="mt-2"
                     />
                   </div>
                   <div>
@@ -958,7 +1001,8 @@ export default function PaymentsPage() {
                       value={editPayment.notes}
                       onChange={(e) => setEditPayment(prev => ({ ...prev, notes: e.target.value }))}
                       placeholder="Additional notes"
-                      className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      size="lg"
+                      className="mt-2"
                     />
                   </div>
                 </div>

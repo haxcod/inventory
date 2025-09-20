@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -7,47 +7,50 @@ import { Label } from '../components/ui/Label';
 import { ProductTransferModal } from '../components/ui/ProductTransferModal';
 import type { Product } from '../types';
 import { formatCurrency, formatNumber } from '../lib/utils';
-import { PlusIcon, MagnifyingGlassIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, MagnifyingGlassIcon, ArrowRightIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useConfirmations } from '../hooks/useConfirmations';
-import apiService from '../lib/api';
+import { apiService } from '../lib/api';
+import { useApiList, useApiDelete } from '../hooks/useApi';
+import { processApiResponse } from '../lib/responseHandler';
+import { handleApiError } from '../lib/errorHandler';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [error, setError] = useState<string | null>(null);
   
-  const authContext = useAuth();
-  const confirmationsContext = useConfirmations();
-  
-  const user = authContext?.user;
-  const showSuccess = confirmationsContext?.showSuccess || (() => {});
-  const showError = confirmationsContext?.showError || (() => {});
+  const { user } = useAuth();
+  const { showSuccess, confirmDelete } = useConfirmations();
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      // Real API call
-      const response = await apiService.products.getAll();
-      if (response.data.success) {
-        setProducts(response.data.data || []);
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch products');
-      }
-      
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setError('Failed to fetch products. Please try again.');
-      setProducts([]); // Set empty array as fallback
-    } finally {
-      setIsLoading(false);
+  // Use API hooks for products
+  const {
+    data: productsResponse,
+    loading: isLoading,
+    error: productsError,
+    execute: fetchProducts
+  } = useApiList<any>(apiService.products.getAll, {
+    onSuccess: (data: any) => {
+      console.log('Products loaded successfully:', data);
+    },
+    onError: (error: string) => {
+      console.error('Failed to load products:', error);
     }
-  }, []);
+  });
+
+  // Extract products array from response
+  const products = (productsResponse as any)?.products || [];
+
+  const {
+    execute: deleteProduct,
+    loading: isDeleting
+  } = useApiDelete(apiService.products.delete, {
+    onSuccess: () => {
+      fetchProducts(); // Refresh the list
+    },
+    itemName: 'Product'
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -81,19 +84,25 @@ export default function ProductsPage() {
     notes?: string;
   }) => {
     try {
-      // Real API call
       const response = await apiService.transfers.create(transferData);
-      if (response.data.success) {
-        // Refresh products to get updated stock
-        await fetchProducts();
+      const processedResponse = processApiResponse(response, 'Transfer completed successfully');
+      
+      if (processedResponse.success) {
+        await fetchProducts(); // Refresh products to get updated stock
         showSuccess(`Successfully transferred ${transferData.quantity} ${selectedProduct?.unit} of ${selectedProduct?.name} to the destination branch.`);
       } else {
-        throw new Error(response.data.message || 'Transfer failed');
+        throw new Error(processedResponse.error?.message || 'Transfer failed');
       }
     } catch (error) {
-      console.error('Error transferring product:', error);
-      showError('Failed to transfer product. Please try again.');
+      const apiError = handleApiError(error, true);
+      console.error('Error transferring product:', apiError);
     }
+  };
+
+  const handleDeleteProduct = (product: Product) => {
+    confirmDelete(product.name, async () => {
+      await deleteProduct(product._id);
+    });
   };
 
   // Check if user can transfer products (admin or team member)
@@ -109,18 +118,31 @@ export default function ProductsPage() {
     );
   }
 
-  if (error) {
+  if (productsError) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="text-red-500 text-xl mb-4">⚠️</div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Products</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-            <Button onClick={fetchProducts} className="bg-blue-600 hover:bg-blue-700">
-              Try Again
-            </Button>
-          </div>
+          <Card className="p-8 text-center max-w-md">
+            <CardContent>
+              <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Products</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{productsError}</p>
+              <Button onClick={() => fetchProducts()} className="bg-blue-600 hover:bg-blue-700">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading if no data yet
+  if (isLoading || !products) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
         </div>
       </DashboardLayout>
     );
@@ -164,7 +186,8 @@ export default function ProductsPage() {
                     placeholder="Search by name, SKU, or category..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 sm:pl-12 h-10 sm:h-12 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    size="lg"
+                    className="pl-10 sm:pl-12"
                   />
                 </div>
               </div>
@@ -249,6 +272,16 @@ export default function ProductsPage() {
                       <ArrowRightIcon className="h-4 w-4" />
                     </Button>
                   )}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDeleteProduct(product)}
+                    disabled={isDeleting}
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
+                    title="Delete product"
+                  >
+                    {isDeleting ? '...' : 'Delete'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

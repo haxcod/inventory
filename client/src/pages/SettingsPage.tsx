@@ -8,7 +8,9 @@ import { Select } from '../components/ui/Select';
 import type { SelectOption } from '../components/ui/Select';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import apiService from '../lib/api';
+import { apiService } from '../lib/api';
+import { useApiUpdate } from '../hooks/useApi';
+import { useConfirmations } from '../hooks/useConfirmations';
 import { 
   CogIcon,
   UserIcon,
@@ -17,7 +19,7 @@ import {
   SwatchIcon as PaletteIcon,
   CircleStackIcon as DatabaseIcon,
   DocumentTextIcon,
-  TrashIcon
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
@@ -51,6 +53,19 @@ export default function SettingsPage() {
     timezone: 'Asia/Kolkata',
     dateFormat: 'DD/MM/YYYY',
     language: 'en',
+  });
+
+  const { showSuccess, showError } = useConfirmations();
+
+  // Use API hook for profile updates
+  const {
+    execute: updateProfile,
+    loading: isUpdatingProfile
+  } = useApiUpdate(apiService.users.update, {
+    onSuccess: () => {
+      showSuccess('Profile updated successfully');
+    },
+    itemName: 'Profile'
   });
 
   const themeOptions: SelectOption[] = [
@@ -89,22 +104,13 @@ export default function SettingsPage() {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    try {
-      // Real API call
-      const response = await apiService.users.update(user?._id || '', profileData);
-      if (response.data.success) {
-        toast.success('Profile updated successfully');
-      } else {
-        throw new Error(response.data.message || 'Failed to update profile');
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
-    } finally {
-      setIsLoading(false);
+    if (!user?._id) {
+      showError('User not authenticated');
+      return;
     }
+
+    await updateProfile(user._id, profileData);
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -201,7 +207,8 @@ export default function SettingsPage() {
                 value={profileData.name}
                 onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Enter your full name"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
             <div>
@@ -212,7 +219,8 @@ export default function SettingsPage() {
                 value={profileData.email}
                 onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="Enter your email"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
             <div>
@@ -222,7 +230,8 @@ export default function SettingsPage() {
                 value={profileData.phone}
                 onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="Enter your phone number"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
             <div>
@@ -232,16 +241,17 @@ export default function SettingsPage() {
                 value={profileData.address}
                 onChange={(e) => setProfileData(prev => ({ ...prev, address: e.target.value }))}
                 placeholder="Enter your address"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
           </div>
           <Button 
             type="submit" 
-            disabled={isLoading}
+            disabled={isUpdatingProfile}
             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
           >
-            {isLoading ? 'Updating...' : 'Update Profile'}
+            {isUpdatingProfile ? 'Updating...' : 'Update Profile'}
           </Button>
         </form>
       </CardContent>
@@ -267,7 +277,8 @@ export default function SettingsPage() {
                 value={passwordData.currentPassword}
                 onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
                 placeholder="Enter current password"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-red-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
             <div>
@@ -278,7 +289,8 @@ export default function SettingsPage() {
                 value={passwordData.newPassword}
                 onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                 placeholder="Enter new password"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-red-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
             <div>
@@ -289,7 +301,8 @@ export default function SettingsPage() {
                 value={passwordData.confirmPassword}
                 onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                 placeholder="Confirm new password"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-red-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
             <Button 
@@ -485,7 +498,8 @@ export default function SettingsPage() {
                 value={systemSettings.companyName}
                 onChange={(e) => setSystemSettings(prev => ({ ...prev, companyName: e.target.value }))}
                 placeholder="Enter company name"
-                className="mt-2 h-12 text-lg border-2 border-gray-200 focus:border-orange-500 rounded-xl"
+                size="lg"
+                className="mt-2"
               />
             </div>
             <div>

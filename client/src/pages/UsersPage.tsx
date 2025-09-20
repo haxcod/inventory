@@ -4,9 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
+import { Select } from '../components/ui/Select';
 import type { User } from '../types';
 import { formatDate } from '../lib/utils';
-import apiService from '../lib/api';
+import { apiService } from '../lib/api';
+import { useApiList, useApiCreate, useApiDelete } from '../hooks/useApi';
+import { useConfirmations } from '../hooks/useConfirmations';
 import { 
   MagnifyingGlassIcon, 
   PlusIcon,
@@ -16,43 +19,82 @@ import {
   TrashIcon,
   EnvelopeIcon,
   ShieldCheckIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [showNewUser, setShowNewUser] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<{_id: string, name: string, address: string, manager?: string} | null>(null);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
     password: '',
     role: 'user' as 'admin' | 'user',
-    branch: '',
+    branch: 'main',
+  });
+
+  const { confirmDelete } = useConfirmations();
+
+  // Use API hooks for users
+  const {
+    data: usersResponse,
+    loading: isLoading,
+    error: usersError,
+    execute: fetchUsers
+  } = useApiList<any>(apiService.users.getAll, {
+    onSuccess: (data: any) => {
+      console.log('Users loaded successfully:', data);
+    },
+    onError: (error: string) => {
+      console.error('Failed to load users:', error);
+    }
+  });
+
+  // Extract users array from response
+  const users = (usersResponse as any)?.users || [];
+
+  // Use API hooks for branches
+  const {
+    data: branches,
+    execute: fetchBranches
+  } = useApiList<{_id: string, name: string, address: string, manager?: string}>(apiService.branches.getAll, {
+    onSuccess: (data: {_id: string, name: string, address: string, manager?: string}[]) => {
+      console.log('Branches loaded successfully:', data.length);
+    },
+    onError: (error: string) => {
+      console.error('Failed to load branches:', error);
+    }
+  });
+
+  const {
+    execute: createUser,
+    loading: isCreatingUser
+  } = useApiCreate<User>(apiService.users.create, {
+    onSuccess: () => {
+      fetchUsers(); // Refresh the list
+    },
+    itemName: 'User'
+  });
+
+
+  const {
+    execute: deleteUser,
+    loading: isDeletingUser
+  } = useApiDelete(apiService.users.delete, {
+    onSuccess: () => {
+      fetchUsers(); // Refresh the list
+    },
+    itemName: 'User'
   });
 
   useEffect(() => {
     fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      setIsLoading(true);
-      // Real API call
-      const response = await apiService.users.getAll();
-      if (response.data.success) {
-        setUsers(response.data.data);
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch users');
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchBranches();
+  }, [fetchUsers, fetchBranches]);
 
   const filteredUsers = (Array.isArray(users) ? users : []).filter(user => {
     const matchesSearch = 
@@ -70,35 +112,65 @@ export default function UsersPage() {
 
 
   const handleCreateUser = async () => {
-    try {
-      // Real API call
-      const userData = {
-        ...newUser,
-        permissions: newUser.role === 'admin' ? ['read', 'write', 'delete', 'admin'] : ['read', 'write'],
-        isActive: true,
-      };
-      
-      const response = await apiService.users.create(userData);
-      if (response.data.success) {
-        setShowNewUser(false);
-        setNewUser({
-          name: '',
-          email: '',
-          password: '',
-          role: 'user',
-          branch: '',
-        });
-        // Refresh users list
-        fetchUsers();
-      } else {
-        throw new Error(response.data.message || 'Failed to create user');
-      }
-    } catch (error) {
-      console.error('Error creating user:', error);
-    }
+    const userData = {
+      ...newUser,
+      permissions: newUser.role === 'admin' ? ['read', 'write', 'delete', 'admin'] : ['read', 'write'],
+      isActive: true,
+      branch: selectedBranch?._id || (newUser.branch === 'main' ? null : newUser.branch),
+    };
+    
+    await createUser(userData);
+    
+    // Reset form on success
+    setNewUser({
+      name: '',
+      email: '',
+      password: '',
+      role: 'user',
+      branch: 'main',
+    });
+    setSelectedBranch(null);
+    setShowNewUser(false);
+  };
+
+
+  const handleDeleteUser = (user: User) => {
+    confirmDelete(user.name, async () => {
+      await deleteUser(user._id);
+    });
   };
 
   if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (usersError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="p-8 text-center max-w-md">
+            <CardContent>
+              <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Users</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{usersError}</p>
+              <Button onClick={() => fetchUsers()} className="bg-blue-600 hover:bg-blue-700">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading if no data yet
+  if (isLoading || !users) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -147,7 +219,8 @@ export default function UsersPage() {
                     placeholder="Search by name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 sm:pl-12 h-10 sm:h-12 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    size="lg"
+                    className="pl-10 sm:pl-12"
                   />
                 </div>
               </div>
@@ -155,16 +228,18 @@ export default function UsersPage() {
                 <Label htmlFor="roleFilter" className="text-sm font-semibold text-foreground">
                   Filter by Role
                 </Label>
-                <select
+                <Select
                   id="roleFilter"
+                  options={[
+                    { value: 'all', label: 'All Roles' },
+                    { value: 'admin', label: 'Admin' },
+                    { value: 'user', label: 'User' }
+                  ]}
                   value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                  className="mt-2 w-full h-10 sm:h-12 px-3 sm:px-4 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                >
-                  <option value="all">All Roles</option>
-                  <option value="admin">Admin</option>
-                  <option value="user">User</option>
-                </select>
+                  onChange={(value) => setRoleFilter(value)}
+                  placeholder="Filter by role"
+                  className="mt-2"
+                />
               </div>
             </div>
           </CardContent>
@@ -245,16 +320,42 @@ export default function UsersPage() {
           </Card>
         </div>
 
-        {/* New User Form */}
+        {/* New User Modal */}
         {showNewUser && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New User</CardTitle>
-              <CardDescription>
-                Create a new user account with appropriate permissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Blurred Background */}
+            <div 
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setShowNewUser(false)}
+            />
+            
+            {/* Modal Content */}
+            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <UserGroupIcon className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Add New User
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Create a new user account with appropriate permissions
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowNewUser(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="userName">Full Name</Label>
@@ -287,41 +388,64 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <Label htmlFor="userRole">Role</Label>
-                  <select
+                  <Select
                     id="userRole"
+                    options={[
+                      { value: 'user', label: 'User' },
+                      { value: 'admin', label: 'Admin' }
+                    ]}
                     value={newUser.role}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as 'admin' | 'user' }))}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    style={{backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))'}}
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                    onChange={(value) => setNewUser(prev => ({ ...prev, role: value as 'admin' | 'user' }))}
+                    placeholder="Select role"
+                    className="mt-2"
+                  />
                 </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="userBranch">Branch</Label>
-                  <select
+                  <Select
                     id="userBranch"
-                    value={newUser.branch}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, branch: e.target.value }))}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    style={{backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))'}}
-                  >
-                    <option value="">Select Branch</option>
-                    <option value="main">Main Branch</option>
-                    <option value="north">North Branch</option>
-                    <option value="south">South Branch</option>
-                  </select>
+                    options={[
+                      { value: 'main', label: 'Main Branch' },
+                      ...(Array.isArray(branches) ? branches.map(branch => ({
+                        value: branch._id,
+                        label: branch.name
+                      })) : [])
+                    ]}
+                    value={selectedBranch?._id || 'main'}
+                    onChange={(value) => {
+                      if (value === 'main') {
+                        setSelectedBranch(null);
+                        setNewUser(prev => ({ ...prev, branch: 'main' }));
+                      } else {
+                        const branch = branches?.find(b => b._id === value);
+                        if (branch) {
+                          setSelectedBranch(branch);
+                          setNewUser(prev => ({ ...prev, branch: branch.name }));
+                        }
+                      }
+                    }}
+                    placeholder="Select branch"
+                    className="mt-2"
+                  />
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
-                <Button onClick={handleCreateUser}>Create User</Button>
-                <Button variant="outline" onClick={() => setShowNewUser(false)}>
-                  Cancel
-                </Button>
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowNewUser(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleCreateUser}
+                    disabled={isCreatingUser}
+                  >
+                    {isCreatingUser ? 'Creating...' : 'Create User'}
+                  </Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Filters */}
@@ -418,7 +542,7 @@ export default function UsersPage() {
                   <div className="mt-2">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Permissions:</p>
                     <div className="flex flex-wrap gap-1">
-                      {user.permissions.map((permission, index) => (
+                      {user.permissions.map((permission: string, index: number) => (
                         <span key={index} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
                           {permission}
                         </span>
@@ -447,8 +571,11 @@ export default function UsersPage() {
                     variant="outline" 
                     size="sm" 
                     className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
+                    onClick={() => handleDeleteUser(user)}
+                    disabled={isDeletingUser}
                   >
                     <TrashIcon className="h-4 w-4" />
+                    {isDeletingUser ? 'Deleting...' : 'Delete'}
                   </Button>
                 </div>
               </CardContent>
@@ -469,6 +596,7 @@ export default function UsersPage() {
           </Card>
         )}
       </div>
+
     </DashboardLayout>
   );
 }

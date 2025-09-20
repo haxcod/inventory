@@ -11,10 +11,12 @@ import {
   ChartBarIcon,
   ArrowUpIcon,
   ArrowDownIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { formatCurrency, formatNumber } from '../lib/utils';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { apiService } from '../lib/api';
+import { useApi } from '../hooks/useApi';
 
 interface DashboardStats {
   totalSales: number;
@@ -38,88 +40,83 @@ interface ChartData {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalSales: 0,
-    totalProducts: 0,
-    totalInvoices: 0,
-    totalRevenue: 0,
-    salesGrowth: 0,
-    productGrowth: 0,
-    invoiceGrowth: 0,
-    revenueGrowth: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [salesData, setSalesData] = useState<ChartData[]>([]);
   const [productData, setProductData] = useState<ChartData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Use API hook for dashboard data
+  const {
+    data: dashboardData,
+    loading: isLoading,
+    error: dashboardError,
+    execute: fetchDashboardData
+  } = useApi(apiService.dashboard.getData, {
+    onSuccess: (data: any) => {
+      console.log('Dashboard data received:', data);
+      if (data?.stats) {
+        setStats({
+          totalSales: data.stats.totalSales || 0,
+          totalProducts: data.stats.totalProducts || 0,
+          totalInvoices: data.stats.totalInvoices || 0,
+          totalRevenue: data.stats.totalRevenue || 0,
+          salesGrowth: data.stats.salesGrowth || 0,
+          productGrowth: data.stats.productGrowth || 0,
+          invoiceGrowth: data.stats.invoiceGrowth || 0,
+          revenueGrowth: data.stats.revenueGrowth || 0,
+        });
+      }
+      
+      if (data?.salesData) {
+        setSalesData(data.salesData);
+      }
+      
+      if (data?.productData) {
+        setProductData(data.productData);
+      }
+    },
+    onError: (error: string) => {
+      console.error('Dashboard data error:', error);
+      // Set stats to null on error to show loading state
+      setStats(null);
+      setSalesData([]);
+      setProductData([]);
+    }
+  });
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchDashboardData();
+      fetchDashboardData({ period: 'monthly' });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchDashboardData]);
 
-  const fetchDashboardData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Set default values first
-      setStats({
-        totalSales: 0,
-        totalProducts: 0,
-        totalInvoices: 0,
-        totalRevenue: 0,
-        salesGrowth: 0,
-        productGrowth: 0,
-        invoiceGrowth: 0,
-        revenueGrowth: 0,
-      });
-
-      setSalesData([]);
-      setProductData([]);
-      
-      // Fetch real dashboard data
-      try {
-        const response = await apiService.dashboard.getData({ period: 'monthly' });
-        
-        if (response.data.success) {
-          const dashboardData = response.data.data;
-          
-          // Update stats with real data
-          setStats({
-            totalSales: dashboardData.stats.totalSales,
-            totalProducts: dashboardData.stats.totalProducts,
-            totalInvoices: dashboardData.stats.totalInvoices,
-            totalRevenue: dashboardData.stats.totalRevenue,
-            salesGrowth: dashboardData.stats.salesGrowth,
-            productGrowth: dashboardData.stats.productGrowth,
-            invoiceGrowth: dashboardData.stats.invoiceGrowth,
-            revenueGrowth: dashboardData.stats.revenueGrowth,
-          });
-
-          // Update chart data
-          if (dashboardData.salesData) {
-            setSalesData(dashboardData.salesData);
-          }
-
-          if (dashboardData.productData) {
-            setProductData(dashboardData.productData);
-          }
-        }
-      } catch (apiError) {
-        console.warn('API data not available, using defaults:', apiError);
-        setError('Failed to load dashboard data. Using default values.');
+  // Fallback: Use dashboardData directly if onSuccess doesn't work
+  useEffect(() => {
+    if (dashboardData && !isLoading && !stats) {
+      console.log('Using dashboardData directly:', dashboardData);
+      if (dashboardData?.stats) {
+        setStats({
+          totalSales: dashboardData.stats.totalSales || 0,
+          totalProducts: dashboardData.stats.totalProducts || 0,
+          totalInvoices: dashboardData.stats.totalInvoices || 0,
+          totalRevenue: dashboardData.stats.totalRevenue || 0,
+          salesGrowth: dashboardData.stats.salesGrowth || 0,
+          productGrowth: dashboardData.stats.productGrowth || 0,
+          invoiceGrowth: dashboardData.stats.invoiceGrowth || 0,
+          revenueGrowth: dashboardData.stats.revenueGrowth || 0,
+        });
       }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data. Please try again.');
-    } finally {
-      setIsLoading(false);
+      
+      if (dashboardData?.salesData) {
+        setSalesData(dashboardData.salesData);
+      }
+      
+      if (dashboardData?.productData) {
+        setProductData(dashboardData.productData);
+      }
     }
-  };
+  }, [dashboardData, isLoading, stats]);
 
-  if (isLoading) {
+  if (isLoading || !stats) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -129,18 +126,23 @@ export default function DashboardPage() {
     );
   }
 
-  if (error) {
+  if (dashboardError) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="text-red-500 text-xl mb-4">⚠️</div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Dashboard</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-            <Button onClick={fetchDashboardData} className="bg-blue-600 hover:bg-blue-700">
-              Try Again
-            </Button>
-          </div>
+          <Card className="p-8 text-center max-w-md">
+            <CardContent>
+              <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Dashboard</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{dashboardError}</p>
+              <Button 
+                onClick={() => fetchDashboardData({ period: 'monthly' })} 
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </DashboardLayout>
     );

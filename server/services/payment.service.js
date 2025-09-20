@@ -76,6 +76,7 @@ export const createPayment = async (paymentData, userId) => {
         
         return await getPaymentById(payment._id);
     } catch (error) {
+        console.log(error);
         throw new Error(`Failed to create payment: ${error.message}`);
     }
 };

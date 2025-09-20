@@ -1,13 +1,15 @@
-import axios from 'axios';
+import axios, { type AxiosResponse, type AxiosError } from 'axios';
+import { handleApiError } from './errorHandler';
 
 // Configure axios defaults
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-axios.defaults.timeout = 10000;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+axios.defaults.timeout = 30000; // Increased timeout for better UX
+axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and logging
 axios.interceptors.request.use(
   (config) => {
-    // Get token from cookies instead of localStorage
+    // Get token from cookies
     const token = document.cookie
       .split('; ')
       .find(row => row.startsWith('auth-token='))
@@ -16,182 +18,462 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add request timestamp for debugging
+    config.metadata = { startTime: new Date() };
+    
+    // Log request in development
+    if (import.meta.env.DEV) {
+      console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+        data: config.data,
+        params: config.params,
+        headers: config.headers
+      });
+    }
+
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and logging
 axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: AxiosResponse) => {
+    // Calculate request duration
+    const duration = new Date().getTime() - (response.config.metadata?.startTime?.getTime() || 0);
+    
+    // Log response in development
+    if (import.meta.env.DEV) {
+      console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+        status: response.status,
+        duration: `${duration}ms`,
+        data: response.data
+      });
+    }
+
+    return response;
+  },
+  (error: AxiosError) => {
+    // Calculate request duration
+    const duration = new Date().getTime() - (error.config?.metadata?.startTime?.getTime() || 0);
+    
+    // Log error in development
+    if (import.meta.env.DEV) {
+      console.error(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+        status: error.response?.status,
+        duration: `${duration}ms`,
+        error: error.response?.data || error.message
+      });
+    }
+
+    // Handle authentication errors
     if (error.response?.status === 401) {
-      // Only clear auth if it's actually an auth error, not a network error
-      if (error.response?.data?.message?.includes('token') || 
-          error.response?.data?.message?.includes('unauthorized') ||
-          error.response?.data?.message?.includes('expired')) {
-        // Token expired or invalid - clear both localStorage and cookies
+      const errorMessage = (error.response?.data as { message?: string })?.message || '';
+      
+      // Only clear auth if it's actually an auth error
+      if (errorMessage.includes('token') || 
+          errorMessage.includes('unauthorized') ||
+          errorMessage.includes('expired') ||
+          errorMessage.includes('Authentication required')) {
+        
+        // Clear authentication data
         localStorage.removeItem('user');
-        // Clear auth-token cookie
         document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        window.location.href = '/login';
+        
+        // Redirect to login after a short delay to allow error handling
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
       }
     }
+
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network error:', error.message);
+    }
+
     return Promise.reject(error);
   }
 );
 
-// API Service functions
+// Enhanced API Service with better error handling
 export const apiService = {
   // Auth endpoints
   auth: {
-    login: (credentials: { email: string; password: string }) =>
-      axios.post('/auth/login', credentials),
+    login: async (credentials: { email: string; password: string }) => {
+      const response = await axios.post('/auth/login', credentials);
+      return response;
+    },
     
-    register: (userData: { name: string; email: string; password: string; role?: string }) =>
-      axios.post('/auth/register', userData),
+    register: async (userData: { name: string; email: string; password: string; role?: string }) => {
+      const response = await axios.post('/auth/register', userData);
+      return response;
+    },
     
-    logout: () =>
-      axios.post('/auth/logout'),
+    logout: async () => {
+      try {
+        const response = await axios.post('/auth/logout');
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    me: () =>
-      axios.get('/auth/me'),
+    me: async () => {
+      try {
+        const response = await axios.get('/auth/me');
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    updateProfile: (userData: Partial<{ name: string; email: string }>) =>
-      axios.put('/auth/profile', userData),
+    updateProfile: async (userData: Partial<{ name: string; email: string }>) => {
+      try {
+        const response = await axios.put('/auth/profile', userData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Products endpoints
   products: {
-    getAll: (params?: { page?: number; limit?: number; search?: string; category?: string }) =>
-      axios.get('/products', { params }),
+    getAll: async (params?: { page?: number; limit?: number; search?: string; category?: string }) => {
+      try {
+        const response = await axios.get('/products', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    getById: (id: string) =>
-      axios.get(`/products/${id}`),
+    getById: async (id: string) => {
+      try {
+        const response = await axios.get(`/products/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    create: (productData: Record<string, unknown>) =>
-      axios.post('/products', productData),
+    create: async (productData: Record<string, unknown>) => {
+      try {
+        const response = await axios.post('/products', productData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    update: (id: string, productData: Record<string, unknown>) =>
-      axios.put(`/products/${id}`, productData),
+    update: async (id: string, productData: Record<string, unknown>) => {
+      try {
+        const response = await axios.put(`/products/${id}`, productData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    delete: (id: string) =>
-      axios.delete(`/products/${id}`),
+    delete: async (id: string) => {
+      try {
+        const response = await axios.delete(`/products/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Invoices endpoints
   invoices: {
-    getAll: (params?: { page?: number; limit?: number; status?: string; dateFrom?: string; dateTo?: string }) =>
-      axios.get('/billing/invoices', { params }),
+    getAll: async (params?: { page?: number; limit?: number; status?: string; dateFrom?: string; dateTo?: string }) => {
+      try {
+        const response = await axios.get('/billing/invoices', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    getById: (id: string) =>
-      axios.get(`/billing/invoices/${id}`),
+    getById: async (id: string) => {
+      try {
+        const response = await axios.get(`/billing/invoices/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    create: (invoiceData: Record<string, unknown>) =>
-      axios.post('/billing/invoices', invoiceData),
+    create: async (invoiceData: Record<string, unknown>) => {
+      try {
+        const response = await axios.post('/billing/invoices', invoiceData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    update: (id: string, invoiceData: Record<string, unknown>) =>
-      axios.put(`/billing/invoices/${id}`, invoiceData),
+    update: async (id: string, invoiceData: Record<string, unknown>) => {
+      try {
+        const response = await axios.put(`/billing/invoices/${id}`, invoiceData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    delete: (id: string) =>
-      axios.delete(`/billing/invoices/${id}`),
+    delete: async (id: string) => {
+      try {
+        const response = await axios.delete(`/billing/invoices/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    generatePDF: (id: string) =>
-      axios.get(`/billing/invoices/${id}/pdf`, { responseType: 'blob' }),
+    generatePDF: async (id: string) => {
+      try {
+        const response = await axios.get(`/billing/invoices/${id}/pdf`, { responseType: 'blob' });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Reports endpoints
   reports: {
-    sales: (params?: { period?: string; startDate?: string; endDate?: string; branch?: string }) =>
-      axios.get('/reports/sales', { params }),
+    sales: async (params?: { period?: string; startDate?: string; endDate?: string; branch?: string }) => {
+      try {
+        const response = await axios.get('/reports/sales', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    stock: (params?: { branch?: string; category?: string }) =>
-      axios.get('/reports/stock', { params }),
+    stock: async (params?: { branch?: string; category?: string }) => {
+      try {
+        const response = await axios.get('/reports/stock', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    profitLoss: (params?: { startDate?: string; endDate?: string; branch?: string }) =>
-      axios.get('/reports/profit-loss', { params }),
+    payments: async (params?: { period?: string; startDate?: string; endDate?: string; branch?: string }) => {
+      try {
+        const response = await axios.get('/reports/payments', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
+    
+    profitLoss: async (params?: { startDate?: string; endDate?: string; branch?: string }) => {
+      try {
+        const response = await axios.get('/reports/profit-loss', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Branches endpoints
   branches: {
-    getAll: () =>
-      axios.get('/branches'),
+    getAll: async () => {
+      try {
+        const response = await axios.get('/branches');
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    getById: (id: string) =>
-      axios.get(`/branches/${id}`),
+    getById: async (id: string) => {
+      try {
+        const response = await axios.get(`/branches/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    create: (branchData: Record<string, unknown>) =>
-      axios.post('/branches', branchData),
+    create: async (branchData: Record<string, unknown>) => {
+      try {
+        const response = await axios.post('/branches', branchData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    update: (id: string, branchData: Record<string, unknown>) =>
-      axios.put(`/branches/${id}`, branchData),
+    update: async (id: string, branchData: Record<string, unknown>) => {
+      try {
+        const response = await axios.put(`/branches/${id}`, branchData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    delete: (id: string) =>
-      axios.delete(`/branches/${id}`),
+    delete: async (id: string) => {
+      try {
+        const response = await axios.delete(`/branches/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Users endpoints
   users: {
-    getAll: (params?: { page?: number; limit?: number; role?: string }) =>
-      axios.get('/users', { params }),
+    getAll: async (params?: { page?: number; limit?: number; role?: string }) => {
+      try {
+        const response = await axios.get('/users', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    getById: (id: string) =>
-      axios.get(`/users/${id}`),
+    getById: async (id: string) => {
+      try {
+        const response = await axios.get(`/users/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    create: (userData: Record<string, unknown>) =>
-      axios.post('/users', userData),
+    create: async (userData: Record<string, unknown>) => {
+      try {
+        const response = await axios.post('/users', userData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    update: (id: string, userData: Record<string, unknown>) =>
-      axios.put(`/users/${id}`, userData),
+    update: async (id: string, userData: Record<string, unknown>) => {
+      try {
+        const response = await axios.put(`/users/${id}`, userData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    delete: (id: string) =>
-      axios.delete(`/users/${id}`),
+    delete: async (id: string) => {
+      try {
+        const response = await axios.delete(`/users/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Payments endpoints
   payments: {
-    getAll: (params?: { page?: number; limit?: number; type?: string; method?: string }) =>
-      axios.get('/payments', { params }),
+    getAll: async (params?: { page?: number; limit?: number; type?: string; method?: string }) => {
+      try {
+        const response = await axios.get('/payments', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    getById: (id: string) =>
-      axios.get(`/payments/${id}`),
+    getById: async (id: string) => {
+      try {
+        const response = await axios.get(`/payments/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    create: (paymentData: Record<string, unknown>) =>
-      axios.post('/payments', paymentData),
+    create: async (paymentData: Record<string, unknown>) => {
+      try {
+        const response = await axios.post('/payments', paymentData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    update: (id: string, paymentData: Record<string, unknown>) =>
-      axios.put(`/payments/${id}`, paymentData),
+    update: async (id: string, paymentData: Record<string, unknown>) => {
+      try {
+        const response = await axios.put(`/payments/${id}`, paymentData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    delete: (id: string) =>
-      axios.delete(`/payments/${id}`),
+    delete: async (id: string) => {
+      try {
+        const response = await axios.delete(`/payments/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Product Transfer endpoints
   transfers: {
-    create: (transferData: {
+    create: async (transferData: {
       productId: string;
       fromBranch: string;
       toBranch: string;
       quantity: number;
       reason: string;
       notes?: string;
-    }) =>
-      axios.post('/transfers', transferData),
+    }) => {
+      try {
+        const response = await axios.post('/transfers', transferData);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    getAll: (params?: { page?: number; limit?: number; productId?: string; branch?: string }) =>
-      axios.get('/transfers', { params }),
+    getAll: async (params?: { page?: number; limit?: number; productId?: string; branch?: string }) => {
+      try {
+        const response = await axios.get('/transfers', { params });
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
     
-    getById: (id: string) =>
-      axios.get(`/transfers/${id}`),
+    getById: async (id: string) => {
+      try {
+        const response = await axios.get(`/transfers/${id}`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Dashboard endpoints
   dashboard: {
-    getData: (params?: { period?: string }) =>
-      axios.get('/dashboard', { params }),
+    getData: async (params?: { period?: string }) => {
+      const response = await axios.get('/dashboard', { params });
+      return response;
+    },
   },
 };
 
 export default apiService;
+

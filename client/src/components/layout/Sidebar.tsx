@@ -45,7 +45,7 @@ export function Sidebar() {
 
   const filteredNavigation = navigation.filter(item => {
     if (item.name === 'Users' || item.name === 'Branches') {
-      return user?.role === 'user';
+      return user?.role === 'admin';
     }
     return true;
   });

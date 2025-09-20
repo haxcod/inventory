@@ -118,14 +118,14 @@ export const Select: React.FC<SelectProps> = ({
       <div
         id={id}
          className={cn(
-           "relative w-full px-4 py-3 text-left bg-white dark:bg-black border-2 rounded-xl shadow-sm cursor-pointer transition-all duration-200",
+           "relative w-full px-4 py-3 text-left bg-white dark:bg-gray-800 border-2 rounded-xl shadow-sm cursor-pointer transition-all duration-200",
            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
-           "hover:border-gray-300 dark:hover:border-gray-600",
+           "hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md",
            error 
              ? "border-red-500 focus:ring-red-500 focus:border-red-500" 
              : "border-gray-200 dark:border-gray-600",
-           disabled && "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800",
-           isOpen && "ring-2 ring-blue-500 border-blue-500",
+           disabled && "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700",
+           isOpen && "ring-2 ring-blue-500 border-blue-500 shadow-lg",
            className
          )}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -153,7 +153,7 @@ export const Select: React.FC<SelectProps> = ({
       </div>
 
        {isOpen && (
-         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-black border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl max-h-60 overflow-auto">
+         <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-xl max-h-60 overflow-auto">
            {options.length === 0 ? (
              <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
                No options available
@@ -165,10 +165,10 @@ export const Select: React.FC<SelectProps> = ({
                  ref={el => { optionRefs.current[index] = el; }}
                  className={cn(
                    "relative px-4 py-3 cursor-pointer transition-colors duration-150",
-                   "hover:bg-gray-100 dark:hover:bg-gray-800",
-                   focusedIndex === index && "bg-gray-100 dark:bg-gray-800",
+                   "hover:bg-blue-50 dark:hover:bg-gray-700",
+                   focusedIndex === index && "bg-blue-50 dark:bg-gray-700",
                    option.disabled && "opacity-50 cursor-not-allowed",
-                   selectedOption?.value === option.value && "bg-blue-50 dark:bg-gray-700 selected-option"
+                   selectedOption?.value === option.value && "bg-blue-100 dark:bg-gray-600 selected-option"
                  )}
                  onClick={() => handleOptionClick(option)}
                  onMouseEnter={() => setFocusedIndex(index)}

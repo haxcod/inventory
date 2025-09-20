@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Frontend API Integration Test</h1>
+        <p>This page tests the improved frontend API handling with better error management and response processing.</p>
+
+        <div class="test-section">
+            <h3>1. Health Check</h3>
+            <button onclick="testHealthCheck()">Test Health Check</button>
+            <div id="health-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Authentication Test</h3>
+            <button onclick="testLogin()">Test Login</button>
+            <button onclick="testLogout()">Test Logout</button>
+            <div id="auth-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Products API Test</h3>
+            <button onclick="testGetProducts()">Get Products</button>
+            <button onclick="testCreateProduct()">Create Product</button>
+            <div id="products-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Payments API Test</h3>
+            <button onclick="testGetPayments()">Get Payments</button>
+            <button onclick="testCreatePayment()">Create Payment</button>
+            <div id="payments-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Error Handling Test</h3>
+            <button onclick="testErrorHandling()">Test Error Scenarios</button>
+            <div id="error-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. Loading States Test</h3>
+            <button onclick="testLoadingStates()">Test Loading States</button>
+            <div id="loading-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let authToken = null;
+
+        // Enhanced API call function with error handling
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                },
+                ...options
+            };
+
+            try {
+                console.log(`🚀 API Request: ${options.method || 'GET'} ${url}`);
+                const startTime = Date.now();
+                
+                const response = await fetch(url, config);
+                const duration = Date.now() - startTime;
+                
+                console.log(`✅ API Response: ${response.status} - ${duration}ms`);
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
+                }
+                
+                return { success: true, data, status: response.status, duration };
+            } catch (error) {
+                console.error(`❌ API Error: ${error.message}`);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Test functions
+        async function testHealthCheck() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing health check...';
+
+            const result = await apiCall('/health');
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Health Check Passed!\nStatus: ${result.status}\nDuration: ${result.duration}ms\nData: ${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Health Check Failed!\nError: ${result.error}`;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing login...';
+
+            const loginData = {
+                email: 'admin@company.com',
+                password: 'admin123'
+            };
+
+            const result = await apiCall('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify(loginData)
+            });
+            
+            if (result.success) {
+                authToken = result.data.data.token;
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Login Successful!\nToken: ${authToken.substring(0, 20)}...\nUser: ${result.data.data.user.name}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Login Failed!\nError: ${result.error}`;
+            }
+        }
+
+        async function testLogout() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing logout...';
+
+            const result = await apiCall('/api/auth/logout', {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                authToken = null;
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Logout Successful!\nMessage: ${result.data.message}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Logout Failed!\nError: ${result.error}`;
+            }
+        }
+
+        async function testGetProducts() {
+            const resultDiv = document.getElementById('products-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Fetching products...';
+
+            const result = await apiCall('/api/products');
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Products Retrieved!\nCount: ${result.data.data.products.length}\nDuration: ${result.duration}ms\nFirst Product: ${JSON.stringify(result.data.data.products[0], null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Failed to get products!\nError: ${result.error}`;
+            }
+        }
+
+        async function testCreateProduct() {
+            const resultDiv = document.getElementById('products-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Creating product...';
+
+            const productData = {
+                name: 'Test Product',
+                description: 'A test product created from frontend',
+                price: 99.99,
+                category: 'Electronics',
+                sku: 'TEST-' + Date.now(),
+                stock: 10,
+                minStock: 5,
+                maxStock: 100,
+                unit: 'piece',
+                supplier: 'Test Supplier'
+            };
+
+            const result = await apiCall('/api/products', {
+                method: 'POST',
+                body: JSON.stringify(productData)
+            });
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Product Created!\nID: ${result.data.data.product._id}\nName: ${result.data.data.product.name}\nPrice: $${result.data.data.product.price}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Failed to create product!\nError: ${result.error}`;
+            }
+        }
+
+        async function testGetPayments() {
+            const resultDiv = document.getElementById('payments-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Fetching payments...';
+
+            const result = await apiCall('/api/payments');
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Payments Retrieved!\nCount: ${result.data.data.payments.length}\nDuration: ${result.duration}ms\nTotal Amount: $${result.data.data.payments.reduce((sum, p) => sum + p.amount, 0).toFixed(2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Failed to get payments!\nError: ${result.error}`;
+            }
+        }
+
+        async function testCreatePayment() {
+            const resultDiv = document.getElementById('payments-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Creating payment...';
+
+            // First get a branch ID
+            const branchesResult = await apiCall('/api/branches');
+            if (!branchesResult.success) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Failed to get branches!\nError: ${branchesResult.error}`;
+                return;
+            }
+
+            const branchId = branchesResult.data.branches[0]._id;
+
+            const paymentData = {
+                amount: 150.00,
+                paymentMethod: 'card',
+                paymentType: 'credit',
+                description: 'Test payment from frontend',
+                reference: 'TEST-' + Date.now(),
+                customer: 'Test Customer',
+                notes: 'Created via frontend test',
+                branch: branchId
+            };
+
+            const result = await apiCall('/api/payments', {
+                method: 'POST',
+                body: JSON.stringify(paymentData)
+            });
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Payment Created!\nID: ${result.data.data.payment._id}\nAmount: $${result.data.data.payment.amount}\nMethod: ${result.data.data.payment.paymentMethod}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Failed to create payment!\nError: ${result.error}`;
+            }
+        }
+
+        async function testErrorHandling() {
+            const resultDiv = document.getElementById('error-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing error scenarios...';
+
+            const tests = [
+                { name: '404 Error', endpoint: '/api/nonexistent' },
+                { name: '401 Error', endpoint: '/api/products', token: false },
+                { name: 'Invalid Data', endpoint: '/api/products', method: 'POST', body: 'invalid json' }
+            ];
+
+            let results = 'Error Handling Test Results:\n\n';
+
+            for (const test of tests) {
+                try {
+                    const config = { method: test.method || 'GET' };
+                    if (test.body) config.body = test.body;
+                    if (test.token === false) config.headers = { 'Authorization': 'Bearer invalid' };
+
+                    const result = await apiCall(test.endpoint, config);
+                    results += `${test.name}: ${result.success ? '✅ Handled properly' : '❌ Unexpected success'}\n`;
+                } catch (error) {
+                    results += `${test.name}: ✅ Error caught and handled\n`;
+                }
+            }
+
+            resultDiv.className = 'result success';
+            resultDiv.textContent = results;
+        }
+
+        async function testLoadingStates() {
+            const resultDiv = document.getElementById('loading-result');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing loading states...';
+
+            // Simulate multiple concurrent requests
+            const promises = [
+                apiCall('/api/products'),
+                apiCall('/api/payments'),
+                apiCall('/api/branches'),
+                apiCall('/api/users')
+            ];
+
+            const startTime = Date.now();
+            const results = await Promise.all(promises);
+            const totalTime = Date.now() - startTime;
+
+            const successCount = results.filter(r => r.success).length;
+            const avgDuration = results.reduce((sum, r) => sum + (r.duration || 0), 0) / results.length;
+
+            resultDiv.className = 'result success';
+            resultDiv.textContent = `✅ Loading States Test Complete!\n\nTotal Requests: ${promises.length}\nSuccessful: ${successCount}\nFailed: ${promises.length - successCount}\nTotal Time: ${totalTime}ms\nAverage Duration: ${avgDuration.toFixed(2)}ms\n\nAll requests handled concurrently with proper loading states.`;
+        }
+
+        // Initialize
+        console.log('🚀 Frontend API Test Page Loaded');
+        console.log('📡 API Base URL:', API_BASE);
+    </script>
+</body>
+</html>

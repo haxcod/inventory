@@ -4,87 +4,148 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
+import { Select } from '../components/ui/Select';
 import type { Branch } from '../types';
 import { formatDate } from '../lib/utils';
-import apiService from '../lib/api';
+import { apiService } from '../lib/api';
+import { useApiList, useApiCreate, useApiDelete } from '../hooks/useApi';
+import { useConfirmations } from '../hooks/useConfirmations';
 import { 
   MagnifyingGlassIcon, 
   PlusIcon,
   BuildingOfficeIcon,
   EyeIcon,
   PencilIcon,
-  TrashIcon
+  TrashIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function BranchesPage() {
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [showNewBranch, setShowNewBranch] = useState(false);
   const [newBranch, setNewBranch] = useState({
     name: '',
     address: '',
     phone: '',
     email: '',
-    manager: '',
+  });
+
+  const { confirmDelete } = useConfirmations();
+
+  // Use API hooks for branches
+  const {
+    data: branchesResponse,
+    loading: isLoading,
+    error: branchesError,
+    execute: fetchBranches
+  } = useApiList<any>(apiService.branches.getAll, {
+    onSuccess: (data: any) => {
+      console.log('Branches loaded successfully:', data);
+    },
+    onError: (error: string) => {
+      console.error('Failed to load branches:', error);
+    }
+  });
+
+  // Extract branches array from response
+  const branches = (branchesResponse as any)?.branches || [];
+
+
+  const {
+    execute: createBranch,
+    loading: isCreatingBranch
+  } = useApiCreate<Branch>(apiService.branches.create, {
+    onSuccess: () => {
+      fetchBranches(); // Refresh the list
+    },
+    itemName: 'Branch'
+  });
+
+
+  const {
+    execute: deleteBranch,
+    loading: isDeletingBranch
+  } = useApiDelete(apiService.branches.delete, {
+    onSuccess: () => {
+      fetchBranches(); // Refresh the list
+    },
+    itemName: 'Branch'
   });
 
   useEffect(() => {
     fetchBranches();
-  }, []);
+  }, [fetchBranches]);
 
-  const fetchBranches = async () => {
-    try {
-      setIsLoading(true);
-      // Real API call
-      const response = await apiService.branches.getAll();
-      if (response.data.success) {
-        setBranches(response.data.data);
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch branches');
-      }
-    } catch (error) {
-      console.error('Error fetching branches:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const filteredBranches = (Array.isArray(branches) ? branches : []).filter(branch => {
+    const matchesSearch = branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      branch.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      branch.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && branch.isActive) ||
+      (statusFilter === 'inactive' && !branch.isActive);
+    
+    return matchesSearch && matchesStatus;
+  });
 
-  const filteredBranches = (Array.isArray(branches) ? branches : []).filter(branch =>
-    branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.manager?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleCreateBranch = async () => {
-    try {
-      // Real API call
-      const branchData = {
-        ...newBranch,
-        isActive: true,
-      };
-      
-      const response = await apiService.branches.create(branchData);
-      if (response.data.success) {
-        setShowNewBranch(false);
-        setNewBranch({
-          name: '',
-          address: '',
-          phone: '',
-          email: '',
-          manager: '',
-        });
-        // Refresh branches list
-        fetchBranches();
-      } else {
-        throw new Error(response.data.message || 'Failed to create branch');
-      }
-    } catch (error) {
-      console.error('Error creating branch:', error);
-    }
+    const branchData = {
+      ...newBranch,
+      isActive: true,
+    };
+    
+    await createBranch(branchData);
+    
+    // Reset form on success
+    setNewBranch({
+      name: '',
+      address: '',
+      phone: '',
+      email: '',
+    });
+    setShowNewBranch(false);
   };
 
+
+  const handleDeleteBranch = (branch: Branch) => {
+    confirmDelete(branch.name, async () => {
+      await deleteBranch(branch._id);
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (branchesError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="p-8 text-center max-w-md">
+            <CardContent>
+              <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Branches</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{branchesError}</p>
+              <Button onClick={() => fetchBranches()} className="bg-blue-600 hover:bg-blue-700">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading if still loading
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -122,7 +183,7 @@ export default function BranchesPage() {
         {/* Search and Filters */}
         <Card className="hover:shadow-lg transition-all duration-300">
           <CardContent className="p-4 sm:p-6">
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Label htmlFor="search" className="text-sm font-semibold text-foreground">
                   Search Branches
@@ -131,19 +192,37 @@ export default function BranchesPage() {
                   <MagnifyingGlassIcon className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   <Input
                     id="search"
-                    placeholder="Search by name, address, manager, or email..."
+                    placeholder="Search by name, address, or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 sm:pl-12 h-10 sm:h-12 text-base sm:text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                    size="lg"
+                    className="pl-10 sm:pl-12"
                   />
                 </div>
+              </div>
+              <div className="sm:w-48">
+                <Label htmlFor="statusFilter" className="text-sm font-semibold text-foreground">
+                  Filter by Status
+                </Label>
+                <Select
+                  id="statusFilter"
+                  options={[
+                    { value: 'all', label: 'All Status' },
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' }
+                  ]}
+                  value={statusFilter}
+                  onChange={(value) => setStatusFilter(value)}
+                  placeholder="Filter by status"
+                  className="mt-2"
+                />
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center">
@@ -197,18 +276,62 @@ export default function BranchesPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <BuildingOfficeIcon className="h-6 w-6 text-gray-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-xs sm:text-sm font-medium" style={{color: 'hsl(var(--muted-foreground))'}}>
+                    Total Branches
+                  </p>
+                  <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
+                    {(Array.isArray(branches) ? branches : []).length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* New Branch Form */}
+        {/* New Branch Modal */}
         {showNewBranch && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Branch</CardTitle>
-              <CardDescription>
-                Create a new branch location for your business
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Blurred Background */}
+            <div 
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setShowNewBranch(false)}
+            />
+            
+            {/* Modal Content */}
+            <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <BuildingOfficeIcon className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Add New Branch
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Create a new branch location for your business
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowNewBranch(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="branchName">Branch Name</Label>
@@ -217,15 +340,6 @@ export default function BranchesPage() {
                     value={newBranch.name}
                     onChange={(e) => setNewBranch(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Enter branch name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="manager">Manager</Label>
-                  <Input
-                    id="manager"
-                    value={newBranch.manager}
-                    onChange={(e) => setNewBranch(prev => ({ ...prev, manager: e.target.value }))}
-                    placeholder="Enter manager name"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -257,14 +371,23 @@ export default function BranchesPage() {
                   />
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
-                <Button onClick={handleCreateBranch}>Create Branch</Button>
-                <Button variant="outline" onClick={() => setShowNewBranch(false)}>
-                  Cancel
-                </Button>
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowNewBranch(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleCreateBranch}
+                    disabled={isCreatingBranch}
+                  >
+                    {isCreatingBranch ? 'Creating...' : 'Create Branch'}
+                  </Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Search */}
@@ -277,7 +400,7 @@ export default function BranchesPage() {
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{color: 'hsl(var(--muted-foreground))'}} />
                   <Input
                     id="search"
-                    placeholder="Search by name, address, manager, or email..."
+                    placeholder="Search by name, address, or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -332,12 +455,6 @@ export default function BranchesPage() {
                       <span className="text-sm font-semibold text-foreground truncate max-w-[150px]">{branch.email}</span>
                     </div>
                   )}
-                  {branch.manager && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-muted-foreground">Manager:</span>
-                      <span className="text-sm font-semibold text-foreground">{branch.manager}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-muted-foreground">Created:</span>
                     <span className="text-sm font-semibold text-foreground">{formatDate(branch.createdAt)}</span>
@@ -364,8 +481,11 @@ export default function BranchesPage() {
                     variant="outline" 
                     size="sm" 
                     className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
+                    onClick={() => handleDeleteBranch(branch)}
+                    disabled={isDeletingBranch}
                   >
                     <TrashIcon className="h-4 w-4" />
+                    {isDeletingBranch ? 'Deleting...' : 'Delete'}
                   </Button>
                 </div>
               </CardContent>
@@ -386,6 +506,7 @@ export default function BranchesPage() {
           </div>
         )}
       </div>
+
     </DashboardLayout>
   );
 }

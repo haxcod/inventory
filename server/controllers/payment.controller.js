@@ -57,7 +57,7 @@ export const getPaymentById = async (req, res) => {
 
 // Create new payment
 export const createPayment = async (req, res) => {
-    try {
+    try {        
         const payment = await paymentService.createPayment(req.body, req.user._id);
         
         res.status(201).json({

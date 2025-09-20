@@ -10,6 +10,11 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node seed-database.js",
+    "db:clear": "node db-manager.js clear",
+    "db:stats": "node db-manager.js stats",
+    "db:backup": "node db-manager.js backup",
+    "db:list": "node db-manager.js list",
+    "db:help": "node db-manager.js help",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -21,7 +26,8 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.1",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
