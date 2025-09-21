@@ -84,7 +84,7 @@ export default function DashboardPage() {
       }
 
       if (data?.salesData) {
-        const cleaned = data.salesData.map((item, index) => ({
+        const cleaned = data.salesData.map((item:any, index:number) => ({
           name: `${item.name},${index + 1}`, // e.g., "Sat #20"
           sales: item.sales,
         }));

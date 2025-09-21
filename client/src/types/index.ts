@@ -77,6 +77,7 @@ export interface Invoice {
 
 export interface InvoiceItem {
   product: string | Product;
+  productName?: string;
   quantity: number;
   price: number;
   discount?: number;

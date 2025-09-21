@@ -1,15 +1,21 @@
-import { useState, useEffect, useMemo } from 'react';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
-import { Select } from '../components/ui/Select';
-import type { SelectOption } from '../components/ui/Select';
-import type { Payment } from '../types';
-import { formatCurrency, formatDate } from '../lib/utils';
-import { 
-  MagnifyingGlassIcon, 
+import { useState, useEffect, useMemo } from "react";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Label } from "../components/ui/Label";
+import { Select } from "../components/ui/Select";
+import type { SelectOption } from "../components/ui/Select";
+import type { Payment } from "../types";
+import { formatCurrency, formatDate } from "../lib/utils";
+import {
+  MagnifyingGlassIcon,
   PlusIcon,
   CreditCardIcon,
   BanknotesIcon,
@@ -19,15 +25,15 @@ import {
   PencilIcon,
   TrashIcon,
   ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
-import { useConfirmations } from '../hooks/useConfirmations';
-import { useAuth } from '../context/AuthContext';
-import { apiService } from '../lib/api';
-import { useApiList, useApiCreate, useApiDelete } from '../hooks/useApi';
+} from "@heroicons/react/24/outline";
+import { useConfirmations } from "../hooks/useConfirmations";
+import { useAuth } from "../context/AuthContext";
+import { apiService } from "../lib/api";
+import { useApiList, useApiCreate, useApiDelete } from "../hooks/useApi";
 
 export default function PaymentsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  
+  const [searchTerm, setSearchTerm] = useState("");
+
   const { user } = useAuth();
   const { confirmDelete, showError } = useConfirmations();
 
@@ -36,89 +42,86 @@ export default function PaymentsPage() {
     data: paymentsResponse,
     loading: isLoading,
     error: paymentsError,
-    execute: fetchPayments
+    execute: fetchPayments,
   } = useApiList<any>(apiService.payments.getAll, {
     onSuccess: (data: any) => {
-      console.log('Payments loaded successfully:', data);
+      console.log("Payments loaded successfully:", data);
     },
     onError: (error: string) => {
-      console.error('Failed to load payments:', error);
-    }
+      console.error("Failed to load payments:", error);
+    },
   });
 
   // Extract payments array from response
   const payments = (paymentsResponse as any)?.payments || [];
 
-  const {
-    execute: createPayment,
-    loading: isCreatingPayment
-  } = useApiCreate<Payment>(apiService.payments.create, {
-    onSuccess: () => {
-      fetchPayments(); // Refresh the list
-    },
-    itemName: 'Payment'
-  });
+  const { execute: createPayment, loading: isCreatingPayment } =
+    useApiCreate<Payment>(apiService.payments.create, {
+      onSuccess: () => {
+        fetchPayments(); // Refresh the list
+      },
+      itemName: "Payment",
+    });
 
-
-  const {
-    execute: deletePayment,
-    loading: isDeletingPayment
-  } = useApiDelete(apiService.payments.delete, {
-    onSuccess: () => {
-      fetchPayments(); // Refresh the list
-    },
-    itemName: 'Payment'
-  });
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [methodFilter, setMethodFilter] = useState('all');
+  const { execute: deletePayment, loading: isDeletingPayment } = useApiDelete(
+    apiService.payments.delete,
+    {
+      onSuccess: () => {
+        fetchPayments(); // Refresh the list
+      },
+      itemName: "Payment",
+    }
+  );
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [methodFilter, setMethodFilter] = useState("all");
   const [showNewPayment, setShowNewPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [showEditPayment, setShowEditPayment] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [newPayment, setNewPayment] = useState({
-    amount: '',
-    paymentMethod: 'cash' as 'cash' | 'card' | 'upi' | 'bank_transfer',
-    paymentType: 'credit' as 'credit' | 'debit',
-    description: '',
-    reference: '',
-    customer: '',
-    notes: '',
+    amount: "",
+    paymentMethod: "cash" as "cash" | "card" | "upi" | "bank_transfer",
+    paymentType: "credit" as "credit" | "debit",
+    description: "",
+    reference: "",
+    customer: "",
+    notes: "",
   });
   const [editPayment, setEditPayment] = useState({
-    amount: '',
-    paymentMethod: 'cash' as 'cash' | 'card' | 'upi' | 'bank_transfer',
-    paymentType: 'credit' as 'credit' | 'debit',
-    description: '',
-    reference: '',
-    customer: '',
-    notes: '',
+    amount: "",
+    paymentMethod: "cash" as "cash" | "card" | "upi" | "bank_transfer",
+    paymentType: "credit" as "credit" | "debit",
+    description: "",
+    reference: "",
+    customer: "",
+    notes: "",
   });
 
   const paymentMethodOptions: SelectOption[] = [
-    { value: 'cash', label: 'Cash' },
-    { value: 'card', label: 'Card' },
-    { value: 'upi', label: 'UPI' },
-    { value: 'bank_transfer', label: 'Bank Transfer' }
+    { value: "cash", label: "Cash" },
+    { value: "card", label: "Card" },
+    { value: "upi", label: "UPI" },
+    { value: "bank_transfer", label: "Bank Transfer" },
   ];
 
   const paymentTypeOptions: SelectOption[] = [
-    { value: 'credit', label: 'Credit (Money In)' },
-    { value: 'debit', label: 'Debit (Money Out)' }
+    { value: "credit", label: "Credit (Money In)" },
+    { value: "debit", label: "Debit (Money Out)" },
   ];
 
   const typeFilterOptions: SelectOption[] = [
-    { value: 'all', label: 'All Types' },
-    { value: 'credit', label: 'Credits Only' },
-    { value: 'debit', label: 'Debits Only' }
+    { value: "all", label: "All Types" },
+    { value: "credit", label: "Credits Only" },
+    { value: "debit", label: "Debits Only" },
   ];
 
   const methodFilterOptions: SelectOption[] = [
-    { value: 'all', label: 'All Methods' },
-    { value: 'cash', label: 'Cash' },
-    { value: 'card', label: 'Card' },
-    { value: 'upi', label: 'UPI' },
-    { value: 'bank_transfer', label: 'Bank Transfer' }
+    { value: "all", label: "All Methods" },
+    { value: "cash", label: "Cash" },
+    { value: "card", label: "Card" },
+    { value: "upi", label: "UPI" },
+    { value: "bank_transfer", label: "Bank Transfer" },
   ];
 
   useEffect(() => {
@@ -128,27 +131,29 @@ export default function PaymentsPage() {
   // Prevent body scroll when modals are open
   useEffect(() => {
     if (showNewPayment || showEditPayment || showPaymentDetails) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [showNewPayment, showEditPayment, showPaymentDetails]);
 
   const filteredPayments = useMemo(() => {
-    return (Array.isArray(payments) ? payments : []).filter(payment => {
-      const matchesSearch = 
+    return (Array.isArray(payments) ? payments : []).filter((payment) => {
+      const matchesSearch =
         payment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         payment.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         payment.reference?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesType = typeFilter === 'all' || payment.paymentType === typeFilter;
-      const matchesMethod = methodFilter === 'all' || payment.paymentMethod === methodFilter;
-      
+
+      const matchesType =
+        typeFilter === "all" || payment.paymentType === typeFilter;
+      const matchesMethod =
+        methodFilter === "all" || payment.paymentMethod === methodFilter;
+
       return matchesSearch && matchesType && matchesMethod;
     });
   }, [payments, searchTerm, typeFilter, methodFilter]);
@@ -157,22 +162,29 @@ export default function PaymentsPage() {
   const stats = useMemo(() => {
     const safePayments = Array.isArray(payments) ? payments : [];
     return {
-      totalAmount: safePayments.reduce((sum, payment) => sum + payment.amount, 0),
+      totalAmount: safePayments.reduce(
+        (sum, payment) => sum + payment.amount,
+        0
+      ),
       totalPayments: safePayments.length,
-      creditAmount: safePayments.filter(p => p.paymentType === 'credit').reduce((sum, p) => sum + p.amount, 0),
-      debitAmount: safePayments.filter(p => p.paymentType === 'debit').reduce((sum, p) => sum + p.amount, 0),
+      creditAmount: safePayments
+        .filter((p) => p.paymentType === "credit")
+        .reduce((sum, p) => sum + p.amount, 0),
+      debitAmount: safePayments
+        .filter((p) => p.paymentType === "debit")
+        .reduce((sum, p) => sum + p.amount, 0),
     };
   }, [payments]);
 
   const getPaymentMethodIcon = (method: string) => {
     switch (method) {
-      case 'card':
+      case "card":
         return <CreditCardIcon className="h-5 w-5" />;
-      case 'upi':
+      case "upi":
         return <DevicePhoneMobileIcon className="h-5 w-5" />;
-      case 'cash':
+      case "cash":
         return <BanknotesIcon className="h-5 w-5" />;
-      case 'bank_transfer':
+      case "bank_transfer":
         return <BuildingLibraryIcon className="h-5 w-5" />;
       default:
         return <BanknotesIcon className="h-5 w-5" />;
@@ -180,33 +192,33 @@ export default function PaymentsPage() {
   };
 
   const getPaymentTypeColor = (type: string) => {
-    return type === 'credit' ? 'text-green-600' : 'text-red-600';
+    return type === "credit" ? "text-green-600" : "text-red-600";
   };
 
   const handleCreatePayment = async () => {
     if (!user) {
-      showError('User not authenticated');
+      showError("User not authenticated");
       return;
     }
 
     const paymentData = {
       ...newPayment,
       amount: parseFloat(newPayment.amount),
-      branch: 'main', // You might want to get this from branches API
+      branch: "main", // You might want to get this from branches API
       createdBy: user._id,
     };
 
     await createPayment(paymentData);
-    
+
     // Reset form on success
     setNewPayment({
-      amount: '',
-      paymentMethod: 'cash',
-      paymentType: 'credit',
-      description: '',
-      reference: '',
-      customer: '',
-      notes: '',
+      amount: "",
+      paymentMethod: "cash",
+      paymentType: "credit",
+      description: "",
+      reference: "",
+      customer: "",
+      notes: "",
     });
     setShowNewPayment(false);
   };
@@ -228,9 +240,9 @@ export default function PaymentsPage() {
       paymentMethod: payment.paymentMethod,
       paymentType: payment.paymentType,
       description: payment.description,
-      reference: payment.reference || '',
-      customer: payment.customer || '',
-      notes: payment.notes || '',
+      reference: payment.reference || "",
+      customer: payment.customer || "",
+      notes: payment.notes || "",
     });
     setShowEditPayment(true);
   };
@@ -239,13 +251,13 @@ export default function PaymentsPage() {
     setEditingPayment(null);
     setShowEditPayment(false);
     setEditPayment({
-      amount: '',
-      paymentMethod: 'cash',
-      paymentType: 'credit',
-      description: '',
-      reference: '',
-      customer: '',
-      notes: '',
+      amount: "",
+      paymentMethod: "cash",
+      paymentType: "credit",
+      description: "",
+      reference: "",
+      customer: "",
+      notes: "",
     });
   };
 
@@ -263,34 +275,41 @@ export default function PaymentsPage() {
         customer: editPayment.customer,
         notes: editPayment.notes,
       };
-      
-      const response = await apiService.payments.update(editingPayment._id, paymentData);
+
+      const response = await apiService.payments.update(
+        editingPayment._id,
+        paymentData
+      );
       if (response.data.success) {
         // Payment updated successfully - the list will refresh automatically via API hooks
       } else {
-        throw new Error(response.data.message || 'Failed to update payment');
+        throw new Error(response.data.message || "Failed to update payment");
       }
-      
+
       setShowEditPayment(false);
       setEditingPayment(null);
       setEditPayment({
-        amount: '',
-        paymentMethod: 'cash',
-        paymentType: 'credit',
-        description: '',
-        reference: '',
-        customer: '',
-        notes: '',
+        amount: "",
+        paymentMethod: "cash",
+        paymentType: "credit",
+        description: "",
+        reference: "",
+        customer: "",
+        notes: "",
       });
     } catch (error) {
-      console.error('Error updating payment:', error);
+      console.error("Error updating payment:", error);
     }
   };
 
   const handleDeletePayment = async (paymentId: string) => {
-    const payment = (Array.isArray(payments) ? payments : []).find(p => p._id === paymentId);
-    const paymentName = payment ? `${payment.customer} - ${formatCurrency(payment.amount)}` : 'this payment';
-    
+    const payment = (Array.isArray(payments) ? payments : []).find(
+      (p) => p._id === paymentId
+    );
+    const paymentName = payment
+      ? `${payment.customer} - ${formatCurrency(payment.amount)}`
+      : "this payment";
+
     confirmDelete(paymentName, async () => {
       await deletePayment(paymentId);
     });
@@ -300,7 +319,10 @@ export default function PaymentsPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+          <div
+            className="animate-spin rounded-full h-16 w-16"
+            style={{ borderBottom: "2px solid hsl(var(--primary))" }}
+          ></div>
         </div>
       </DashboardLayout>
     );
@@ -313,9 +335,16 @@ export default function PaymentsPage() {
           <Card className="p-8 text-center max-w-md">
             <CardContent>
               <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Payments</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{paymentsError}</p>
-              <Button onClick={() => fetchPayments()} className="bg-blue-600 hover:bg-blue-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Error Loading Payments
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {paymentsError}
+              </p>
+              <Button
+                onClick={() => fetchPayments()}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 Try Again
               </Button>
             </CardContent>
@@ -330,7 +359,10 @@ export default function PaymentsPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-16 w-16" style={{borderBottom: '2px solid hsl(var(--primary))'}}></div>
+          <div
+            className="animate-spin rounded-full h-16 w-16"
+            style={{ borderBottom: "2px solid hsl(var(--primary))" }}
+          ></div>
         </div>
       </DashboardLayout>
     );
@@ -345,18 +377,18 @@ export default function PaymentsPage() {
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold">
                 Payment Management
-            </h1>
+              </h1>
               <p className="mt-2 text-emerald-100 dark:text-gray-300 text-sm sm:text-base">
-              Track and manage all payment transactions
-            </p>
-          </div>
-            <Button 
+                Track and manage all payment transactions
+              </p>
+            </div>
+            <Button
               onClick={() => setShowNewPayment(true)}
               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-emerald-400 w-full sm:w-auto"
             >
-            <PlusIcon className="h-4 w-4 mr-2" />
-            New Payment
-          </Button>
+              <PlusIcon className="h-4 w-4 mr-2" />
+              New Payment
+            </Button>
           </div>
         </div>
 
@@ -368,14 +400,14 @@ export default function PaymentsPage() {
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg flex-shrink-0">
                     <BanknotesIcon className="h-8 w-8 text-white" />
-                </div>
+                  </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Total Payments
-                  </p>
+                      Total Payments
+                    </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {stats.totalPayments}
-                  </p>
+                      {stats.totalPayments}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -390,15 +422,17 @@ export default function PaymentsPage() {
               <div className="flex items-start justify-between">
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg flex-shrink-0">
-                    <span className="text-white font-bold text-lg sm:text-xl">₹</span>
-                </div>
+                    <span className="text-white font-bold text-lg sm:text-xl">
+                      ₹
+                    </span>
+                  </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Total Amount
-                  </p>
+                      Total Amount
+                    </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {formatCurrency(stats.totalAmount)}
-                  </p>
+                      {formatCurrency(stats.totalAmount)}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -413,15 +447,17 @@ export default function PaymentsPage() {
               <div className="flex items-start justify-between">
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg flex-shrink-0">
-                    <span className="text-white font-bold text-lg sm:text-xl">+</span>
-                </div>
+                    <span className="text-white font-bold text-lg sm:text-xl">
+                      +
+                    </span>
+                  </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Credits
-                  </p>
+                      Credits
+                    </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {formatCurrency(stats.creditAmount)}
-                  </p>
+                      {formatCurrency(stats.creditAmount)}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -436,15 +472,17 @@ export default function PaymentsPage() {
               <div className="flex items-start justify-between">
                 <div className="flex items-start min-w-0 flex-1">
                   <div className="p-4 bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg flex-shrink-0">
-                    <span className="text-white font-bold text-lg sm:text-xl">-</span>
-                </div>
+                    <span className="text-white font-bold text-lg sm:text-xl">
+                      -
+                    </span>
+                  </div>
                   <div className="ml-4 min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Debits
-                  </p>
+                      Debits
+                    </p>
                     <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1">
-                    {formatCurrency(stats.debitAmount)}
-                  </p>
+                      {formatCurrency(stats.debitAmount)}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -457,7 +495,7 @@ export default function PaymentsPage() {
 
         {/* New Payment Modal */}
         {showNewPayment && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
@@ -482,108 +520,182 @@ export default function PaymentsPage() {
                   </Button>
                 </div>
                 <CardDescription className="text-muted-foreground">
-                Record a new payment transaction
-              </CardDescription>
-            </CardHeader>
+                  Record a new payment transaction
+                </CardDescription>
+              </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <Label htmlFor="amount" className="text-sm font-semibold text-foreground">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={newPayment.amount}
-                    onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
-                    placeholder="Enter amount"
-                    size="lg"
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                    <Label htmlFor="paymentMethod" className="text-sm font-semibold text-foreground">Payment Method</Label>
+                  <div>
+                    <Label
+                      htmlFor="amount"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Amount
+                    </Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      value={newPayment.amount}
+                      onChange={(e) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          amount: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter amount"
+                      size="lg"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="paymentMethod"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Payment Method
+                    </Label>
                     <Select
-                    id="paymentMethod"
+                      id="paymentMethod"
                       options={paymentMethodOptions}
-                    value={newPayment.paymentMethod}
-                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentMethod: value as 'cash' | 'card' | 'upi' | 'bank_transfer' }))}
+                      value={newPayment.paymentMethod}
+                      onChange={(value) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          paymentMethod: value as
+                            | "cash"
+                            | "card"
+                            | "upi"
+                            | "bank_transfer",
+                        }))
+                      }
                       placeholder="Select payment method"
                       className="mt-2"
                     />
-                </div>
-                <div>
-                    <Label htmlFor="paymentType" className="text-sm font-semibold text-foreground">Payment Type</Label>
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="paymentType"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Payment Type
+                    </Label>
                     <Select
-                    id="paymentType"
+                      id="paymentType"
                       options={paymentTypeOptions}
-                    value={newPayment.paymentType}
-                      onChange={(value) => setNewPayment(prev => ({ ...prev, paymentType: value as 'credit' | 'debit' }))}
+                      value={newPayment.paymentType}
+                      onChange={(value) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          paymentType: value as "credit" | "debit",
+                        }))
+                      }
                       placeholder="Select payment type"
                       className="mt-2"
                     />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="customer"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Customer
+                    </Label>
+                    <Input
+                      id="customer"
+                      value={newPayment.customer}
+                      onChange={(e) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          customer: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter customer name"
+                      size="lg"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label
+                      htmlFor="description"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Description
+                    </Label>
+                    <Input
+                      id="description"
+                      value={newPayment.description}
+                      onChange={(e) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter payment description"
+                      size="lg"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="reference"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Reference
+                    </Label>
+                    <Input
+                      id="reference"
+                      value={newPayment.reference}
+                      onChange={(e) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          reference: e.target.value,
+                        }))
+                      }
+                      placeholder="Transaction reference"
+                      size="lg"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="notes"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Notes
+                    </Label>
+                    <Input
+                      id="notes"
+                      value={newPayment.notes}
+                      onChange={(e) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          notes: e.target.value,
+                        }))
+                      }
+                      placeholder="Additional notes"
+                      size="lg"
+                      className="mt-2"
+                    />
+                  </div>
                 </div>
-                <div>
-                    <Label htmlFor="customer" className="text-sm font-semibold text-foreground">Customer</Label>
-                  <Input
-                    id="customer"
-                    value={newPayment.customer}
-                    onChange={(e) => setNewPayment(prev => ({ ...prev, customer: e.target.value }))}
-                    placeholder="Enter customer name"
-                    size="lg"
-                    className="mt-2"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                    <Label htmlFor="description" className="text-sm font-semibold text-foreground">Description</Label>
-                  <Input
-                    id="description"
-                    value={newPayment.description}
-                    onChange={(e) => setNewPayment(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter payment description"
-                    size="lg"
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                    <Label htmlFor="reference" className="text-sm font-semibold text-foreground">Reference</Label>
-                  <Input
-                    id="reference"
-                    value={newPayment.reference}
-                    onChange={(e) => setNewPayment(prev => ({ ...prev, reference: e.target.value }))}
-                    placeholder="Transaction reference"
-                    size="lg"
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                    <Label htmlFor="notes" className="text-sm font-semibold text-foreground">Notes</Label>
-                  <Input
-                    id="notes"
-                    value={newPayment.notes}
-                    onChange={(e) => setNewPayment(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Additional notes"
-                    size="lg"
-                    className="mt-2"
-                  />
-                </div>
-              </div>
                 <div className="mt-6 flex justify-end gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setShowNewPayment(false)}
                     className="border-2 border-gray-200 hover:border-gray-300"
                   >
-                  Cancel
-                </Button>
-                  <Button 
+                    Cancel
+                  </Button>
+                  <Button
                     onClick={handleCreatePayment}
                     disabled={isCreatingPayment}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   >
-                    {isCreatingPayment ? 'Creating...' : 'Create Payment'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                    {isCreatingPayment ? "Creating..." : "Create Payment"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -592,7 +704,12 @@ export default function PaymentsPage() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <Label htmlFor="search" className="text-sm font-semibold text-foreground">Search Payments</Label>
+                <Label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-foreground"
+                >
+                  Search Payments
+                </Label>
                 <div className="relative mt-2">
                   <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
@@ -606,7 +723,12 @@ export default function PaymentsPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="type" className="text-sm font-semibold text-foreground">Type</Label>
+                <Label
+                  htmlFor="type"
+                  className="text-sm font-semibold text-foreground"
+                >
+                  Type
+                </Label>
                 <Select
                   id="type"
                   options={typeFilterOptions}
@@ -617,7 +739,12 @@ export default function PaymentsPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="method" className="text-sm font-semibold text-foreground">Method</Label>
+                <Label
+                  htmlFor="method"
+                  className="text-sm font-semibold text-foreground"
+                >
+                  Method
+                </Label>
                 <Select
                   id="method"
                   options={methodFilterOptions}
@@ -634,29 +761,39 @@ export default function PaymentsPage() {
         {/* Payments List */}
         <div className="space-y-4">
           {filteredPayments.map((payment) => (
-            <Card key={payment._id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <Card
+              key={payment._id}
+              className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+            >
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-3">
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          payment.paymentMethod === 'cash' ? 'bg-green-100 text-green-600' :
-                          payment.paymentMethod === 'card' ? 'bg-blue-100 text-blue-600' :
-                          payment.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-600' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                        {getPaymentMethodIcon(payment.paymentMethod)}
+                        <div
+                          className={`p-2 rounded-lg ${
+                            payment.paymentMethod === "cash"
+                              ? "bg-green-100 text-green-600"
+                              : payment.paymentMethod === "card"
+                              ? "bg-blue-100 text-blue-600"
+                              : payment.paymentMethod === "upi"
+                              ? "bg-purple-100 text-purple-600"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {getPaymentMethodIcon(payment.paymentMethod)}
                         </div>
                         <span className="capitalize font-semibold text-foreground">
-                          {payment.paymentMethod.replace('_', ' ')}
+                          {payment.paymentMethod.replace("_", " ")}
                         </span>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        payment.paymentType === 'credit' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          payment.paymentType === "credit"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
+                      >
                         {payment.paymentType.toUpperCase()}
                       </span>
                     </div>
@@ -664,45 +801,56 @@ export default function PaymentsPage() {
                       {payment.description}
                     </p>
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      <span><strong>Customer:</strong> {payment.customer}</span>
-                      <span><strong>Ref:</strong> {payment.reference}</span>
-                      <span><strong>Date:</strong> {formatDate(payment.createdAt)}</span>
+                      <span>
+                        <strong>Customer:</strong> {payment.customer}
+                      </span>
+                      <span>
+                        <strong>Ref:</strong> {payment.reference}
+                      </span>
+                      <span>
+                        <strong>Date:</strong> {formatDate(payment.createdAt)}
+                      </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-2xl font-bold ${getPaymentTypeColor(payment.paymentType)}`}>
-                      {payment.paymentType === 'credit' ? '+' : '-'}{formatCurrency(payment.amount)}
+                    <p
+                      className={`text-2xl font-bold ${getPaymentTypeColor(
+                        payment.paymentType
+                      )}`}
+                    >
+                      {payment.paymentType === "credit" ? "+" : "-"}
+                      {formatCurrency(payment.amount)}
                     </p>
                   </div>
                 </div>
                 <div className="mt-6 flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleViewPayment(payment)}
                   >
                     <EyeIcon className="h-4 w-4 mr-1" />
                     View
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="text-green-600 hover:bg-green-50 hover:text-green-700"
                     onClick={() => handleEditPayment(payment)}
                   >
                     <PencilIcon className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="text-red-600 hover:bg-red-50 hover:text-red-700"
                     onClick={() => handleDeletePayment(payment._id)}
                     disabled={isDeletingPayment}
                   >
                     <TrashIcon className="h-4 w-4 mr-1" />
-                    {isDeletingPayment ? 'Deleting...' : 'Delete'}
+                    {isDeletingPayment ? "Deleting..." : "Delete"}
                   </Button>
                 </div>
               </CardContent>
@@ -717,16 +865,15 @@ export default function PaymentsPage() {
                 <BanknotesIcon className="h-8 w-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {searchTerm ? 'No payments found' : 'No payments available'}
+                {searchTerm ? "No payments found" : "No payments available"}
               </h3>
               <p className="text-muted-foreground mb-6">
-                {searchTerm 
-                  ? 'Try adjusting your search terms or filters.' 
-                  : 'Get started by recording your first payment transaction.'
-                }
+                {searchTerm
+                  ? "Try adjusting your search terms or filters."
+                  : "Get started by recording your first payment transaction."}
               </p>
               {!searchTerm && (
-                <Button 
+                <Button
                   onClick={() => setShowNewPayment(true)}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
@@ -740,7 +887,7 @@ export default function PaymentsPage() {
 
         {/* Payment Details Modal */}
         {showPaymentDetails && selectedPayment && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
@@ -770,30 +917,43 @@ export default function PaymentsPage() {
                   {/* Payment Header */}
                   <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-lg ${
-                        selectedPayment.paymentMethod === 'cash' ? 'bg-green-100 text-green-600' :
-                        selectedPayment.paymentMethod === 'card' ? 'bg-blue-100 text-blue-600' :
-                        selectedPayment.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-600' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
+                      <div
+                        className={`p-3 rounded-lg ${
+                          selectedPayment.paymentMethod === "cash"
+                            ? "bg-green-100 text-green-600"
+                            : selectedPayment.paymentMethod === "card"
+                            ? "bg-blue-100 text-blue-600"
+                            : selectedPayment.paymentMethod === "upi"
+                            ? "bg-purple-100 text-purple-600"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
                         {getPaymentMethodIcon(selectedPayment.paymentMethod)}
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg capitalize">
-                          {selectedPayment.paymentMethod.replace('_', ' ')} Payment
+                          {selectedPayment.paymentMethod.replace("_", " ")}{" "}
+                          Payment
                         </h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          selectedPayment.paymentType === 'credit' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                        }`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            selectedPayment.paymentType === "credit"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
+                        >
                           {selectedPayment.paymentType.toUpperCase()}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-3xl font-bold ${getPaymentTypeColor(selectedPayment.paymentType)}`}>
-                        {selectedPayment.paymentType === 'credit' ? '+' : '-'}{formatCurrency(selectedPayment.amount)}
+                      <p
+                        className={`text-3xl font-bold ${getPaymentTypeColor(
+                          selectedPayment.paymentType
+                        )}`}
+                      >
+                        {selectedPayment.paymentType === "credit" ? "+" : "-"}
+                        {formatCurrency(selectedPayment.amount)}
                       </p>
                     </div>
                   </div>
@@ -801,37 +961,65 @@ export default function PaymentsPage() {
                   {/* Payment Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-semibold text-foreground mb-3">Transaction Details</h4>
+                      <h4 className="font-semibold text-foreground mb-3">
+                        Transaction Details
+                      </h4>
                       <div className="space-y-3">
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Description</label>
-                          <p className="text-foreground">{selectedPayment.description}</p>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Description
+                          </label>
+                          <p className="text-foreground">
+                            {selectedPayment.description}
+                          </p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Reference</label>
-                          <p className="text-foreground font-mono">{selectedPayment.reference}</p>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Reference
+                          </label>
+                          <p className="text-foreground font-mono">
+                            {selectedPayment.reference}
+                          </p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Customer</label>
-                          <p className="text-foreground">{selectedPayment.customer}</p>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Customer
+                          </label>
+                          <p className="text-foreground">
+                            {selectedPayment.customer}
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-foreground mb-3">Payment Information</h4>
+                      <h4 className="font-semibold text-foreground mb-3">
+                        Payment Information
+                      </h4>
                       <div className="space-y-3">
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Payment Method</label>
-                          <p className="text-foreground capitalize">{selectedPayment.paymentMethod.replace('_', ' ')}</p>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Payment Method
+                          </label>
+                          <p className="text-foreground capitalize">
+                            {selectedPayment.paymentMethod.replace("_", " ")}
+                          </p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Payment Type</label>
-                          <p className="text-foreground capitalize">{selectedPayment.paymentType}</p>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Payment Type
+                          </label>
+                          <p className="text-foreground capitalize">
+                            {selectedPayment.paymentType}
+                          </p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Date</label>
-                          <p className="text-foreground">{formatDate(selectedPayment.createdAt)}</p>
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Date
+                          </label>
+                          <p className="text-foreground">
+                            {formatDate(selectedPayment.createdAt)}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -839,32 +1027,70 @@ export default function PaymentsPage() {
 
                   {/* Additional Details */}
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3">Additional Information</h4>
+                    <h4 className="font-semibold text-foreground mb-3">
+                      Additional Information
+                    </h4>
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="font-medium text-muted-foreground">Branch:</span>
+                          <span className="font-medium text-muted-foreground">
+                            Branch:
+                          </span>
                           <span className="ml-2 text-foreground capitalize">
-                            {typeof selectedPayment.branch === 'object' && selectedPayment.branch?.name 
-                              ? selectedPayment.branch.name 
-                              : selectedPayment.branch || 'Main Branch'}
+                            {(() => {
+                              if (typeof selectedPayment.branch === "string") {
+                                return selectedPayment.branch || "Main Branch";
+                              }
+                              if (
+                                selectedPayment.branch &&
+                                typeof selectedPayment.branch === "object" &&
+                                "name" in selectedPayment.branch
+                              ) {
+                                return (selectedPayment.branch as any).name;
+                              }
+                              return "Main Branch";
+                            })()}
                           </span>
                         </div>
                         <div>
-                          <span className="font-medium text-muted-foreground">Created By:</span>
+                          <span className="font-medium text-muted-foreground">
+                            Created By:
+                          </span>
                           <span className="ml-2 text-foreground">
-                            {typeof selectedPayment.createdBy === 'object' && selectedPayment.createdBy?.name 
-                              ? selectedPayment.createdBy.name 
-                              : selectedPayment.createdBy || 'Unknown User'}
+                            {(() => {
+                              if (
+                                typeof selectedPayment.createdBy === "string"
+                              ) {
+                                return (
+                                  selectedPayment.createdBy || "Unknown User"
+                                );
+                              }
+                              if (
+                                selectedPayment.createdBy &&
+                                typeof selectedPayment.createdBy === "object" &&
+                                "name" in selectedPayment.createdBy
+                              ) {
+                                return (selectedPayment.createdBy as any).name;
+                              }
+                              return "Unknown User";
+                            })()}
                           </span>
                         </div>
                         <div>
-                          <span className="font-medium text-muted-foreground">Created At:</span>
-                          <span className="ml-2 text-foreground">{formatDate(selectedPayment.createdAt)}</span>
+                          <span className="font-medium text-muted-foreground">
+                            Created At:
+                          </span>
+                          <span className="ml-2 text-foreground">
+                            {formatDate(selectedPayment.createdAt)}
+                          </span>
                         </div>
                         <div>
-                          <span className="font-medium text-muted-foreground">Updated At:</span>
-                          <span className="ml-2 text-foreground">{formatDate(selectedPayment.updatedAt)}</span>
+                          <span className="font-medium text-muted-foreground">
+                            Updated At:
+                          </span>
+                          <span className="ml-2 text-foreground">
+                            {formatDate(selectedPayment.updatedAt)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -897,7 +1123,7 @@ export default function PaymentsPage() {
 
         {/* Edit Payment Modal */}
         {showEditPayment && editingPayment && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
@@ -928,78 +1154,152 @@ export default function PaymentsPage() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="edit-amount" className="text-sm font-semibold text-foreground">Amount</Label>
+                    <Label
+                      htmlFor="edit-amount"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Amount
+                    </Label>
                     <Input
                       id="edit-amount"
                       type="number"
                       value={editPayment.amount}
-                      onChange={(e) => setEditPayment(prev => ({ ...prev, amount: e.target.value }))}
+                      onChange={(e) =>
+                        setEditPayment((prev) => ({
+                          ...prev,
+                          amount: e.target.value,
+                        }))
+                      }
                       placeholder="Enter amount"
                       size="lg"
                       className="mt-2"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-paymentMethod" className="text-sm font-semibold text-foreground">Payment Method</Label>
+                    <Label
+                      htmlFor="edit-paymentMethod"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Payment Method
+                    </Label>
                     <Select
                       id="edit-paymentMethod"
                       options={paymentMethodOptions}
                       value={editPayment.paymentMethod}
-                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentMethod: value as 'cash' | 'card' | 'upi' | 'bank_transfer' }))}
+                      onChange={(value) =>
+                        setEditPayment((prev) => ({
+                          ...prev,
+                          paymentMethod: value as
+                            | "cash"
+                            | "card"
+                            | "upi"
+                            | "bank_transfer",
+                        }))
+                      }
                       placeholder="Select payment method"
                       className="mt-2"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-paymentType" className="text-sm font-semibold text-foreground">Payment Type</Label>
+                    <Label
+                      htmlFor="edit-paymentType"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Payment Type
+                    </Label>
                     <Select
                       id="edit-paymentType"
                       options={paymentTypeOptions}
                       value={editPayment.paymentType}
-                      onChange={(value) => setEditPayment(prev => ({ ...prev, paymentType: value as 'credit' | 'debit' }))}
+                      onChange={(value) =>
+                        setEditPayment((prev) => ({
+                          ...prev,
+                          paymentType: value as "credit" | "debit",
+                        }))
+                      }
                       placeholder="Select payment type"
                       className="mt-2"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-customer" className="text-sm font-semibold text-foreground">Customer</Label>
+                    <Label
+                      htmlFor="edit-customer"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Customer
+                    </Label>
                     <Input
                       id="edit-customer"
                       value={editPayment.customer}
-                      onChange={(e) => setEditPayment(prev => ({ ...prev, customer: e.target.value }))}
+                      onChange={(e) =>
+                        setEditPayment((prev) => ({
+                          ...prev,
+                          customer: e.target.value,
+                        }))
+                      }
                       placeholder="Enter customer name"
                       size="lg"
                       className="mt-2"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="edit-description" className="text-sm font-semibold text-foreground">Description</Label>
+                    <Label
+                      htmlFor="edit-description"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Description
+                    </Label>
                     <Input
                       id="edit-description"
                       value={editPayment.description}
-                      onChange={(e) => setEditPayment(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setEditPayment((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       placeholder="Enter payment description"
                       size="lg"
                       className="mt-2"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-reference" className="text-sm font-semibold text-foreground">Reference</Label>
+                    <Label
+                      htmlFor="edit-reference"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Reference
+                    </Label>
                     <Input
                       id="edit-reference"
                       value={editPayment.reference}
-                      onChange={(e) => setEditPayment(prev => ({ ...prev, reference: e.target.value }))}
+                      onChange={(e) =>
+                        setEditPayment((prev) => ({
+                          ...prev,
+                          reference: e.target.value,
+                        }))
+                      }
                       placeholder="Transaction reference"
                       size="lg"
                       className="mt-2"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-notes" className="text-sm font-semibold text-foreground">Notes</Label>
+                    <Label
+                      htmlFor="edit-notes"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Notes
+                    </Label>
                     <Input
                       id="edit-notes"
                       value={editPayment.notes}
-                      onChange={(e) => setEditPayment(prev => ({ ...prev, notes: e.target.value }))}
+                      onChange={(e) =>
+                        setEditPayment((prev) => ({
+                          ...prev,
+                          notes: e.target.value,
+                        }))
+                      }
                       placeholder="Additional notes"
                       size="lg"
                       className="mt-2"
@@ -1007,14 +1307,14 @@ export default function PaymentsPage() {
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={handleCloseEditPayment}
                     className="border-2 border-gray-200 hover:border-gray-300"
                   >
                     Cancel
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleUpdatePayment}
                     className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   >
@@ -1025,7 +1325,6 @@ export default function PaymentsPage() {
             </Card>
           </div>
         )}
-
       </div>
     </DashboardLayout>
   );

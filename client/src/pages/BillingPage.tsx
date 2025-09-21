@@ -105,13 +105,48 @@ export default function BillingPage() {
     }
   );
 
+  // Helper function to get status display configuration
+  const getStatusDisplay = (invoice: Invoice) => {
+    const status = invoice.paymentStatus || 'pending';
+    const statusConfig = {
+      paid: {
+        class: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+        label: "Paid"
+      },
+      pending: {
+        class: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200", 
+        label: "Pending"
+      },
+      partial: {
+        class: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+        label: "Partial"
+      },
+      refunded: {
+        class: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+        label: "Refunded"
+      }
+    };
+    
+    return statusConfig[status] || statusConfig.pending;
+  };
+
   // Process invoices data when invoicesData changes
   useEffect(() => {
     if (invoicesData) {
       try {
         console.log("Invoices API Response:", invoicesData);
-        // Handle different response structures safely
-        const invoicesArray = invoicesData?.invoices || invoicesData || [];
+        
+        // Safe API data access
+        const invoicesArray = (() => {
+          if (Array.isArray(invoicesData)) {
+            return invoicesData;
+          }
+          if (invoicesData && typeof invoicesData === 'object') {
+            return (invoicesData as any).invoices || [];
+          }
+          return [];
+        })();
+        
         const processedInvoices: Invoice[] = Array.isArray(invoicesArray) 
           ? invoicesArray.map((invoice: any) => ({
               ...invoice,
@@ -125,7 +160,7 @@ export default function BillingPage() {
               items: Array.isArray(invoice.items) ? invoice.items : [],
               total: typeof invoice.total === 'number' ? invoice.total : 0,
               paymentMethod: invoice.paymentMethod || "cash",
-              status: invoice.status || "pending",
+              paymentStatus: invoice.paymentStatus || invoice.status || "pending", // Handle both property names
               createdAt: invoice.createdAt || new Date().toISOString(),
             }))
           : [];
@@ -146,8 +181,17 @@ export default function BillingPage() {
       try {
         console.log("Products API Response:", productData);
         
-        // Handle different response structures safely
-        const productsArray = productData?.products || productData || [];
+        // Safe API data access
+        const productsArray = (() => {
+          if (Array.isArray(productData)) {
+            return productData;
+          }
+          if (productData && typeof productData === 'object') {
+            return (productData as any).products || [];
+          }
+          return [];
+        })();
+        
         const processedProducts: Product[] = Array.isArray(productsArray)
           ? productsArray.map((product: any) => ({
               ...product,
@@ -320,7 +364,7 @@ export default function BillingPage() {
           address: newInvoice.customer.address.trim(),
         },
         total,
-        status: "pending" as const,
+        paymentStatus: "pending" as const,
         createdAt: new Date().toISOString(),
       };
 
@@ -713,102 +757,96 @@ export default function BillingPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-            {filteredInvoices.map((invoice) => (
-              <Card
-                key={invoice._id}
-                className="hover:shadow-lg transition-all duration-300 group"
-              >
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                        #{invoice.invoiceNumber}
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                        {invoice.customer?.name || "Unknown Customer"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          invoice.status === "paid"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : invoice.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        }`}
-                      >
-                        {invoice.status?.charAt(0).toUpperCase() +
-                          invoice.status?.slice(1) || "Pending"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">
-                        Total:
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(invoice.total || 0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">
-                        Date:
-                      </span>
-                      <span className="text-gray-900 dark:text-white">
-                        {new Date(
-                          invoice.createdAt || new Date()
-                        ).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">
-                        Payment:
-                      </span>
-                      <span className="text-gray-900 dark:text-white capitalize">
-                        {(invoice.paymentMethod || "cash").replace("_", " ")}
-                      </span>
-                    </div>
-                    {invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">
-                          Items:
-                        </span>
-                        <span className="text-gray-900 dark:text-white">
-                          {invoice.items.length} item
-                          {invoice.items.length > 1 ? "s" : ""}
+            {filteredInvoices.map((invoice) => {
+              const statusDisplay = getStatusDisplay(invoice);
+              return (
+                <Card
+                  key={invoice._id}
+                  className="hover:shadow-lg transition-all duration-300 group"
+                >
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+                          #{invoice.invoiceNumber}
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+                          {invoice.customer?.name || "Unknown Customer"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusDisplay.class}`}>
+                          {statusDisplay.label}
                         </span>
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedInvoice(invoice);
-                        setShowModernInvoice(true);
-                      }}
-                      className="flex-1 text-xs sm:text-sm"
-                    >
-                      View
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteInvoice(invoice)}
-                      disabled={isDeletingInvoice}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          Total:
+                        </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(invoice.total || 0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          Date:
+                        </span>
+                        <span className="text-gray-900 dark:text-white">
+                          {new Date(
+                            invoice.createdAt || new Date()
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          Payment:
+                        </span>
+                        <span className="text-gray-900 dark:text-white capitalize">
+                          {(invoice.paymentMethod || "cash").replace("_", " ")}
+                        </span>
+                      </div>
+                      {invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 dark:text-gray-400">
+                            Items:
+                          </span>
+                          <span className="text-gray-900 dark:text-white">
+                            {invoice.items.length} item
+                            {invoice.items.length > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setShowModernInvoice(true);
+                        }}
+                        className="flex-1 text-xs sm:text-sm"
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteInvoice(invoice)}
+                        disabled={isDeletingInvoice}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
