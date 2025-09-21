@@ -15,6 +15,9 @@ import BranchesPage from './pages/BranchesPage';
 import UsersPage from './pages/UsersPage';
 import SettingsPage from './pages/SettingsPage';
 import AddProductPage from './pages/AddProductPage';
+import EditProductPage from './pages/EditProductPage';
+import ViewProductPage from './pages/ViewProductPage';
+import TransferPage from './pages/TransferPage';
 
 function App() {
   return (
@@ -49,6 +52,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <AddProductPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/products/edit/:id" 
+            element={
+              <ProtectedRoute>
+                <EditProductPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/products/view/:id" 
+            element={
+              <ProtectedRoute>
+                <ViewProductPage />
               </ProtectedRoute>
             } 
           />
@@ -97,6 +116,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UsersPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/transfers" 
+            element={
+              <ProtectedRoute>
+                <TransferPage />
               </ProtectedRoute>
             } 
           />

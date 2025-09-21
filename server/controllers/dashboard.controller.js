@@ -5,7 +5,7 @@ export const getDashboardData = async (req, res) => {
     try {
         const { period = 'monthly' } = req.query;
         
-        const dashboardData = await dashboardService.getDashboardData(period);
+        const dashboardData = await dashboardService.getDashboardData(period, req.branchFilter);
         
         res.json({
             success: true,

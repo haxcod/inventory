@@ -5,7 +5,7 @@ import User from '../models/User.js';
 import Branch from '../models/Branch.js';
 
 // Get dashboard data
-export const getDashboardData = async (period = 'monthly') => {
+export const getDashboardData = async (period = 'monthly', branchFilter = null) => {
     try {
         // Calculate date range based on period
         const now = new Date();
@@ -33,6 +33,20 @@ export const getDashboardData = async (period = 'monthly') => {
                 endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
         }
 
+        // Build query filters
+        const invoiceQuery = { createdAt: { $gte: startDate, $lt: endDate } };
+        const productQuery = { isActive: true };
+        const paymentQuery = { createdAt: { $gte: startDate, $lt: endDate } };
+        const userQuery = { isActive: true };
+        const branchQuery = { isActive: true };
+
+        // Apply branch filter if provided
+        if (branchFilter) {
+            invoiceQuery.branch = branchFilter.branch;
+            productQuery.branch = branchFilter.branch;
+            paymentQuery.branch = branchFilter.branch;
+        }
+
         // Get all data in parallel
         const [
             invoices,
@@ -41,15 +55,11 @@ export const getDashboardData = async (period = 'monthly') => {
             users,
             branches
         ] = await Promise.all([
-            Invoice.find({
-                createdAt: { $gte: startDate, $lt: endDate }
-            }),
-            Product.find({ isActive: true }),
-            Payment.find({
-                createdAt: { $gte: startDate, $lt: endDate }
-            }),
-            User.find({ isActive: true }),
-            Branch.find({ isActive: true })
+            Invoice.find(invoiceQuery),
+            Product.find(productQuery),
+            Payment.find(paymentQuery),
+            User.find(userQuery),
+            Branch.find(branchQuery)
         ]);
 
         // Calculate stats
@@ -63,18 +73,25 @@ export const getDashboardData = async (period = 'monthly') => {
         const previousStartDate = new Date(startDate.getTime() - (endDate.getTime() - startDate.getTime()));
         const previousEndDate = startDate;
 
+        // Build previous period queries
+        const previousInvoiceQuery = { createdAt: { $gte: previousStartDate, $lt: previousEndDate } };
+        const previousProductQuery = { isActive: true };
+        const previousPaymentQuery = { createdAt: { $gte: previousStartDate, $lt: previousEndDate } };
+
+        // Apply branch filter to previous period queries if provided
+        if (branchFilter) {
+            previousInvoiceQuery.branch = branchFilter.branch;
+            previousPaymentQuery.branch = branchFilter.branch;
+        }
+
         const [
             previousInvoices,
             previousProducts,
             previousPayments
         ] = await Promise.all([
-            Invoice.find({
-                createdAt: { $gte: previousStartDate, $lt: previousEndDate }
-            }),
-            Product.find({ isActive: true }),
-            Payment.find({
-                createdAt: { $gte: previousStartDate, $lt: previousEndDate }
-            })
+            Invoice.find(previousInvoiceQuery),
+            Product.find(previousProductQuery),
+            Payment.find(previousPaymentQuery)
         ]);
 
         const previousSales = previousInvoices.length;

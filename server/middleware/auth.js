@@ -16,7 +16,9 @@ export const authenticateToken = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('-password');
+        const user = await User.findById(decoded.userId)
+            .select('-password')
+            .populate('branch', 'name address phone email manager');
         
         if (!user || !user.isActive) {
             return res.status(401).json({
@@ -86,4 +88,32 @@ export const requirePermission = (permission) => {
 
         next();
     };
+};
+
+// Middleware to filter data by user's branch (for non-admin users)
+export const filterByBranch = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: 'Authentication required'
+        });
+    }
+
+    // Admin users can see all data, regular users only see their branch data
+    if (req.user.role === 'admin') {
+        return next();
+    }
+
+    // For regular users, add branch filter to query
+    if (req.user.branch) {
+        req.branchFilter = { branch: req.user.branch._id || req.user.branch };
+    } else {
+        // If user has no branch assigned, they can't see any data
+        return res.status(403).json({
+            success: false,
+            message: 'No branch assigned to user'
+        });
+    }
+
+    next();
 };

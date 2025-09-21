@@ -426,6 +426,15 @@ export const apiService = {
         throw handleApiError(error, false);
       }
     },
+    
+    delete: async (id: string) => {
+      try {
+        const response = await axios.delete(`/transfers/${id}/cancel`);
+        return response;
+      } catch (error) {
+        throw handleApiError(error, false);
+      }
+    },
   },
 
   // Dashboard endpoints

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -12,15 +13,17 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useConfirmations } from '../hooks/useConfirmations';
 import { apiService } from '../lib/api';
-import { useApiList, useApiDelete } from '../hooks/useApi';
+import { useApi, useApiDelete } from '../hooks/useApi';
 import { processApiResponse } from '../lib/responseHandler';
 import { handleApiError } from '../lib/errorHandler';
+import { hasPermission, PERMISSIONS } from '../lib/permissions';
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { showSuccess, confirmDelete } = useConfirmations();
 
@@ -30,8 +33,8 @@ export default function ProductsPage() {
     loading: isLoading,
     error: productsError,
     execute: fetchProducts
-  } = useApiList<any>(apiService.products.getAll, {
-    onSuccess: (data: any) => {
+  } = useApi<{products: Product[]}>(apiService.products.getAll, {
+    onSuccess: (data: {products: Product[]}) => {
       console.log('Products loaded successfully:', data);
     },
     onError: (error: string) => {
@@ -40,7 +43,7 @@ export default function ProductsPage() {
   });
 
   // Extract products array from response
-  const products = (productsResponse as any)?.products || [];
+  const products = productsResponse?.products || [];
 
   const {
     execute: deleteProduct,
@@ -105,8 +108,19 @@ export default function ProductsPage() {
     });
   };
 
-  // Check if user can transfer products (admin or team member)
-  const canTransfer = user?.role === 'admin' || (user?.role === 'user' && user?.permissions?.includes('transfer_products'));
+  const handleViewProduct = (product: Product) => {
+    navigate(`/products/view/${product._id}`);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    navigate(`/products/edit/${product._id}`);
+  };
+
+  // Check permissions
+  const canCreate = hasPermission(user, PERMISSIONS.PRODUCTS_CREATE);
+  const canEdit = hasPermission(user, PERMISSIONS.PRODUCTS_EDIT);
+  const canDelete = hasPermission(user, PERMISSIONS.PRODUCTS_DELETE);
+  const canTransfer = hasPermission(user, PERMISSIONS.TRANSFERS_CREATE);
 
   if (isLoading) {
     return (
@@ -162,12 +176,14 @@ export default function ProductsPage() {
                 Manage your inventory products
               </p>
             </div>
-            <Link to="/products/add">
-              <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-blue-400 w-full sm:w-auto">
-                <PlusIcon className="h-5 w-5 mr-2" />
-                Add Product
-              </Button>
-            </Link>
+            {canCreate && (
+              <Link to="/products/add">
+                <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-blue-400 w-full sm:w-auto">
+                  <PlusIcon className="h-5 w-5 mr-2" />
+                  Add Product
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -247,16 +263,20 @@ export default function ProductsPage() {
                   </div>
                 </div>
                 <div className="mt-6 flex gap-2">
+                  {canEdit && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEditProduct(product)}
+                      className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
+                    >
+                      Edit
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
-                  >
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                    onClick={() => handleViewProduct(product)}
                     className="flex-1 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200"
                   >
                     View
@@ -272,16 +292,18 @@ export default function ProductsPage() {
                       <ArrowRightIcon className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDeleteProduct(product)}
-                    disabled={isDeleting}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
-                    title="Delete product"
-                  >
-                    {isDeleting ? '...' : 'Delete'}
-                  </Button>
+                  {canDelete && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDeleteProduct(product)}
+                      disabled={isDeleting}
+                      className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
+                      title="Delete product"
+                    >
+                      {isDeleting ? '...' : 'Delete'}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
+import { hasPermission, PERMISSIONS } from '../../lib/permissions';
 import {
   HomeIcon,
   CubeIcon,
@@ -15,21 +16,73 @@ import {
   BuildingOfficeIcon,
   SunIcon,
   MoonIcon,
+  ArrowRightIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Products', href: '/products', icon: CubeIcon },
-  { name: 'Billing', href: '/billing', icon: ShoppingCartIcon },
-  { name: 'Invoices', href: '/invoices', icon: DocumentTextIcon },
-  { name: 'Payments', href: '/payments', icon: DocumentTextIcon },
-  { name: 'Reports', href: '/reports', icon: ChartBarIcon },
-  { name: 'Branches', href: '/branches', icon: BuildingOfficeIcon },
-  { name: 'Users', href: '/users', icon: UserGroupIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
+  { 
+    name: 'Dashboard', 
+    href: '/dashboard', 
+    icon: HomeIcon, 
+    permission: PERMISSIONS.DASHBOARD_VIEW 
+  },
+  { 
+    name: 'Products', 
+    href: '/products', 
+    icon: CubeIcon, 
+    permission: PERMISSIONS.PRODUCTS_VIEW 
+  },
+  { 
+    name: 'Transfers', 
+    href: '/transfers', 
+    icon: ArrowRightIcon, 
+    permission: PERMISSIONS.TRANSFERS_VIEW 
+  },
+  { 
+    name: 'Billing', 
+    href: '/billing', 
+    icon: ShoppingCartIcon, 
+    permission: PERMISSIONS.BILLING_VIEW 
+  },
+  { 
+    name: 'Invoices', 
+    href: '/invoices', 
+    icon: DocumentTextIcon, 
+    permission: PERMISSIONS.INVOICES_VIEW 
+  },
+  { 
+    name: 'Payments', 
+    href: '/payments', 
+    icon: DocumentTextIcon, 
+    permission: PERMISSIONS.PAYMENTS_VIEW 
+  },
+  { 
+    name: 'Reports', 
+    href: '/reports', 
+    icon: ChartBarIcon, 
+    permission: PERMISSIONS.REPORTS_VIEW 
+  },
+  { 
+    name: 'Branches', 
+    href: '/branches', 
+    icon: BuildingOfficeIcon, 
+    permission: PERMISSIONS.BRANCHES_VIEW 
+  },
+  { 
+    name: 'Users', 
+    href: '/users', 
+    icon: UserGroupIcon, 
+    permission: PERMISSIONS.USERS_VIEW 
+  },
+  { 
+    name: 'Settings', 
+    href: '/settings', 
+    icon: CogIcon, 
+    permission: PERMISSIONS.SETTINGS_VIEW 
+  },
 ];
 
 export function Sidebar() {
@@ -44,10 +97,7 @@ export function Sidebar() {
   };
 
   const filteredNavigation = navigation.filter(item => {
-    if (item.name === 'Users' || item.name === 'Branches') {
-      return user?.role === 'admin';
-    }
-    return true;
+    return hasPermission(user, item.permission);
   });
 
   return (
@@ -206,6 +256,16 @@ export function Sidebar() {
                 >
                   {user?.role || 'admin'}
                 </p>
+                {user?.branch && (
+                  <p 
+                    className="text-xs mt-1"
+                    style={{
+                      color: theme === 'dark' ? '#6b7280' : '#9ca3af'
+                    }}
+                  >
+                    {typeof user.branch === 'object' ? user.branch.name : user.branch}
+                  </p>
+                )}
               </div>
             </div>
 

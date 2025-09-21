@@ -98,8 +98,8 @@ export const login = async (req, res) => {
             });
         }
 
-        // Find user
-        const user = await User.findByEmail(email);
+        // Find user with branch information
+        const user = await User.findByEmail(email).populate('branch', 'name address phone email manager');
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -179,7 +179,9 @@ export const logout = async (req, res) => {
 // Get current user profile
 export const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select('-password');
+        const user = await User.findById(req.user._id)
+            .select('-password')
+            .populate('branch', 'name address phone email manager');
         
         res.json({
             success: true,

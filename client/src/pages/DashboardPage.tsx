@@ -54,6 +54,12 @@ interface ChartData {
   totalProducts?: number;
 }
 
+interface DashboardData {
+  stats: DashboardStats;
+  salesData: ChartData[];
+  productData: ChartData[];
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -67,8 +73,8 @@ export default function DashboardPage() {
     loading: isLoading,
     error: dashboardError,
     execute: fetchDashboardData,
-  } = useApi(apiService.dashboard.getData, {
-    onSuccess: (data: any) => {
+  } = useApi<DashboardData>(apiService.dashboard.getData, {
+    onSuccess: (data: DashboardData) => {
       console.log("Dashboard data received:", data);
       if (data?.stats) {
         setStats({
@@ -84,7 +90,7 @@ export default function DashboardPage() {
       }
 
       if (data?.salesData) {
-        const cleaned = data.salesData.map((item:any, index:number) => ({
+        const cleaned = data.salesData.map((item, index) => ({
           name: `${item.name},${index + 1}`, // e.g., "Sat #20"
           sales: item.sales,
         }));
@@ -226,6 +232,14 @@ export default function DashboardPage() {
               <p className="mt-2 text-blue-100 dark:text-gray-300 text-sm sm:text-base">
                 Here&apos;s what&apos;s happening with your business today
               </p>
+              {user?.branch && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-blue-200 dark:text-gray-400">Branch:</span>
+                  <span className="text-sm font-semibold text-white">
+                    {typeof user.branch === 'object' ? user.branch.name : user.branch}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="text-left sm:text-right">
               <p className="text-xs sm:text-sm text-blue-200 dark:text-gray-400">

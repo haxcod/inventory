@@ -64,10 +64,28 @@ UserSchema.pre('save', function(next) {
     if (this.isNew && this.permissions.length === 0) {
         switch (this.role) {
             case 'admin':
-                this.permissions = ['read', 'write', 'delete', 'admin'];
+                this.permissions = [
+                    'products.view', 'products.create', 'products.edit', 'products.delete',
+                    'billing.view', 'billing.create', 'billing.edit', 'billing.delete',
+                    'transfers.view', 'transfers.create', 'transfers.edit', 'transfers.delete',
+                    'payments.view', 'payments.create', 'payments.edit', 'payments.delete',
+                    'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.delete',
+                    'reports.view', 'reports.create',
+                    'users.view', 'users.create', 'users.edit', 'users.delete',
+                    'branches.view', 'branches.create', 'branches.edit', 'branches.delete',
+                    'dashboard.view', 'settings.view', 'settings.edit'
+                ];
                 break;
             default: // user
-                this.permissions = ['read', 'write'];
+                this.permissions = [
+                    'products.view',
+                    'billing.view', 'billing.create', 'billing.edit',
+                    'transfers.view', 'transfers.create',
+                    'payments.view', 'payments.create',
+                    'invoices.view', 'invoices.create', 'invoices.edit',
+                    'reports.view',
+                    'dashboard.view'
+                ];
         }
     }
     next();

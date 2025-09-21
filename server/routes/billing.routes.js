@@ -8,33 +8,37 @@ import {
     generateInvoicePDF,
     qrCodeScan
 } from '../controllers/billing.controller.js';
-import { authenticateToken, requirePermission } from '../middleware/auth.js';
+import { authenticateToken, filterByBranch } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/permissions.js';
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
 
-// GET /api/billing/invoices - Get all invoices
-router.get('/invoices', getAllInvoices);
+// Apply branch filtering for data retrieval routes
+router.use(filterByBranch);
 
-// GET /api/billing/invoices/:id - Get invoice by ID
-router.get('/invoices/:id', getInvoiceById);
+// GET /api/billing/invoices - Get all invoices (users can view)
+router.get('/invoices', requirePermission('invoices.view'), getAllInvoices);
 
-// POST /api/billing/invoices - Create new invoice
-router.post('/invoices', requirePermission('write'), createInvoice);
+// GET /api/billing/invoices/:id - Get invoice by ID (users can view)
+router.get('/invoices/:id', requirePermission('invoices.view'), getInvoiceById);
 
-// PUT /api/billing/invoices/:id - Update invoice
-router.put('/invoices/:id', requirePermission('write'), updateInvoice);
+// POST /api/billing/invoices - Create new invoice (users can create)
+router.post('/invoices', requirePermission('invoices.create'), createInvoice);
 
-// DELETE /api/billing/invoices/:id - Delete invoice
-router.delete('/invoices/:id', requirePermission('delete'), deleteInvoice);
+// PUT /api/billing/invoices/:id - Update invoice (users can edit)
+router.put('/invoices/:id', requirePermission('invoices.edit'), updateInvoice);
 
-// GET /api/billing/invoices/:id/pdf - Generate invoice PDF
-router.get('/invoices/:id/pdf', generateInvoicePDF);
+// DELETE /api/billing/invoices/:id - Delete invoice (admin only)
+router.delete('/invoices/:id', requirePermission('invoices.delete'), deleteInvoice);
 
-// POST /api/billing/qr-scan - QR code scan
-router.post('/qr-scan', qrCodeScan);
+// GET /api/billing/invoices/:id/pdf - Generate invoice PDF (users can view)
+router.get('/invoices/:id/pdf', requirePermission('invoices.view'), generateInvoicePDF);
+
+// POST /api/billing/qr-scan - QR code scan (users can use)
+router.post('/qr-scan', requirePermission('billing.view'), qrCodeScan);
 
 export default router;
 

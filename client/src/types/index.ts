@@ -112,6 +112,22 @@ export interface StockMovement {
   createdAt: Date;
 }
 
+export interface Transfer {
+  _id: string;
+  product: string;
+  fromBranch: string;
+  toBranch: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  createdBy: string;
+  completedBy?: string;
+  createdAt: Date;
+  completedAt?: Date;
+  updatedAt: Date;
+}
+
 export interface Notification {
   _id: string;
   user: string;

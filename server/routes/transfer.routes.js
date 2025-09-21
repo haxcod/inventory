@@ -6,26 +6,27 @@ import {
     cancelTransfer,
     getTransferStats
 } from '../controllers/transfer.controller.js';
-import { authenticateToken, requirePermission } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/permissions.js';
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
 
-// GET /api/transfers - Get all transfers
-router.get('/', getAllTransfers);
+// GET /api/transfers - Get all transfers (users can view)
+router.get('/', requirePermission('transfers.view'), getAllTransfers);
 
-// GET /api/transfers/stats - Get transfer statistics
-router.get('/stats', getTransferStats);
+// GET /api/transfers/stats - Get transfer statistics (users can view)
+router.get('/stats', requirePermission('transfers.view'), getTransferStats);
 
-// GET /api/transfers/:id - Get transfer by ID
-router.get('/:id', getTransferById);
+// GET /api/transfers/:id - Get transfer by ID (users can view)
+router.get('/:id', requirePermission('transfers.view'), getTransferById);
 
-// POST /api/transfers - Create new transfer
-router.post('/', requirePermission('transfer_products'), createTransfer);
+// POST /api/transfers - Create new transfer (users can create)
+router.post('/', requirePermission('transfers.create'), createTransfer);
 
-// PUT /api/transfers/:id/cancel - Cancel a transfer
-router.put('/:id/cancel', requirePermission('transfer_products'), cancelTransfer);
+// PUT /api/transfers/:id/cancel - Cancel a transfer (users can cancel)
+router.put('/:id/cancel', requirePermission('transfers.edit'), cancelTransfer);
 
 export default router;

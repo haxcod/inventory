@@ -11,6 +11,11 @@ export const getAllProducts = async (req, res) => {
         if (branch) filters.branch = branch;
         if (search) filters.search = search;
 
+        // Apply branch filter for non-admin users
+        if (req.branchFilter) {
+            filters.branch = req.branchFilter.branch;
+        }
+
         const result = await productService.getAllProducts(filters, parseInt(page), parseInt(limit));
         
         res.json({
@@ -49,7 +54,9 @@ export const createProduct = async (req, res) => {
     try {
         const productData = {
             ...req.body,
-            createdBy: req.user._id
+            createdBy: req.user._id,
+            // Set branch to user's branch if not admin
+            branch: req.user.role === 'admin' ? req.body.branch : req.user.branch._id || req.user.branch
         };
         
         const product = await productService.createProduct(productData);
@@ -151,6 +158,11 @@ export const searchProducts = async (req, res) => {
         if (category) filters.category = category;
         if (branch) filters.branch = branch;
 
+        // Apply branch filter for non-admin users
+        if (req.branchFilter) {
+            filters.branch = req.branchFilter.branch;
+        }
+
         const products = await productService.searchProducts(searchTerm, filters);
         
         res.json({
@@ -169,7 +181,9 @@ export const searchProducts = async (req, res) => {
 export const getLowStockProducts = async (req, res) => {
     try {
         const { branch } = req.query;
-        const products = await productService.getLowStockProducts(branch);
+        // Use branch filter for non-admin users
+        const branchId = req.branchFilter ? req.branchFilter.branch : branch;
+        const products = await productService.getLowStockProducts(branchId);
         
         res.json({
             success: true,

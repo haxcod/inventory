@@ -7,29 +7,30 @@ import {
     deleteUser,
     searchUsers
 } from '../controllers/user.controller.js';
-import { authenticateToken, requirePermission } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/permissions.js';
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
 
-// GET /api/users - Get all users
-router.get('/', getAllUsers);
+// GET /api/users - Get all users (admin only)
+router.get('/', requirePermission('users.view'), getAllUsers);
 
-// GET /api/users/search - Search users
-router.get('/search', searchUsers);
+// GET /api/users/search - Search users (admin only)
+router.get('/search', requirePermission('users.view'), searchUsers);
 
-// GET /api/users/:id - Get user by ID
-router.get('/:id', getUserById);
+// GET /api/users/:id - Get user by ID (admin only)
+router.get('/:id', requirePermission('users.view'), getUserById);
 
-// POST /api/users - Create new user
-router.post('/', requirePermission('admin'), createUser);
+// POST /api/users - Create new user (admin only)
+router.post('/', requirePermission('users.create'), createUser);
 
-// PUT /api/users/:id - Update user
-router.put('/:id', requirePermission('write'), updateUser);
+// PUT /api/users/:id - Update user (admin only)
+router.put('/:id', requirePermission('users.edit'), updateUser);
 
-// DELETE /api/users/:id - Delete user
-router.delete('/:id', requirePermission('delete'), deleteUser);
+// DELETE /api/users/:id - Delete user (admin only)
+router.delete('/:id', requirePermission('users.delete'), deleteUser);
 
 export default router;

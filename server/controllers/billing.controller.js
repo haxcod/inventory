@@ -20,6 +20,11 @@ export const getAllInvoices = async (req, res) => {
         if (dateFrom) filters.dateFrom = dateFrom;
         if (dateTo) filters.dateTo = dateTo;
 
+        // Apply branch filter for non-admin users
+        if (req.branchFilter) {
+            filters.branch = req.branchFilter.branch;
+        }
+
         const result = await billingService.getAllInvoices(filters, parseInt(page), parseInt(limit));
         
         res.json({
@@ -56,7 +61,12 @@ export const getInvoiceById = async (req, res) => {
 // Create new invoice
 export const createInvoice = async (req, res) => {
     try {
-        const invoice = await billingService.createInvoice(req.body, req.user._id);
+        // Set branch to user's branch if not admin
+        const invoiceData = {
+            ...req.body,
+            branch: req.user.role === 'admin' ? req.body.branch : req.user.branch._id || req.user.branch
+        };
+        const invoice = await billingService.createInvoice(invoiceData, req.user._id);
         
         res.status(201).json({
             success: true,

@@ -57,10 +57,39 @@ export const createTransfer = async (transferData) => {
 
         await transfer.save();
 
-        // Update product stock and branch
+        // Update product stock in source branch
         product.stock -= quantity;
-        product.branch = toBranch;
+        // product.branch = toBranch;
         await product.save();
+
+        // Check if product exists in destination branch
+        let destinationProduct = await Product.findOne({
+            sku: product.sku,
+            branch: toBranch
+        });
+
+        if (destinationProduct) {
+            // Update existing product in destination branch
+            destinationProduct.stock += quantity;
+            await destinationProduct.save();
+        } else {
+            // Create new product entry in destination branch
+            const newProduct = new Product({
+                name: product.name,
+                sku: product.sku,
+                category: product.category,
+                brand: product.brand,
+                description: product.description,
+                price: product.price,
+                cost: product.cost,
+                stock: quantity,
+                minStock: product.minStock,
+                unit: product.unit,
+                branch: toBranch,
+                createdBy: createdBy
+            });
+            await newProduct.save();
+        }
 
         // Create stock movement records
         const stockMovements = [
