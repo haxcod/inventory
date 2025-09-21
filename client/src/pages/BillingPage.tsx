@@ -1,22 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
-import { Card, CardContent } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
-import { Select } from '../components/ui/Select';
-import { QRScanner } from '../components/ui/QRScanner';
-import { QRMachine } from '../components/ui/QRMachine';
-import { VoiceInput } from '../components/ui/VoiceInput';
-import { ModernInvoice } from '../components/ui/ModernInvoice';
-import type { Invoice, Product } from '../types';
-import { formatCurrency } from '../lib/utils';
-import { apiService } from '../lib/api';
-import { useApiList, useApiCreate, useApiDelete } from '../hooks/useApi';
-import { useConfirmations } from '../hooks/useConfirmations';
-import { 
-  PlusIcon, 
-  MagnifyingGlassIcon, 
+import { useState, useEffect, useCallback } from "react";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import { Card, CardContent } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Label } from "../components/ui/Label";
+import { Select } from "../components/ui/Select";
+import { QRScanner } from "../components/ui/QRScanner";
+import { QRMachine } from "../components/ui/QRMachine";
+import { VoiceInput } from "../components/ui/VoiceInput";
+import { ModernInvoice } from "../components/ui/ModernInvoice";
+import type { Invoice, Product } from "../types";
+import { formatCurrency } from "../lib/utils";
+import { apiService } from "../lib/api";
+import { useApiList, useApiCreate, useApiDelete } from "../hooks/useApi";
+import { useConfirmations } from "../hooks/useConfirmations";
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
   QrCodeIcon,
   MicrophoneIcon,
   ShoppingCartIcon,
@@ -24,8 +24,8 @@ import {
   ComputerDesktopIcon,
   TrashIcon,
   XMarkIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline';
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 
 interface InvoiceItem {
   product: string;
@@ -36,14 +36,14 @@ interface InvoiceItem {
 }
 
 interface NewInvoiceData {
-  customer: { 
-    name: string; 
-    email: string; 
-    phone: string; 
-    address: string; 
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
   };
   items: InvoiceItem[];
-  paymentMethod: 'cash' | 'card' | 'upi' | 'bank_transfer';
+  paymentMethod: "cash" | "card" | "upi" | "bank_transfer";
   notes: string;
 }
 
@@ -51,7 +51,7 @@ export default function BillingPage() {
   // State management
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showQRMachine, setShowQRMachine] = useState(false);
@@ -63,10 +63,10 @@ export default function BillingPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [newInvoice, setNewInvoice] = useState<NewInvoiceData>({
-    customer: { name: '', email: '', phone: '', address: '' },
+    customer: { name: "", email: "", phone: "", address: "" },
     items: [],
-    paymentMethod: 'cash',
-    notes: '',
+    paymentMethod: "cash",
+    notes: "",
   });
 
   // Hooks
@@ -74,139 +74,137 @@ export default function BillingPage() {
 
   // API hooks with proper error handling
   const {
+    data: invoicesData,
     loading: isLoadingInvoices,
     error: invoicesError,
-    execute: fetchInvoices
-  } = useApiList<any>(apiService.invoices?.getAll || (() => Promise.resolve([])), {
-    onSuccess: (data) => {
-      try {
-        console.log('Invoices API Response:', data);
-        
-        // Handle different response structures
-        let invoicesList: Invoice[] = [];
-        
-        if (data?.data?.invoices) {
-          invoicesList = data.data.invoices;
-        } else if (data?.invoices) {
-          invoicesList = data.invoices;
-        } else if (Array.isArray(data)) {
-          invoicesList = data;
-        } else if (data?.data && Array.isArray(data.data)) {
-          invoicesList = data.data;
-        }
-
-        // Ensure each invoice has required properties
-        const processedInvoices = invoicesList.map((invoice: any) => ({
-          ...invoice,
-          _id: invoice._id || invoice.id,
-          invoiceNumber: invoice.invoiceNumber || `INV-${invoice._id?.slice(-6) || Math.random().toString(36).substr(2, 6)}`,
-          customer: invoice.customer || { name: 'Unknown Customer' },
-          items: invoice.items || [],
-          total: invoice.total || 0,
-          paymentMethod: invoice.paymentMethod || 'cash',
-          status: invoice.status || 'pending',
-          createdAt: invoice.createdAt || new Date().toISOString(),
-        }));
-
-        setInvoices(processedInvoices);
-        setError(null);
-      } catch (error) {
-        console.error('Error processing invoices:', error);
-        setError('Failed to process invoice data');
+    execute: fetchInvoices,
+  } = useApiList<any>(
+    apiService.invoices?.getAll || (() => Promise.resolve([])),
+    {
+      onError: (error) => {
+        console.error("Failed to load invoices:", error);
+        setError("Failed to load invoices. Please try again.");
         setInvoices([]);
-      }
-    },
-    onError: (error) => {
-      console.error('Failed to load invoices:', error);
-      setError('Failed to load invoices. Please try again.');
-      setInvoices([]);
+      },
     }
-  });
+  );
 
   const {
+    data: productData,
     loading: isLoadingProducts,
     error: productsError,
-    execute: fetchProducts
-  } = useApiList<any>(apiService.products?.getAll || (() => Promise.resolve([])), {
-    onSuccess: (data) => {
-      try {
-        console.log('Products API Response:', data);
-        
-        // Handle different response structures
-        let productsList: Product[] = [];
-        
-        if (data?.data?.products) {
-          productsList = data.data.products;
-        } else if (data?.products) {
-          productsList = data.products;
-        } else if (Array.isArray(data)) {
-          productsList = data;
-        } else if (data?.data && Array.isArray(data.data)) {
-          productsList = data.data;
-        }
+    execute: fetchProducts,
+  } = useApiList<any>(
+    apiService.products?.getAll || (() => Promise.resolve([])),
+    {
+      onError: (error) => {
+        console.error("Failed to load products:", error);
+        setError("Failed to load products. Please try again.");
+        setProducts([]);
+      },
+    }
+  );
 
-        // Ensure each product has required properties
-        const processedProducts = productsList.map((product: any) => ({
-          ...product,
-          _id: product._id || product.id,
-          name: product.name || 'Unnamed Product',
-          price: typeof product.price === 'number' ? product.price : 0,
-          stock: typeof product.stock === 'number' ? product.stock : 0,
-        }));
+  // Process invoices data when invoicesData changes
+  useEffect(() => {
+    if (invoicesData) {
+      try {
+        console.log("Invoices API Response:", invoicesData);
+        // Handle different response structures safely
+        const invoicesArray = invoicesData?.invoices || invoicesData || [];
+        const processedInvoices: Invoice[] = Array.isArray(invoicesArray) 
+          ? invoicesArray.map((invoice: any) => ({
+              ...invoice,
+              _id: invoice._id || invoice.id || `temp-${Date.now()}-${Math.random()}`,
+              invoiceNumber:
+                invoice.invoiceNumber ||
+                `INV-${
+                  invoice._id?.slice(-6) || Math.random().toString(36).substr(2, 6)
+                }`,
+              customer: invoice.customer || { name: "Unknown Customer" },
+              items: Array.isArray(invoice.items) ? invoice.items : [],
+              total: typeof invoice.total === 'number' ? invoice.total : 0,
+              paymentMethod: invoice.paymentMethod || "cash",
+              status: invoice.status || "pending",
+              createdAt: invoice.createdAt || new Date().toISOString(),
+            }))
+          : [];
+        
+        setInvoices(processedInvoices);
+        setError(null);
+      } catch (processingError) {
+        console.error("Error processing invoices:", processingError);
+        setError("Failed to process invoice data");
+        setInvoices([]);
+      }
+    }
+  }, [invoicesData]);
+
+  // Process products data when productData changes
+  useEffect(() => {
+    if (productData) {
+      try {
+        console.log("Products API Response:", productData);
+        
+        // Handle different response structures safely
+        const productsArray = productData?.products || productData || [];
+        const processedProducts: Product[] = Array.isArray(productsArray)
+          ? productsArray.map((product: any) => ({
+              ...product,
+              _id: product._id || product.id || `temp-${Date.now()}-${Math.random()}`,
+              name: product.name || "Unnamed Product",
+              price: typeof product.price === "number" ? product.price : 0,
+              stock: typeof product.stock === "number" ? product.stock : 0,
+            }))
+          : [];
 
         setProducts(processedProducts);
         setError(null);
-      } catch (error) {
-        console.error('Error processing products:', error);
-        setError('Failed to process product data');
+      } catch (processingError) {
+        console.error("Error processing products:", processingError);
+        setError("Failed to process product data");
         setProducts([]);
       }
-    },
-    onError: (error) => {
-      console.error('Failed to load products:', error);
-      setError('Failed to load products. Please try again.');
-      setProducts([]);
     }
-  });
+  }, [productData]);
 
-  const {
-    loading: isCreatingInvoice,
-    execute: createInvoice
-  } = useApiCreate<Invoice>(apiService.invoices?.create || (() => Promise.resolve({} as Invoice)), {
-    onSuccess: (data) => {
-      console.log('Invoice created:', data);
-      setShowNewInvoice(false);
-      resetNewInvoiceForm();
-      fetchInvoices();
-      // Show success message if needed
-    },
-    onError: (error) => {
-      console.error('Failed to create invoice:', error);
-      showError('Failed to create invoice. Please try again.');
-    }
-  });
+  const { loading: isCreatingInvoice, execute: createInvoice } =
+    useApiCreate<Invoice>(
+      apiService.invoices?.create || (() => Promise.resolve({} as Invoice)),
+      {
+        onSuccess: (data) => {
+          console.log("Invoice created:", data);
+          setShowNewInvoice(false);
+          resetNewInvoiceForm();
+          fetchInvoices();
+        },
+        onError: (error) => {
+          console.error("Failed to create invoice:", error);
+          showError("Failed to create invoice. Please try again.");
+        },
+      }
+    );
 
-  const {
-    loading: isDeletingInvoice,
-    execute: deleteInvoice
-  } = useApiDelete(apiService.invoices?.delete || (() => Promise.resolve()), {
-    onSuccess: () => {
-      fetchInvoices();
-      // Show success message if needed
-    },
-    onError: (error) => {
-      console.error('Failed to delete invoice:', error);
-      showError('Failed to delete invoice. Please try again.');
+  const { loading: isDeletingInvoice, execute: deleteInvoice } = useApiDelete(
+    apiService.invoices?.delete || (() => Promise.resolve()),
+    {
+      onSuccess: () => {
+        fetchInvoices();
+      },
+      onError: (error) => {
+        console.error("Failed to delete invoice:", error);
+        showError("Failed to delete invoice. Please try again.");
+      },
     }
-  });
+  );
 
   // Utility functions
   const resetNewInvoiceForm = useCallback(() => {
     setNewInvoice({
-      customer: { name: '', email: '', phone: '', address: '' },
+      customer: { name: "", email: "", phone: "", address: "" },
       items: [],
-      paymentMethod: 'cash',
-      notes: '',
+      paymentMethod: "cash",
+      notes: "",
     });
     setSelectedProduct(null);
     setProductQuantity(1);
@@ -217,13 +215,10 @@ export default function BillingPage() {
     const loadData = async () => {
       try {
         setError(null);
-        await Promise.all([
-          fetchInvoices(),
-          fetchProducts()
-        ]);
+        await Promise.all([fetchInvoices(), fetchProducts()]);
       } catch (error) {
-        console.error('Error loading initial data:', error);
-        setError('Failed to load data. Please refresh the page.');
+        console.error("Error loading initial data:", error);
+        setError("Failed to load data. Please refresh the page.");
       }
     };
 
@@ -233,21 +228,35 @@ export default function BillingPage() {
   // Product handling functions
   const handleAddProduct = useCallback(() => {
     if (!selectedProduct || productQuantity <= 0) {
-      showError('Please select a product and enter a valid quantity');
+      showError("Please select a product and enter a valid quantity");
+      return;
+    }
+
+    // Check stock availability
+    if (selectedProduct.stock !== undefined && selectedProduct.stock < productQuantity) {
+      showError(`Insufficient stock. Available: ${selectedProduct.stock}`);
       return;
     }
 
     const existingItemIndex = newInvoice.items.findIndex(
-      item => item.product === selectedProduct._id
+      (item) => item.product === selectedProduct._id
     );
 
     const updatedItems = [...newInvoice.items];
 
     if (existingItemIndex >= 0) {
+      const newQuantity = updatedItems[existingItemIndex].quantity + productQuantity;
+      
+      // Check total quantity against stock
+      if (selectedProduct.stock !== undefined && selectedProduct.stock < newQuantity) {
+        showError(`Insufficient stock for total quantity. Available: ${selectedProduct.stock}`);
+        return;
+      }
+
       updatedItems[existingItemIndex] = {
         ...updatedItems[existingItemIndex],
-        quantity: updatedItems[existingItemIndex].quantity + productQuantity,
-        total: (updatedItems[existingItemIndex].quantity + productQuantity) * selectedProduct.price,
+        quantity: newQuantity,
+        total: newQuantity * selectedProduct.price,
       };
     } else {
       const newItem: InvoiceItem = {
@@ -260,128 +269,209 @@ export default function BillingPage() {
       updatedItems.push(newItem);
     }
 
-    setNewInvoice(prev => ({ ...prev, items: updatedItems }));
+    setNewInvoice((prev) => ({ ...prev, items: updatedItems }));
     setSelectedProduct(null);
     setProductQuantity(1);
   }, [selectedProduct, productQuantity, newInvoice.items, showError]);
 
-  const handleRemoveItem = useCallback((index: number) => {
-    const updatedItems = newInvoice.items.filter((_, i) => i !== index);
-    setNewInvoice(prev => ({ ...prev, items: updatedItems }));
-  }, [newInvoice.items]);
+  const handleRemoveItem = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < newInvoice.items.length) {
+        const updatedItems = newInvoice.items.filter((_, i) => i !== index);
+        setNewInvoice((prev) => ({ ...prev, items: updatedItems }));
+      }
+    },
+    [newInvoice.items]
+  );
 
   // Invoice creation with validation
   const handleCreateInvoice = useCallback(async () => {
     try {
       // Validation
       if (newInvoice.items.length === 0) {
-        showError('Please add at least one product');
+        showError("Please add at least one product");
         return;
       }
 
       if (!newInvoice.customer.name.trim()) {
-        showError('Please enter customer name');
+        showError("Please enter customer name");
         return;
       }
 
-      // Calculate total
-      const total = newInvoice.items.reduce((sum, item) => sum + item.total, 0);
+      // Validate email format if provided
+      if (newInvoice.customer.email && !/\S+@\S+\.\S+/.test(newInvoice.customer.email)) {
+        showError("Please enter a valid email address");
+        return;
+      }
+
+      // Calculate total safely
+      const total = newInvoice.items.reduce((sum, item) => {
+        const itemTotal = typeof item.total === 'number' ? item.total : 0;
+        return sum + itemTotal;
+      }, 0);
 
       const invoiceData = {
         ...newInvoice,
+        customer: {
+          ...newInvoice.customer,
+          name: newInvoice.customer.name.trim(),
+          email: newInvoice.customer.email.trim(),
+          phone: newInvoice.customer.phone.trim(),
+          address: newInvoice.customer.address.trim(),
+        },
         total,
-        status: 'pending' as const,
+        status: "pending" as const,
         createdAt: new Date().toISOString(),
       };
 
-      console.log('Creating invoice with data:', invoiceData);
+      console.log("Creating invoice with data:", invoiceData);
       await createInvoice(invoiceData);
     } catch (error) {
-      console.error('Error creating invoice:', error);
-      showError('Failed to create invoice. Please try again.');
+      console.error("Error creating invoice:", error);
+      showError("Failed to create invoice. Please try again.");
     }
   }, [newInvoice, createInvoice, showError]);
 
   // Invoice deletion with confirmation
-  const handleDeleteInvoice = useCallback(async (invoice: Invoice) => {
-    try {
-      await confirmDelete(
-        `invoice #${invoice.invoiceNumber}`,
-        async () => {
+  const handleDeleteInvoice = useCallback(
+    async (invoice: Invoice) => {
+      if (!invoice._id) {
+        showError("Invalid invoice ID");
+        return;
+      }
+
+      try {
+        await confirmDelete(`invoice #${invoice.invoiceNumber}`, async () => {
           await deleteInvoice(invoice._id);
-        }
-      );
-    } catch (error) {
-      console.error('Error deleting invoice:', error);
-      showError('Failed to delete invoice. Please try again.');
-    }
-  }, [confirmDelete, deleteInvoice, showError]);
-
-  // QR and Voice handlers
-  const handleQRScan = useCallback((data: string) => {
-    console.log('QR Code scanned:', data);
-    try {
-      // Try to parse as JSON for product data
-      const parsedData = JSON.parse(data);
-      if (parsedData.productId) {
-        const product = products.find(p => p._id === parsedData.productId);
-        if (product) {
-          setSelectedProduct(product);
-          if (parsedData.quantity) {
-            setProductQuantity(parsedData.quantity);
-          }
-        }
+        });
+      } catch (error) {
+        console.error("Error deleting invoice:", error);
+        showError("Failed to delete invoice. Please try again.");
       }
-    } catch {
-      // If not JSON, treat as product search
-      const product = products.find(p => 
-        p.name.toLowerCase().includes(data.toLowerCase()) ||
-        p._id === data
-      );
-      if (product) {
-        setSelectedProduct(product);
-      }
-    }
-  }, [products]);
-
-  const handleVoiceInput = useCallback((text: string) => {
-    console.log('Voice input:', text);
-    // Simple voice command processing
-    const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('new invoice')) {
-      setShowNewInvoice(true);
-    } else if (lowerText.includes('search')) {
-      // Extract search term after "search"
-      const searchIndex = lowerText.indexOf('search') + 6;
-      const searchTerm = text.substring(searchIndex).trim();
-      if (searchTerm) {
-        setSearchTerm(searchTerm);
-      }
-    } else {
-      // Try to find product by name
-      const product = products.find(p => 
-        p.name.toLowerCase().includes(lowerText)
-      );
-      if (product) {
-        setSelectedProduct(product);
-      }
-    }
-  }, [products]);
-
-  // Filtered data
-  const filteredInvoices = invoices.filter(invoice =>
-    invoice.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+    },
+    [confirmDelete, deleteInvoice, showError]
   );
 
-  const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0);
+  // QR and Voice handlers
+  const handleQRScan = useCallback(
+    (data: string) => {
+      if (!data || typeof data !== 'string') {
+        showError("Invalid QR code data");
+        return;
+      }
+
+      console.log("QR Code scanned:", data);
+      try {
+        // Try to parse as JSON for product data
+        const parsedData = JSON.parse(data);
+        if (parsedData.productId) {
+          const product = products.find((p) => p._id === parsedData.productId);
+          if (product) {
+            setSelectedProduct(product);
+            if (parsedData.quantity && typeof parsedData.quantity === 'number' && parsedData.quantity > 0) {
+              setProductQuantity(Math.max(1, Math.floor(parsedData.quantity)));
+            }
+          } else {
+            showError("Product not found");
+          }
+        }
+      } catch {
+        // If not JSON, treat as product search
+        const product = products.find(
+          (p) =>
+            p.name.toLowerCase().includes(data.toLowerCase()) || p._id === data
+        );
+        if (product) {
+          setSelectedProduct(product);
+        } else {
+          showError("No matching product found");
+        }
+      }
+      setShowQRScanner(false);
+      setShowQRMachine(false);
+    },
+    [products, showError]
+  );
+
+  const handleVoiceInput = useCallback(
+    (text: string) => {
+      if (!text || typeof text !== 'string') {
+        return;
+      }
+
+      console.log("Voice input:", text);
+      const lowerText = text.toLowerCase().trim();
+
+      try {
+        if (lowerText.includes("new invoice")) {
+          setShowNewInvoice(true);
+        } else if (lowerText.includes("search")) {
+          // Extract search term after "search"
+          const searchIndex = lowerText.indexOf("search") + 6;
+          const searchTerm = text.substring(searchIndex).trim();
+          if (searchTerm) {
+            setSearchTerm(searchTerm);
+          }
+        } else {
+          // Try to find product by name
+          const product = products.find((p) =>
+            p.name.toLowerCase().includes(lowerText)
+          );
+          if (product) {
+            setSelectedProduct(product);
+          }
+        }
+      } catch (error) {
+        console.error("Error processing voice input:", error);
+      }
+      setShowVoiceInput(false);
+    },
+    [products]
+  );
+
+  // Filtered data with safe operations
+  const filteredInvoices = invoices.filter(
+    (invoice) => {
+      if (!searchTerm) return true;
+      
+      const customerName = invoice.customer?.name || "";
+      const invoiceNumber = invoice.invoiceNumber || "";
+      const searchLower = searchTerm.toLowerCase();
+      
+      return (
+        customerName.toLowerCase().includes(searchLower) ||
+        invoiceNumber.toLowerCase().includes(searchLower)
+      );
+    }
+  );
+
+  const totalAmount = filteredInvoices.reduce(
+    (sum, invoice) => sum + (typeof invoice.total === 'number' ? invoice.total : 0),
+    0
+  );
 
   // Get product name for display
-  const getProductName = useCallback((productId: string) => {
-    const product = products.find(p => p._id === productId);
-    return product?.name || 'Unknown Product';
-  }, [products]);
+  const getProductName = useCallback(
+    (productId: string) => {
+      if (!productId) return "Unknown Product";
+      const product = products.find((p) => p._id === productId);
+      return product?.name || "Unknown Product";
+    },
+    [products]
+  );
+
+  // Safe quantity input handler
+  const handleQuantityChange = useCallback((value: string) => {
+    const numValue = parseInt(value) || 1;
+    const maxStock = selectedProduct?.stock;
+    
+    if (maxStock !== undefined && numValue > maxStock) {
+      showError(`Maximum available quantity is ${maxStock}`);
+      setProductQuantity(maxStock);
+    } else {
+      setProductQuantity(Math.max(1, numValue));
+    }
+  }, [selectedProduct?.stock, showError]);
 
   // Loading state
   if (isLoadingInvoices || isLoadingProducts) {
@@ -390,7 +480,9 @@ export default function BillingPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading billing data...</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Loading billing data...
+            </p>
           </div>
         </div>
       </DashboardLayout>
@@ -409,9 +501,12 @@ export default function BillingPage() {
                 Something went wrong
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {error || invoicesError || productsError || 'Failed to load data'}
+                {error ||
+                  invoicesError ||
+                  productsError ||
+                  "Failed to load data"}
               </p>
-              <Button 
+              <Button
                 onClick={() => {
                   setError(null);
                   fetchInvoices();
@@ -443,8 +538,8 @@ export default function BillingPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                 onClick={() => setShowQRScanner(true)}
               >
@@ -452,8 +547,8 @@ export default function BillingPage() {
                 <span className="hidden sm:inline">Camera Scan</span>
                 <span className="sm:hidden">Camera</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                 onClick={() => setShowQRMachine(true)}
               >
@@ -461,8 +556,8 @@ export default function BillingPage() {
                 <span className="hidden sm:inline">Machine Scan</span>
                 <span className="sm:hidden">Machine</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                 onClick={() => setShowVoiceInput(true)}
               >
@@ -470,7 +565,7 @@ export default function BillingPage() {
                 <span className="hidden sm:inline">Voice</span>
                 <span className="sm:hidden">Mic</span>
               </Button>
-              <Button 
+              <Button
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-green-400 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                 onClick={() => setShowNewInvoice(true)}
               >
@@ -487,7 +582,10 @@ export default function BillingPage() {
           <CardContent className="p-6">
             <div className="flex gap-4">
               <div className="flex-1">
-                <Label htmlFor="search" className="text-xs sm:text-sm font-semibold text-foreground">
+                <Label
+                  htmlFor="search"
+                  className="text-xs sm:text-sm font-semibold text-foreground"
+                >
                   Search Invoices
                 </Label>
                 <div className="relative mt-1">
@@ -513,7 +611,9 @@ export default function BillingPage() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Invoices</p>
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    Total Invoices
+                  </p>
                   <p className="text-2xl sm:text-3xl font-bold text-blue-900 dark:text-blue-100">
                     {filteredInvoices.length}
                   </p>
@@ -529,7 +629,9 @@ export default function BillingPage() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Amount</p>
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                    Total Amount
+                  </p>
                   <p className="text-2xl sm:text-3xl font-bold text-green-900 dark:text-green-100">
                     {formatCurrency(totalAmount)}
                   </p>
@@ -545,9 +647,14 @@ export default function BillingPage() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Items</p>
+                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                    Items
+                  </p>
                   <p className="text-2xl sm:text-3xl font-bold text-purple-900 dark:text-purple-100">
-                    {filteredInvoices.reduce((sum, inv) => sum + (inv.items?.length || 0), 0)}
+                    {filteredInvoices.reduce(
+                      (sum, inv) => sum + (Array.isArray(inv.items) ? inv.items.length : 0),
+                      0
+                    )}
                   </p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
@@ -561,12 +668,13 @@ export default function BillingPage() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Avg Amount</p>
+                  <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                    Avg Amount
+                  </p>
                   <p className="text-2xl sm:text-3xl font-bold text-orange-900 dark:text-orange-100">
-                    {filteredInvoices.length > 0 
-                      ? formatCurrency(totalAmount / filteredInvoices.length) 
-                      : formatCurrency(0)
-                    }
+                    {filteredInvoices.length > 0
+                      ? formatCurrency(totalAmount / filteredInvoices.length)
+                      : formatCurrency(0)}
                   </p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
@@ -588,13 +696,12 @@ export default function BillingPage() {
                 No Invoices Found
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm sm:text-base">
-                {searchTerm 
-                  ? 'No invoices match your search criteria.' 
-                  : 'Get started by creating your first invoice.'
-                }
+                {searchTerm
+                  ? "No invoices match your search criteria."
+                  : "Get started by creating your first invoice."}
               </p>
               {!searchTerm && (
-                <Button 
+                <Button
                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-green-400"
                   onClick={() => setShowNewInvoice(true)}
                 >
@@ -607,7 +714,10 @@ export default function BillingPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {filteredInvoices.map((invoice) => (
-              <Card key={invoice._id} className="hover:shadow-lg transition-all duration-300 group">
+              <Card
+                key={invoice._id}
+                className="hover:shadow-lg transition-all duration-300 group"
+              >
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -615,51 +725,65 @@ export default function BillingPage() {
                         #{invoice.invoiceNumber}
                       </h3>
                       <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                        {invoice.customer?.name || 'Unknown Customer'}
+                        {invoice.customer?.name || "Unknown Customer"}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        invoice.status === 'paid' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : invoice.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                      }`}>
-                        {invoice.status?.charAt(0).toUpperCase() + invoice.status?.slice(1) || 'Pending'}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          invoice.status === "paid"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : invoice.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        }`}
+                      >
+                        {invoice.status?.charAt(0).toUpperCase() +
+                          invoice.status?.slice(1) || "Pending"}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Total:</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Total:
+                      </span>
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(invoice.total || 0)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Date:</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Date:
+                      </span>
                       <span className="text-gray-900 dark:text-white">
-                        {new Date(invoice.createdAt || new Date()).toLocaleDateString()}
+                        {new Date(
+                          invoice.createdAt || new Date()
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Payment:</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Payment:
+                      </span>
                       <span className="text-gray-900 dark:text-white capitalize">
-                        {(invoice.paymentMethod || 'cash').replace('_', ' ')}
+                        {(invoice.paymentMethod || "cash").replace("_", " ")}
                       </span>
                     </div>
-                    {invoice.items && invoice.items.length > 0 && (
+                    {invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Items:</span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                          Items:
+                        </span>
                         <span className="text-gray-900 dark:text-white">
-                          {invoice.items.length} item{invoice.items.length > 1 ? 's' : ''}
+                          {invoice.items.length} item
+                          {invoice.items.length > 1 ? "s" : ""}
                         </span>
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -692,11 +816,11 @@ export default function BillingPage() {
         {showNewInvoice && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Blurred Background */}
-            <div 
+            <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setShowNewInvoice(false)}
             />
-            
+
             {/* Modal Content */}
             <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -724,7 +848,7 @@ export default function BillingPage() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="p-6 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   {/* Customer Details */}
@@ -733,60 +857,86 @@ export default function BillingPage() {
                       <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                         <ShoppingCartIcon className="h-4 w-4 text-blue-600" />
                       </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-foreground">Customer Details</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                        Customer Details
+                      </h3>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="customerName">Customer Name *</Label>
                         <Input
                           id="customerName"
                           value={newInvoice.customer.name}
-                          onChange={(e) => setNewInvoice(prev => ({
-                            ...prev,
-                            customer: { ...prev.customer, name: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setNewInvoice((prev) => ({
+                              ...prev,
+                              customer: {
+                                ...prev.customer,
+                                name: e.target.value,
+                              },
+                            }))
+                          }
                           placeholder="Enter customer name"
-                          className={!newInvoice.customer.name.trim() ? 'border-red-300 focus:border-red-500' : ''}
+                          className={
+                            !newInvoice.customer.name.trim()
+                              ? "border-red-300 focus:border-red-500"
+                              : ""
+                          }
                         />
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="customerEmail">Email</Label>
                         <Input
                           id="customerEmail"
                           type="email"
                           value={newInvoice.customer.email}
-                          onChange={(e) => setNewInvoice(prev => ({
-                            ...prev,
-                            customer: { ...prev.customer, email: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setNewInvoice((prev) => ({
+                              ...prev,
+                              customer: {
+                                ...prev.customer,
+                                email: e.target.value,
+                              },
+                            }))
+                          }
                           placeholder="Enter email address"
                         />
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="customerPhone">Phone</Label>
                         <Input
                           id="customerPhone"
                           value={newInvoice.customer.phone}
-                          onChange={(e) => setNewInvoice(prev => ({
-                            ...prev,
-                            customer: { ...prev.customer, phone: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setNewInvoice((prev) => ({
+                              ...prev,
+                              customer: {
+                                ...prev.customer,
+                                phone: e.target.value,
+                              },
+                            }))
+                          }
                           placeholder="Enter phone number"
                         />
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="customerAddress">Address</Label>
                         <Input
                           id="customerAddress"
                           value={newInvoice.customer.address}
-                          onChange={(e) => setNewInvoice(prev => ({
-                            ...prev,
-                            customer: { ...prev.customer, address: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setNewInvoice((prev) => ({
+                              ...prev,
+                              customer: {
+                                ...prev.customer,
+                                address: e.target.value,
+                              },
+                            }))
+                          }
                           placeholder="Enter address"
                         />
                       </div>
@@ -796,16 +946,22 @@ export default function BillingPage() {
                         <Select
                           id="paymentMethod"
                           options={[
-                            { value: 'cash', label: 'Cash' },
-                            { value: 'card', label: 'Card' },
-                            { value: 'upi', label: 'UPI' },
-                            { value: 'bank_transfer', label: 'Bank Transfer' }
+                            { value: "cash", label: "Cash" },
+                            { value: "card", label: "Card" },
+                            { value: "upi", label: "UPI" },
+                            { value: "bank_transfer", label: "Bank Transfer" },
                           ]}
                           value={newInvoice.paymentMethod}
-                          onChange={(value) => setNewInvoice(prev => ({
-                            ...prev,
-                            paymentMethod: value as 'cash' | 'card' | 'upi' | 'bank_transfer'
-                          }))}
+                          onChange={(value) =>
+                            setNewInvoice((prev) => ({
+                              ...prev,
+                              paymentMethod: value as
+                                | "cash"
+                                | "card"
+                                | "upi"
+                                | "bank_transfer",
+                            }))
+                          }
                           placeholder="Select payment method"
                         />
                       </div>
@@ -815,10 +971,12 @@ export default function BillingPage() {
                         <Input
                           id="notes"
                           value={newInvoice.notes}
-                          onChange={(e) => setNewInvoice(prev => ({
-                            ...prev,
-                            notes: e.target.value
-                          }))}
+                          onChange={(e) =>
+                            setNewInvoice((prev) => ({
+                              ...prev,
+                              notes: e.target.value,
+                            }))
+                          }
                           placeholder="Additional notes (optional)"
                         />
                       </div>
@@ -831,9 +989,11 @@ export default function BillingPage() {
                       <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
                         <DocumentTextIcon className="h-4 w-4 text-green-600" />
                       </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-foreground">Add Products</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                        Add Products
+                      </h3>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div className="flex gap-2">
                         <div className="flex-1">
@@ -841,15 +1001,23 @@ export default function BillingPage() {
                           <Select
                             id="productSelect"
                             options={[
-                              { value: '', label: 'Choose a product' },
-                              ...products.map(product => ({
+                              { value: "", label: "Choose a product" },
+                              ...products.map((product) => ({
                                 value: product._id,
-                                label: `${product.name} - ${formatCurrency(product.price)}${product.stock !== undefined ? ` (Stock: ${product.stock})` : ''}`
-                              }))
+                                label: `${product.name} - ${formatCurrency(
+                                  product.price
+                                )}${
+                                  product.stock !== undefined
+                                    ? ` (Stock: ${product.stock})`
+                                    : ""
+                                }`,
+                              })),
                             ]}
-                            value={selectedProduct?._id || ''}
+                            value={selectedProduct?._id || ""}
                             onChange={(value) => {
-                              const product = products.find(p => p._id === value);
+                              const product = products.find(
+                                (p) => p._id === value
+                              );
                               setSelectedProduct(product || null);
                             }}
                             placeholder="Choose a product"
@@ -863,7 +1031,7 @@ export default function BillingPage() {
                             min="1"
                             max={selectedProduct?.stock || undefined}
                             value={productQuantity}
-                            onChange={(e) => setProductQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                            onChange={(e) => handleQuantityChange(e.target.value)}
                             placeholder="1"
                           />
                         </div>
@@ -877,26 +1045,31 @@ export default function BillingPage() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       {selectedProduct && (
                         <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             <strong>Selected:</strong> {selectedProduct.name}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            <strong>Price:</strong> {formatCurrency(selectedProduct.price)} each
+                            <strong>Price:</strong>{" "}
+                            {formatCurrency(selectedProduct.price)} each
                           </p>
                           {selectedProduct.stock !== undefined && (
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              <strong>Available:</strong> {selectedProduct.stock} units
+                              <strong>Available:</strong>{" "}
+                              {selectedProduct.stock} units
                             </p>
                           )}
                           <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            <strong>Total:</strong> {formatCurrency(selectedProduct.price * productQuantity)}
+                            <strong>Total:</strong>{" "}
+                            {formatCurrency(
+                              selectedProduct.price * productQuantity
+                            )}
                           </p>
                         </div>
                       )}
-                      
+
                       {newInvoice.items.length > 0 && (
                         <div className="space-y-2">
                           <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
@@ -904,13 +1077,18 @@ export default function BillingPage() {
                           </h4>
                           <div className="max-h-40 overflow-y-auto space-y-2">
                             {newInvoice.items.map((item, index) => (
-                              <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <div
+                                key={index}
+                                className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg"
+                              >
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {item.productName || getProductName(item.product)}
+                                    {item.productName ||
+                                      getProductName(item.product)}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {formatCurrency(item.price)} × {item.quantity}
+                                    {formatCurrency(item.price)} ×{" "}
+                                    {item.quantity}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -931,9 +1109,16 @@ export default function BillingPage() {
                           </div>
                           <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                             <div className="flex justify-between items-center">
-                              <span className="font-semibold text-gray-900 dark:text-white">Total:</span>
+                              <span className="font-semibold text-gray-900 dark:text-white">
+                                Total:
+                              </span>
                               <span className="font-bold text-lg text-green-600 dark:text-green-400">
-                                {formatCurrency(newInvoice.items.reduce((sum, item) => sum + item.total, 0))}
+                                {formatCurrency(
+                                  newInvoice.items.reduce(
+                                    (sum, item) => sum + item.total,
+                                    0
+                                  )
+                                )}
                               </span>
                             </div>
                           </div>
@@ -944,7 +1129,9 @@ export default function BillingPage() {
                         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                           <ShoppingCartIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                           <p className="text-sm">No items added yet</p>
-                          <p className="text-xs">Select a product above to get started</p>
+                          <p className="text-xs">
+                            Select a product above to get started
+                          </p>
                         </div>
                       )}
                     </div>
@@ -957,16 +1144,22 @@ export default function BillingPage() {
                       <p>* Required fields</p>
                       {newInvoice.items.length > 0 && (
                         <p className="mt-1">
-                          {newInvoice.items.length} item{newInvoice.items.length > 1 ? 's' : ''} • 
-                          Total: <span className="font-semibold text-gray-900 dark:text-white">
-                            {formatCurrency(newInvoice.items.reduce((sum, item) => sum + item.total, 0))}
+                          {newInvoice.items.length} item
+                          {newInvoice.items.length > 1 ? "s" : ""} • Total:{" "}
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {formatCurrency(
+                              newInvoice.items.reduce(
+                                (sum, item) => sum + item.total,
+                                0
+                              )
+                            )}
                           </span>
                         </p>
                       )}
                     </div>
                     <div className="flex gap-3 w-full sm:w-auto">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => {
                           setShowNewInvoice(false);
                           resetNewInvoiceForm();
@@ -975,9 +1168,13 @@ export default function BillingPage() {
                       >
                         Cancel
                       </Button>
-                      <Button 
+                      <Button
                         onClick={handleCreateInvoice}
-                        disabled={isCreatingInvoice || newInvoice.items.length === 0 || !newInvoice.customer.name.trim()}
+                        disabled={
+                          isCreatingInvoice ||
+                          newInvoice.items.length === 0 ||
+                          !newInvoice.customer.name.trim()
+                        }
                         className="flex-1 sm:flex-none bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isCreatingInvoice ? (

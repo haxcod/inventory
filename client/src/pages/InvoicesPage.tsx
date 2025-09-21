@@ -42,9 +42,13 @@ export default function InvoicesPage() {
       console.error('Failed to load invoices:', error);
     }
   });
+  
+  console.log(invoicesResponse);
+  
 
   // Extract invoices array from response
   const invoices = (invoicesResponse as any)?.invoices || [];
+  
 
   const {
     execute: deleteInvoice,
