@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import {
   Card,
@@ -27,56 +27,23 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useConfirmations } from "../hooks/useConfirmations";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, usePayments } from "../hooks/useStores";
 import { apiService } from "../lib/api";
-import { useApiList, useApiCreate, useApiDelete } from "../hooks/useApi";
 
 export default function PaymentsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-
   const { user } = useAuth();
+  const { payments, fetchPayments, isLoading, error, createPayment: storeCreatePayment, removePayment } = usePayments();
   const { confirmDelete, showError } = useConfirmations();
-
-  // Use API hooks for payments
-  const {
-    data: paymentsResponse,
-    loading: isLoading,
-    error: paymentsError,
-    execute: fetchPayments,
-  } = useApiList<any>(apiService.payments.getAll, {
-    onSuccess: (data: any) => {
-      console.log("Payments loaded successfully:", data);
-    },
-    onError: (error: string) => {
-      console.error("Failed to load payments:", error);
-    },
-  });
-
-  // Extract payments array from response
-  const payments = (paymentsResponse as any)?.payments || [];
-
-  const { execute: createPayment, loading: isCreatingPayment } =
-    useApiCreate<Payment>(apiService.payments.create, {
-      onSuccess: () => {
-        fetchPayments(); // Refresh the list
-      },
-      itemName: "Payment",
-    });
-
-  const { execute: deletePayment, loading: isDeletingPayment } = useApiDelete(
-    apiService.payments.delete,
-    {
-      onSuccess: () => {
-        fetchPayments(); // Refresh the list
-      },
-      itemName: "Payment",
-    }
-  );
+  
+  // State
+  const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
   const [showNewPayment, setShowNewPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [isDeletingPayment, setIsDeletingPayment] = useState(false);
   const [showEditPayment, setShowEditPayment] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [newPayment, setNewPayment] = useState({
@@ -88,6 +55,57 @@ export default function PaymentsPage() {
     customer: "",
     notes: "",
   });
+
+  // Load data using the same pattern as other pages
+  useEffect(() => {
+    console.log('🔍 PaymentsPage useEffect - payments.length:', payments.length);
+    
+    // Only fetch payments if we don't have payments yet
+    if (payments.length === 0) {
+      console.log('📥 Fetching payments...');
+      fetchPayments();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payments.length]); // fetchPayments is stable from Zustand
+
+  // Create payment function using Zustand store
+  const createPayment = useCallback(async (paymentData: Partial<Payment>) => {
+    try {
+      setIsCreatingPayment(true);
+      // Use store method which handles API call and state update
+      await storeCreatePayment(paymentData);
+      setShowNewPayment(false);
+      setNewPayment({
+        amount: "",
+        paymentMethod: "cash",
+        paymentType: "credit",
+        description: "",
+        reference: "",
+        customer: "",
+        notes: "",
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while creating payment';
+      console.error('Payment creation error:', errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsCreatingPayment(false);
+    }
+  }, [storeCreatePayment, showError]);
+
+  // Delete payment function using Zustand store
+  const deletePayment = useCallback(async (paymentId: string) => {
+    try {
+      setIsDeletingPayment(true);
+      // Use store method which handles API call and state update
+      await removePayment(paymentId);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while deleting payment';
+      console.error('Payment deletion error:', errorMessage);
+    } finally {
+      setIsDeletingPayment(false);
+    }
+  }, [removePayment]);
   const [editPayment, setEditPayment] = useState({
     amount: "",
     paymentMethod: "cash" as "cash" | "card" | "upi" | "bank_transfer",
@@ -124,9 +142,6 @@ export default function PaymentsPage() {
     { value: "bank_transfer", label: "Bank Transfer" },
   ];
 
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
 
   // Prevent body scroll when modals are open
   useEffect(() => {
@@ -328,7 +343,7 @@ export default function PaymentsPage() {
     );
   }
 
-  if (paymentsError) {
+  if (error) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -339,7 +354,7 @@ export default function PaymentsPage() {
                 Error Loading Payments
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {paymentsError}
+                {error}
               </p>
               <Button
                 onClick={() => fetchPayments()}
@@ -1046,7 +1061,7 @@ export default function PaymentsPage() {
                                 typeof selectedPayment.branch === "object" &&
                                 "name" in selectedPayment.branch
                               ) {
-                                return (selectedPayment.branch as any).name;
+                                return (selectedPayment.branch as { name: string }).name;
                               }
                               return "Main Branch";
                             })()}
@@ -1070,7 +1085,7 @@ export default function PaymentsPage() {
                                 typeof selectedPayment.createdBy === "object" &&
                                 "name" in selectedPayment.createdBy
                               ) {
-                                return (selectedPayment.createdBy as any).name;
+                                return (selectedPayment.createdBy as { name: string }).name;
                               }
                               return "Unknown User";
                             })()}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import {
   Card,
@@ -13,8 +13,7 @@ import { Label } from "../components/ui/Label";
 import { Select } from "../components/ui/Select";
 import type { SelectOption } from "../components/ui/Select";
 import { formatCurrency } from "../lib/utils";
-import { apiService } from "../lib/api";
-import { useApi } from "../hooks/useApi";
+import { useReports } from "../hooks/useStores";
 import {
   ChartBarIcon,
   DocumentArrowDownIcon,
@@ -77,27 +76,6 @@ interface LowStockProduct {
   costPrice: number;
 }
 
-interface ReportSummary {
-  totalRevenue?: number;
-  totalInvoices?: number;
-  totalProducts?: number;
-  netProfit?: number;
-  averageOrderValue?: number;
-  profitMargin?: number;
-  lowStockProducts?: number;
-  outOfStockProducts?: number;
-  totalStockValue?: number;
-  totalExpenses?: number;
-}
-
-interface ReportData {
-  chartData?: ChartDataItem[] | ProfitLossDataItem[];
-  summary?: ReportSummary;
-  paymentMethodStats?: PaymentMethodStatsItem[];
-  categoryStats?: CategoryStatsItem[];
-  lowStockProducts?: LowStockProduct[];
-}
-
 // Custom label props for Pie charts
 interface PieChartLabelProps {
   method?: string;
@@ -107,50 +85,50 @@ interface PieChartLabelProps {
 }
 
 export default function ReportsPage() {
-  const [selectedReport, setSelectedReport] = useState("sales");
-  const [dateRange, setDateRange] = useState({
-    startDate: "",
-    endDate: "",
-  });
-  const [period, setPeriod] = useState("monthly");
+  const {
+    reportData,
+    isLoading,
+    error: reportsError,
+    selectedReport,
+    dateRange,
+    period,
+    setSelectedReport,
+    setDateRange,
+    setPeriod,
+    setReportData,
+    fetchReports,
+  } = useReports();
+
   const [isExporting, setIsExporting] = useState(false);
 
-  // Get the appropriate API function based on selected report type
-  const getReportApiFunction = useMemo(() => {
-    switch (selectedReport) {
-      case "sales":
-        return apiService.reports.sales;
-      case "revenue":
-        return apiService.reports.sales; // Revenue uses same endpoint as sales
-      case "profitLoss":
-        return apiService.reports.profitLoss;
-      case "stock":
-        return apiService.reports.stock;
-      default:
-        return apiService.reports.sales;
+  // Load data using the same pattern as other pages
+  useEffect(() => {
+    console.log('🔍 ReportsPage useEffect - reportData:', reportData ? 'exists' : 'null');
+    
+    // Only fetch reports if we don't have report data yet
+    if (!reportData) {
+      console.log('📥 Fetching reports...');
+      const params: Record<string, string> = {};
+
+      // Add date range parameters for reports that support them
+      if (["sales", "revenue", "profitLoss"].includes(selectedReport)) {
+        if (dateRange.startDate) params.dateFrom = dateRange.startDate;
+        if (dateRange.endDate) params.dateTo = dateRange.endDate;
+        if (selectedReport === "profitLoss") {
+          if (dateRange.startDate) params.startDate = dateRange.startDate;
+          if (dateRange.endDate) params.endDate = dateRange.endDate;
+        }
+      }
+
+      // Add period parameter for sales/revenue reports
+      if (["sales", "revenue"].includes(selectedReport)) {
+        params.period = period;
+      }
+
+      fetchReports(params);
     }
-  }, [selectedReport]);
-
-  // Use API hook for reports
-  const {
-    data: reportDataResponse,
-    loading: isLoading,
-    error: reportsError,
-    execute: fetchReports,
-  } = useApi(getReportApiFunction, {
-    onSuccess: () => {
-      console.log("Reports loaded successfully");
-    },
-    onError: (error: string) => {
-      console.error("Failed to load reports:", error);
-    },
-  });
-
-  // Extract the actual report data from the API response
-  const reportData: ReportData | null = reportDataResponse || null;
-
-  // Debug: Log the report data to see what we're receiving
-  console.log("Report data received:", reportData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportData, selectedReport, period, dateRange]); // fetchReports is stable from Zustand
 
   const reportTypeOptions: SelectOption[] = [
     { value: "sales", label: "Sales Report" },
@@ -166,26 +144,26 @@ export default function ReportsPage() {
     { value: "yearly", label: "Yearly" },
   ];
 
-  useEffect(() => {
-    const params: Record<string, string> = {};
+  const handleReportTypeChange = useCallback((value: string) => {
+    setSelectedReport(value);
+    // Clear report data when changing report type to trigger fresh fetch
+    setReportData(null);
+  }, [setSelectedReport, setReportData]);
 
-    // Add date range parameters for reports that support them
-    if (["sales", "revenue", "profitLoss"].includes(selectedReport)) {
-      if (dateRange.startDate) params.dateFrom = dateRange.startDate;
-      if (dateRange.endDate) params.dateTo = dateRange.endDate;
-      if (selectedReport === "profitLoss") {
-        if (dateRange.startDate) params.startDate = dateRange.startDate;
-        if (dateRange.endDate) params.endDate = dateRange.endDate;
-      }
-    }
+  const handlePeriodChange = useCallback((value: string) => {
+    setPeriod(value);
+    // Clear report data when changing period to trigger fresh fetch
+    setReportData(null);
+  }, [setPeriod, setReportData]);
 
-    // Add period parameter for sales/revenue reports
-    if (["sales", "revenue"].includes(selectedReport)) {
-      params.period = period;
-    }
-
-    fetchReports(params);
-  }, [selectedReport, period, dateRange, fetchReports]);
+  const handleDateRangeChange = useCallback((field: 'startDate' | 'endDate', value: string) => {
+    setDateRange({
+      ...dateRange,
+      [field]: value
+    });
+    // Clear report data when changing date range to trigger fresh fetch
+    setReportData(null);
+  }, [dateRange, setDateRange, setReportData]);
 
   const COLORS = [
     "#3B82F6",
@@ -1336,7 +1314,7 @@ export default function ReportsPage() {
                   id="reportType"
                   options={reportTypeOptions}
                   value={selectedReport}
-                  onChange={setSelectedReport}
+                  onChange={handleReportTypeChange}
                   placeholder="Select report type"
                   className="mt-2"
                 />
@@ -1352,7 +1330,7 @@ export default function ReportsPage() {
                   id="period"
                   options={periodOptions}
                   value={period}
-                  onChange={setPeriod}
+                  onChange={handlePeriodChange}
                   placeholder="Select period"
                   className="mt-2"
                 />
@@ -1368,12 +1346,7 @@ export default function ReportsPage() {
                   id="startDate"
                   type="date"
                   value={dateRange.startDate}
-                  onChange={(e) =>
-                    setDateRange((prev) => ({
-                      ...prev,
-                      startDate: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => handleDateRangeChange('startDate', e.target.value)}
                   className="mt-2"
                 />
               </div>
@@ -1388,12 +1361,7 @@ export default function ReportsPage() {
                   id="endDate"
                   type="date"
                   value={dateRange.endDate}
-                  onChange={(e) =>
-                    setDateRange((prev) => ({
-                      ...prev,
-                      endDate: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => handleDateRangeChange('endDate', e.target.value)}
                   className="mt-2"
                 />
               </div>

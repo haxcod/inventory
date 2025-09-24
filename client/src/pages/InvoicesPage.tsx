@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -8,8 +8,7 @@ import { Select } from '../components/ui/Select';
 import type { SelectOption } from '../components/ui/Select';
 import type { Invoice } from '../types';
 import { formatCurrency, formatDate } from '../lib/utils';
-import { apiService } from '../lib/api';
-import { useApiList, useApiDelete } from '../hooks/useApi';
+import { useInvoices } from '../hooks/useStores';
 import { useConfirmations } from '../hooks/useConfirmations';
 import { 
   MagnifyingGlassIcon, 
@@ -22,43 +21,14 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function InvoicesPage() {
+  const { invoices, fetchInvoices, isLoading, error, removeInvoice } = useInvoices();
+  const { confirmDelete } = useConfirmations();
+  
+  // State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-
-  const { confirmDelete } = useConfirmations();
-
-  // Use API hooks for invoices
-  const {
-    data: invoicesResponse,
-    loading: isLoading,
-    error: invoicesError,
-    execute: fetchInvoices
-  } = useApiList<any>(apiService.invoices.getAll, {
-    onSuccess: (data: any) => {
-      console.log('Invoices loaded successfully:', data);
-    },
-    onError: (error: string) => {
-      console.error('Failed to load invoices:', error);
-    }
-  });
-  
-  console.log(invoicesResponse);
-  
-
-  // Extract invoices array from response
-  const invoices = (invoicesResponse as any)?.invoices || [];
-  
-
-  const {
-    execute: deleteInvoice,
-    loading: isDeletingInvoice
-  } = useApiDelete(apiService.invoices.delete, {
-    onSuccess: () => {
-      fetchInvoices(); // Refresh the list
-    },
-    itemName: 'Invoice'
-  });
+  const [isDeletingInvoice, setIsDeletingInvoice] = useState(false);
 
   const statusFilterOptions: SelectOption[] = [
     { value: 'all', label: 'All Status' },
@@ -75,9 +45,30 @@ export default function InvoicesPage() {
     { value: 'month', label: 'This Month' }
   ];
 
+  // Load data using the same pattern as other pages
   useEffect(() => {
+    console.log('🔍 InvoicesPage useEffect - invoices.length:', invoices.length);
+    
+    // Only fetch invoices if we don't have invoices yet
+    if (invoices.length === 0) {
+      console.log('📥 Fetching invoices...');
     fetchInvoices();
-  }, [fetchInvoices]);
+    }
+  }, [invoices.length, fetchInvoices]);
+
+  // Delete invoice function using Zustand store
+  const deleteInvoice = useCallback(async (invoiceId: string) => {
+    try {
+      setIsDeletingInvoice(true);
+      // Use store method which handles API call and state update
+      await removeInvoice(invoiceId);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while deleting invoice';
+      console.error('Invoice deletion error:', errorMessage);
+    } finally {
+      setIsDeletingInvoice(false);
+    }
+  }, [removeInvoice]);
 
   const handleDeleteInvoice = (invoice: Invoice) => {
     confirmDelete(`Invoice #${invoice.invoiceNumber}`, async () => {
@@ -136,7 +127,7 @@ export default function InvoicesPage() {
     );
   }
 
-  if (invoicesError) {
+  if (error) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -144,7 +135,7 @@ export default function InvoicesPage() {
             <CardContent>
               <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Invoices</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{invoicesError}</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
               <Button onClick={() => fetchInvoices()} className="bg-blue-600 hover:bg-blue-700">
                 Try Again
               </Button>

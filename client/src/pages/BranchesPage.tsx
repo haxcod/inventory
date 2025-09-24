@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -7,8 +7,7 @@ import { Label } from '../components/ui/Label';
 import { Select } from '../components/ui/Select';
 import type { Branch } from '../types';
 import { formatDate } from '../lib/utils';
-import { apiService } from '../lib/api';
-import { useApiList, useApiCreate, useApiDelete } from '../hooks/useApi';
+import { useBranches } from '../hooks/useStores';
 import { useConfirmations } from '../hooks/useConfirmations';
 import { 
   MagnifyingGlassIcon, 
@@ -33,50 +32,19 @@ export default function BranchesPage() {
   });
 
   const { confirmDelete } = useConfirmations();
+  const { branches, fetchBranches, isLoading, error: branchesError, createBranch, removeBranch } = useBranches();
 
-  // Use API hooks for branches
-  const {
-    data: branchesResponse,
-    loading: isLoading,
-    error: branchesError,
-    execute: fetchBranches
-  } = useApiList<any>(apiService.branches.getAll, {
-    onSuccess: (data: any) => {
-      console.log('Branches loaded successfully:', data);
-    },
-    onError: (error: string) => {
-      console.error('Failed to load branches:', error);
-    }
-  });
-
-  // Extract branches array from response
-  const branches = (branchesResponse as any)?.branches || [];
-
-
-  const {
-    execute: createBranch,
-    loading: isCreatingBranch
-  } = useApiCreate<Branch>(apiService.branches.create, {
-    onSuccess: () => {
-      fetchBranches(); // Refresh the list
-    },
-    itemName: 'Branch'
-  });
-
-
-  const {
-    execute: deleteBranch,
-    loading: isDeletingBranch
-  } = useApiDelete(apiService.branches.delete, {
-    onSuccess: () => {
-      fetchBranches(); // Refresh the list
-    },
-    itemName: 'Branch'
-  });
-
+  // Load data using the same pattern as other pages
   useEffect(() => {
-    fetchBranches();
-  }, [fetchBranches]);
+    console.log('🔍 BranchesPage useEffect - branches.length:', branches.length);
+    
+    // Only fetch branches if we don't have branches yet
+    if (branches.length === 0) {
+      console.log('📥 Fetching branches...');
+      fetchBranches();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branches.length]); // fetchBranches is stable from Zustand
 
   const filteredBranches = (Array.isArray(branches) ? branches : []).filter(branch => {
     const matchesSearch = branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -90,31 +58,37 @@ export default function BranchesPage() {
     return matchesSearch && matchesStatus;
   });
 
-
-  const handleCreateBranch = async () => {
+  const handleCreateBranch = useCallback(async () => {
     const branchData = {
       ...newBranch,
       isActive: true,
     };
     
-    await createBranch(branchData);
-    
-    // Reset form on success
-    setNewBranch({
-      name: '',
-      address: '',
-      phone: '',
-      email: '',
-    });
-    setShowNewBranch(false);
-  };
+    try {
+      await createBranch(branchData);
+      
+      // Reset form on success
+      setNewBranch({
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+      });
+      setShowNewBranch(false);
+    } catch (error) {
+      console.error('Failed to create branch:', error);
+    }
+  }, [newBranch, createBranch]);
 
-
-  const handleDeleteBranch = (branch: Branch) => {
+  const handleDeleteBranch = useCallback((branch: Branch) => {
     confirmDelete(branch.name, async () => {
-      await deleteBranch(branch._id);
+      try {
+        await removeBranch(branch._id);
+      } catch (error) {
+        console.error('Failed to delete branch:', error);
+      }
     });
-  };
+  }, [confirmDelete, removeBranch]);
 
   if (isLoading) {
     return (
@@ -380,9 +354,9 @@ export default function BranchesPage() {
                   </Button>
                   <Button 
                     onClick={handleCreateBranch}
-                    disabled={isCreatingBranch}
+                    disabled={isLoading}
                   >
-                    {isCreatingBranch ? 'Creating...' : 'Create Branch'}
+                    {isLoading ? 'Creating...' : 'Create Branch'}
                   </Button>
                 </div>
               </div>
@@ -482,10 +456,10 @@ export default function BranchesPage() {
                     size="sm" 
                     className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
                     onClick={() => handleDeleteBranch(branch)}
-                    disabled={isDeletingBranch}
+                    disabled={isLoading}
                   >
                     <TrashIcon className="h-4 w-4" />
-                    {isDeletingBranch ? 'Deleting...' : 'Delete'}
+                    {isLoading ? 'Deleting...' : 'Delete'}
                   </Button>
                 </div>
               </CardContent>

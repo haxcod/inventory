@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useStores';
 import { apiService } from '../lib/api';
 import { processApiLogin } from '../lib/responseHandler';
 import { handleApiError } from '../lib/errorHandler';

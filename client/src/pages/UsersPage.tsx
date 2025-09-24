@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -7,8 +7,7 @@ import { Label } from '../components/ui/Label';
 import { Select } from '../components/ui/Select';
 import type { User } from '../types';
 import { formatDate } from '../lib/utils';
-import { apiService } from '../lib/api';
-import { useApiList, useApiCreate, useApiDelete } from '../hooks/useApi';
+import { useUsers, useBranches } from '../hooks/useStores';
 import { useConfirmations } from '../hooks/useConfirmations';
 import { 
   MagnifyingGlassIcon, 
@@ -38,63 +37,26 @@ export default function UsersPage() {
   });
 
   const { confirmDelete } = useConfirmations();
+  const { users, fetchUsers, isLoading, error: usersError, createUser, removeUser } = useUsers();
+  const { branches, fetchBranches } = useBranches();
 
-  // Use API hooks for users
-  const {
-    data: usersResponse,
-    loading: isLoading,
-    error: usersError,
-    execute: fetchUsers
-  } = useApiList<any>(apiService.users.getAll, {
-    onSuccess: (data: any) => {
-      console.log('Users loaded successfully:', data);
-    },
-    onError: (error: string) => {
-      console.error('Failed to load users:', error);
-    }
-  });
-
-  // Extract users array from response
-  const users = (usersResponse as any)?.users || [];
-
-  // Use API hooks for branches
-  const {
-    data: branches,
-    execute: fetchBranches
-  } = useApiList<{_id: string, name: string, address: string, manager?: string}>(apiService.branches.getAll, {
-    onSuccess: (data: {_id: string, name: string, address: string, manager?: string}[]) => {
-      console.log('Branches loaded successfully:', data.length);
-    },
-    onError: (error: string) => {
-      console.error('Failed to load branches:', error);
-    }
-  });
-
-  const {
-    execute: createUser,
-    loading: isCreatingUser
-  } = useApiCreate<User>(apiService.users.create, {
-    onSuccess: () => {
-      fetchUsers(); // Refresh the list
-    },
-    itemName: 'User'
-  });
-
-
-  const {
-    execute: deleteUser,
-    loading: isDeletingUser
-  } = useApiDelete(apiService.users.delete, {
-    onSuccess: () => {
-      fetchUsers(); // Refresh the list
-    },
-    itemName: 'User'
-  });
-
+  // Load data using the same pattern as other pages
   useEffect(() => {
-    fetchUsers();
-    fetchBranches();
-  }, [fetchUsers, fetchBranches]);
+    console.log('🔍 UsersPage useEffect - users.length:', users.length, 'branches.length:', branches.length);
+    
+    // Only fetch users if we don't have users yet
+    if (users.length === 0) {
+      console.log('📥 Fetching users...');
+      fetchUsers();
+    }
+    
+    // Only fetch branches if we don't have branches yet
+    if (branches.length === 0) {
+      console.log('📥 Fetching branches...');
+      fetchBranches();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [users.length, branches.length]); // fetchUsers and fetchBranches are stable from Zustand
 
   const filteredUsers = (Array.isArray(users) ? users : []).filter(user => {
     const matchesSearch = 
@@ -110,8 +72,7 @@ export default function UsersPage() {
     return role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
   };
 
-
-  const handleCreateUser = async () => {
+  const handleCreateUser = useCallback(async () => {
     const userData = {
       ...newUser,
       permissions: newUser.role === 'admin' ? ['read', 'write', 'delete', 'admin'] : ['read', 'write'],
@@ -119,26 +80,33 @@ export default function UsersPage() {
       branch: selectedBranch?._id || (newUser.branch === 'main' ? null : newUser.branch),
     };
     
-    await createUser(userData);
-    
-    // Reset form on success
-    setNewUser({
-      name: '',
-      email: '',
-      password: '',
-      role: 'user',
-      branch: 'main',
-    });
-    setSelectedBranch(null);
-    setShowNewUser(false);
-  };
+    try {
+      await createUser(userData);
+      
+      // Reset form on success
+      setNewUser({
+        name: '',
+        email: '',
+        password: '',
+        role: 'user',
+        branch: 'main',
+      });
+      setSelectedBranch(null);
+      setShowNewUser(false);
+    } catch (error) {
+      console.error('Failed to create user:', error);
+    }
+  }, [newUser, selectedBranch, createUser]);
 
-
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = useCallback((user: User) => {
     confirmDelete(user.name, async () => {
-      await deleteUser(user._id);
+      try {
+        await removeUser(user._id);
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+      }
     });
-  };
+  }, [confirmDelete, removeUser]);
 
   if (isLoading) {
     return (
@@ -438,9 +406,9 @@ export default function UsersPage() {
                   </Button>
                   <Button 
                     onClick={handleCreateUser}
-                    disabled={isCreatingUser}
+                    disabled={isLoading}
                   >
-                    {isCreatingUser ? 'Creating...' : 'Create User'}
+                    {isLoading ? 'Creating...' : 'Create User'}
                   </Button>
                 </div>
               </div>
@@ -572,10 +540,10 @@ export default function UsersPage() {
                     size="sm" 
                     className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
                     onClick={() => handleDeleteUser(user)}
-                    disabled={isDeletingUser}
+                    disabled={isLoading}
                   >
                     <TrashIcon className="h-4 w-4" />
-                    {isDeletingUser ? 'Deleting...' : 'Delete'}
+                    {isLoading ? 'Deleting...' : 'Delete'}
                   </Button>
                 </div>
               </CardContent>

@@ -3,9 +3,11 @@ import { Toaster } from 'react-hot-toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ConfirmationProvider } from './context/ConfirmationContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AuthInitializer } from './components/AuthInitializer';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import TeamDashboardPage from './pages/TeamDashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import BillingPage from './pages/BillingPage';
 import InvoicesPage from './pages/InvoicesPage';
@@ -21,9 +23,10 @@ import TransferPage from './pages/TransferPage';
 
 function App() {
   return (
-    <ErrorBoundary>
-      <ConfirmationProvider>
-        <BrowserRouter>
+        <ErrorBoundary>
+          <ConfirmationProvider>
+            <AuthInitializer />
+            <BrowserRouter>
           <div className="min-h-screen">
           <Routes>
           {/* Public Routes */}
@@ -36,6 +39,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/team-dashboard" 
+            element={
+              <ProtectedRoute>
+                <TeamDashboardPage />
               </ProtectedRoute>
             } 
           />

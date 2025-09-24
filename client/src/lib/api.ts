@@ -143,7 +143,7 @@ export const apiService = {
 
   // Products endpoints
   products: {
-    getAll: async (params?: { page?: number; limit?: number; search?: string; category?: string }) => {
+    getAll: async (params?: { page?: number; limit?: number; search?: string; category?: string; branch?: string }) => {
       try {
         const response = await axios.get('/products', { params });
         return response;

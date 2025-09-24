@@ -11,9 +11,9 @@ import { VoiceInput } from "../components/ui/VoiceInput";
 import { ModernInvoice } from "../components/ui/ModernInvoice";
 import type { Invoice, Product } from "../types";
 import { formatCurrency } from "../lib/utils";
-import { apiService } from "../lib/api";
-import { useApiList, useApiCreate, useApiDelete } from "../hooks/useApi";
 import { useConfirmations } from "../hooks/useConfirmations";
+import { useAuth, useProducts, useBranches, useInvoices } from "../hooks/useStores";
+import { isAdmin, getUserBranchName } from "../lib/roles";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -45,12 +45,19 @@ interface NewInvoiceData {
   items: InvoiceItem[];
   paymentMethod: "cash" | "card" | "upi" | "bank_transfer";
   notes: string;
+  [key: string]: unknown; // Index signature for API compatibility
 }
 
 export default function BillingPage() {
+  const { user } = useAuth();
+  const { products, fetchProducts } = useProducts();
+  const { branches, fetchBranches } = useBranches();
+  const { invoices, fetchInvoices, isLoading, error, createInvoice: storeCreateInvoice, removeInvoice } = useInvoices();
+  // Type assertion to ensure compatibility with Invoice type from types
+  const typedInvoices = invoices as Invoice[];
+  const branchName = getUserBranchName(user);
+  
   // State management
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
@@ -60,7 +67,6 @@ export default function BillingPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productQuantity, setProductQuantity] = useState(1);
-  const [error, setError] = useState<string | null>(null);
 
   const [newInvoice, setNewInvoice] = useState<NewInvoiceData>({
     customer: { name: "", email: "", phone: "", address: "" },
@@ -71,39 +77,6 @@ export default function BillingPage() {
 
   // Hooks
   const { showError, confirmDelete } = useConfirmations();
-
-  // API hooks with proper error handling
-  const {
-    data: invoicesData,
-    loading: isLoadingInvoices,
-    error: invoicesError,
-    execute: fetchInvoices,
-  } = useApiList<any>(
-    apiService.invoices?.getAll || (() => Promise.resolve([])),
-    {
-      onError: (error) => {
-        console.error("Failed to load invoices:", error);
-        setError("Failed to load invoices. Please try again.");
-        setInvoices([]);
-      },
-    }
-  );
-
-  const {
-    data: productData,
-    loading: isLoadingProducts,
-    error: productsError,
-    execute: fetchProducts,
-  } = useApiList<any>(
-    apiService.products?.getAll || (() => Promise.resolve([])),
-    {
-      onError: (error) => {
-        console.error("Failed to load products:", error);
-        setError("Failed to load products. Please try again.");
-        setProducts([]);
-      },
-    }
-  );
 
   // Helper function to get status display configuration
   const getStatusDisplay = (invoice: Invoice) => {
@@ -130,117 +103,31 @@ export default function BillingPage() {
     return statusConfig[status] || statusConfig.pending;
   };
 
-  // Process invoices data when invoicesData changes
+  // Load data using the same pattern as ProductsPage
   useEffect(() => {
-    if (invoicesData) {
-      try {
-        console.log("Invoices API Response:", invoicesData);
-        
-        // Safe API data access
-        const invoicesArray = (() => {
-          if (Array.isArray(invoicesData)) {
-            return invoicesData;
-          }
-          if (invoicesData && typeof invoicesData === 'object') {
-            return (invoicesData as any).invoices || [];
-          }
-          return [];
-        })();
-        
-        const processedInvoices: Invoice[] = Array.isArray(invoicesArray) 
-          ? invoicesArray.map((invoice: any) => ({
-              ...invoice,
-              _id: invoice._id || invoice.id || `temp-${Date.now()}-${Math.random()}`,
-              invoiceNumber:
-                invoice.invoiceNumber ||
-                `INV-${
-                  invoice._id?.slice(-6) || Math.random().toString(36).substr(2, 6)
-                }`,
-              customer: invoice.customer || { name: "Unknown Customer" },
-              items: Array.isArray(invoice.items) ? invoice.items : [],
-              total: typeof invoice.total === 'number' ? invoice.total : 0,
-              paymentMethod: invoice.paymentMethod || "cash",
-              paymentStatus: invoice.paymentStatus || invoice.status || "pending", // Handle both property names
-              createdAt: invoice.createdAt || new Date().toISOString(),
-            }))
-          : [];
-        
-        setInvoices(processedInvoices);
-        setError(null);
-      } catch (processingError) {
-        console.error("Error processing invoices:", processingError);
-        setError("Failed to process invoice data");
-        setInvoices([]);
-      }
+    console.log('🔍 BillingPage useEffect - invoices.length:', typedInvoices.length, 'products.length:', products.length, 'branches.length:', branches.length);
+    
+    // Only fetch invoices if we don't have invoices yet
+    if (typedInvoices.length === 0) {
+      console.log('📥 Fetching invoices...');
+      fetchInvoices();
     }
-  }, [invoicesData]);
-
-  // Process products data when productData changes
-  useEffect(() => {
-    if (productData) {
-      try {
-        console.log("Products API Response:", productData);
-        
-        // Safe API data access
-        const productsArray = (() => {
-          if (Array.isArray(productData)) {
-            return productData;
-          }
-          if (productData && typeof productData === 'object') {
-            return (productData as any).products || [];
-          }
-          return [];
-        })();
-        
-        const processedProducts: Product[] = Array.isArray(productsArray)
-          ? productsArray.map((product: any) => ({
-              ...product,
-              _id: product._id || product.id || `temp-${Date.now()}-${Math.random()}`,
-              name: product.name || "Unnamed Product",
-              price: typeof product.price === "number" ? product.price : 0,
-              stock: typeof product.stock === "number" ? product.stock : 0,
-            }))
-          : [];
-
-        setProducts(processedProducts);
-        setError(null);
-      } catch (processingError) {
-        console.error("Error processing products:", processingError);
-        setError("Failed to process product data");
-        setProducts([]);
-      }
+    
+    // Only fetch products if we don't have products yet
+    if (products.length === 0) {
+      console.log('📥 Fetching products...');
+      fetchProducts();
     }
-  }, [productData]);
-
-  const { loading: isCreatingInvoice, execute: createInvoice } =
-    useApiCreate<Invoice>(
-      apiService.invoices?.create || (() => Promise.resolve({} as Invoice)),
-      {
-        onSuccess: (data) => {
-          console.log("Invoice created:", data);
-          setShowNewInvoice(false);
-          resetNewInvoiceForm();
-          fetchInvoices();
-        },
-        onError: (error) => {
-          console.error("Failed to create invoice:", error);
-          showError("Failed to create invoice. Please try again.");
-        },
-      }
-    );
-
-  const { loading: isDeletingInvoice, execute: deleteInvoice } = useApiDelete(
-    apiService.invoices?.delete || (() => Promise.resolve()),
-    {
-      onSuccess: () => {
-        fetchInvoices();
-      },
-      onError: (error) => {
-        console.error("Failed to delete invoice:", error);
-        showError("Failed to delete invoice. Please try again.");
-      },
+    
+    // Only fetch branches if we don't have branches yet
+    if (branches.length === 0) {
+      console.log('📥 Fetching branches...');
+      fetchBranches();
     }
-  );
+  }, [typedInvoices.length, products.length, branches.length, fetchInvoices, fetchProducts, fetchBranches]);
+
+
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
 
   // Utility functions
   const resetNewInvoiceForm = useCallback(() => {
@@ -254,20 +141,41 @@ export default function BillingPage() {
     setProductQuantity(1);
   }, []);
 
-  // Load data on component mount with error handling
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setError(null);
-        await Promise.all([fetchInvoices(), fetchProducts()]);
-      } catch (error) {
-        console.error("Error loading initial data:", error);
-        setError("Failed to load data. Please refresh the page.");
-      }
-    };
+  // Create invoice function using Zustand store
+  const createInvoice = useCallback(async (invoiceData: NewInvoiceData) => {
+    try {
+      setIsCreatingInvoice(true);
+      // Use store method which handles API call and state update
+      await storeCreateInvoice(invoiceData);
+      setShowNewInvoice(false);
+      resetNewInvoiceForm();
+    } catch (error) {
+      console.error("Failed to create invoice:", error);
+      showError("Failed to create invoice. Please try again.");
+      throw error;
+    } finally {
+      setIsCreatingInvoice(false);
+    }
+  }, [showError, resetNewInvoiceForm, storeCreateInvoice]);
 
-    loadData();
-  }, [fetchInvoices, fetchProducts]);
+  const [isDeletingInvoice, setIsDeletingInvoice] = useState(false);
+
+  // Delete invoice function using Zustand store
+  const deleteInvoice = useCallback(async (invoiceId: string) => {
+    try {
+      setIsDeletingInvoice(true);
+      // Use store method which handles API call and state update
+      await removeInvoice(invoiceId);
+    } catch (error) {
+      console.error("Failed to delete invoice:", error);
+      showError("Failed to delete invoice. Please try again.");
+      throw error;
+    } finally {
+      setIsDeletingInvoice(false);
+    }
+  }, [showError, removeInvoice]);
+
+  // Utility functions
 
   // Product handling functions
   const handleAddProduct = useCallback(() => {
@@ -474,7 +382,7 @@ export default function BillingPage() {
   );
 
   // Filtered data with safe operations
-  const filteredInvoices = invoices.filter(
+  const filteredInvoices = typedInvoices.filter(
     (invoice) => {
       if (!searchTerm) return true;
       
@@ -518,7 +426,7 @@ export default function BillingPage() {
   }, [selectedProduct?.stock, showError]);
 
   // Loading state
-  if (isLoadingInvoices || isLoadingProducts) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -534,7 +442,7 @@ export default function BillingPage() {
   }
 
   // Error state
-  if (error || invoicesError || productsError) {
+  if (error) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -545,14 +453,10 @@ export default function BillingPage() {
                 Something went wrong
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {error ||
-                  invoicesError ||
-                  productsError ||
-                  "Failed to load data"}
+                {error || "Failed to load data"}
               </p>
               <Button
                 onClick={() => {
-                  setError(null);
                   fetchInvoices();
                   fetchProducts();
                 }}
@@ -578,8 +482,20 @@ export default function BillingPage() {
                 Billing & Invoicing
               </h1>
               <p className="mt-2 text-green-100 dark:text-gray-300 text-sm sm:text-base">
-                Manage invoices and billing operations
+                {isAdmin(user) 
+                  ? 'Manage invoices and billing operations across all branches' 
+                  : `Manage invoices and billing operations for ${branchName || 'your branch'}`
+                }
               </p>
+              <div className="mt-2">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  isAdmin(user) 
+                    ? 'bg-purple-100 text-purple-800' 
+                    : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {isAdmin(user) ? 'Admin Access' : 'Team Access'}
+                </span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button

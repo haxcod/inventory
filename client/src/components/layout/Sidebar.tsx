@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useStores';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
-import { hasPermission, PERMISSIONS } from '../../lib/permissions';
+import { getNavigationItems } from '../../lib/roles';
 import {
   HomeIcon,
   CubeIcon,
@@ -22,68 +22,18 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
-const navigation = [
-  { 
-    name: 'Dashboard', 
-    href: '/dashboard', 
-    icon: HomeIcon, 
-    permission: PERMISSIONS.DASHBOARD_VIEW 
-  },
-  { 
-    name: 'Products', 
-    href: '/products', 
-    icon: CubeIcon, 
-    permission: PERMISSIONS.PRODUCTS_VIEW 
-  },
-  { 
-    name: 'Transfers', 
-    href: '/transfers', 
-    icon: ArrowRightIcon, 
-    permission: PERMISSIONS.TRANSFERS_VIEW 
-  },
-  { 
-    name: 'Billing', 
-    href: '/billing', 
-    icon: ShoppingCartIcon, 
-    permission: PERMISSIONS.BILLING_VIEW 
-  },
-  { 
-    name: 'Invoices', 
-    href: '/invoices', 
-    icon: DocumentTextIcon, 
-    permission: PERMISSIONS.INVOICES_VIEW 
-  },
-  { 
-    name: 'Payments', 
-    href: '/payments', 
-    icon: DocumentTextIcon, 
-    permission: PERMISSIONS.PAYMENTS_VIEW 
-  },
-  { 
-    name: 'Reports', 
-    href: '/reports', 
-    icon: ChartBarIcon, 
-    permission: PERMISSIONS.REPORTS_VIEW 
-  },
-  { 
-    name: 'Branches', 
-    href: '/branches', 
-    icon: BuildingOfficeIcon, 
-    permission: PERMISSIONS.BRANCHES_VIEW 
-  },
-  { 
-    name: 'Users', 
-    href: '/users', 
-    icon: UserGroupIcon, 
-    permission: PERMISSIONS.USERS_VIEW 
-  },
-  { 
-    name: 'Settings', 
-    href: '/settings', 
-    icon: CogIcon, 
-    permission: PERMISSIONS.SETTINGS_VIEW 
-  },
-];
+// Icon mapping for dynamic navigation
+const iconMap = {
+  HomeIcon,
+  CubeIcon,
+  ShoppingCartIcon,
+  DocumentTextIcon,
+  ChartBarIcon,
+  BuildingOfficeIcon,
+  UserGroupIcon,
+  CogIcon,
+  ArrowRightIcon,
+};
 
 export function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -96,9 +46,12 @@ export function Sidebar() {
     window.location.href = '/login';
   };
 
-  const filteredNavigation = navigation.filter(item => {
-    return hasPermission(user, item.permission);
-  });
+  // Get role-based navigation items
+  const navigationItems = getNavigationItems(user);
+  const navigation = navigationItems.map(item => ({
+    ...item,
+    icon: iconMap[item.icon as keyof typeof iconMap],
+  }));
 
   return (
     <>
@@ -151,7 +104,7 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
-            {filteredNavigation.map(item => {
+            {navigation.map(item => {
               // More robust active state detection
               const isActive = pathname === item.href || 
                 (item.href !== '/dashboard' && pathname.startsWith(item.href));

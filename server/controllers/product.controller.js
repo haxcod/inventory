@@ -11,7 +11,7 @@ export const getAllProducts = async (req, res) => {
         if (branch) filters.branch = branch;
         if (search) filters.search = search;
 
-        // Apply branch filter for non-admin users
+        // Apply branch filter for team users (admin users see all)
         if (req.branchFilter) {
             filters.branch = req.branchFilter.branch;
         }

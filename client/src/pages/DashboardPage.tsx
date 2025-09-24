@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, useDashboard } from "../hooks/useStores";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import {
   Card,
@@ -33,117 +33,62 @@ import {
   Cell,
 } from "recharts";
 import { apiService } from "../lib/api";
-import { useApi } from "../hooks/useApi";
-
-interface DashboardStats {
-  totalSales: number;
-  totalProducts: number;
-  totalInvoices: number;
-  totalRevenue: number;
-  salesGrowth: number;
-  productGrowth: number;
-  invoiceGrowth: number;
-  revenueGrowth: number;
-}
-
-interface ChartData {
-  name: string;
-  value?: number;
-  sales?: number;
-  revenue?: number;
-  totalProducts?: number;
-}
-
-interface DashboardData {
-  stats: DashboardStats;
-  salesData: ChartData[];
-  productData: ChartData[];
-}
+import { isAdmin } from "../lib/roles";
+import { Navigate } from "react-router-dom";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [salesData, setSalesData] = useState<ChartData[]>([]);
-  const [productData, setProductData] = useState<ChartData[]>([]);
+  const { 
+    dashboardData, 
+    isLoading, 
+    error, 
+    setData, 
+    setLoading, 
+    setError, 
+    clearCache, 
+    isCacheValid 
+  } = useDashboard();
 
-  // Use API hook for dashboard data
-  const {
-    data: dashboardData,
-    loading: isLoading,
-    error: dashboardError,
-    execute: fetchDashboardData,
-  } = useApi<DashboardData>(apiService.dashboard.getData, {
-    onSuccess: (data: DashboardData) => {
-      console.log("Dashboard data received:", data);
-      if (data?.stats) {
-        setStats({
-          totalSales: data.stats.totalSales || 0,
-          totalProducts: data.stats.totalProducts || 0,
-          totalInvoices: data.stats.totalInvoices || 0,
-          totalRevenue: data.stats.totalRevenue || 0,
-          salesGrowth: data.stats.salesGrowth || 0,
-          productGrowth: data.stats.productGrowth || 0,
-          invoiceGrowth: data.stats.invoiceGrowth || 0,
-          revenueGrowth: data.stats.revenueGrowth || 0,
-        });
+  // Fetch dashboard data
+  const fetchDashboardData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiService.dashboard.getData({ period: "monthly" });
+      
+      if (response.data.success && response.data.data) {
+        setData(response.data.data);
+      } else {
+        setError(response.data.message || 'Failed to fetch dashboard data');
       }
-
-      if (data?.salesData) {
-        const cleaned = data.salesData.map((item, index) => ({
-          name: `${item.name},${index + 1}`, // e.g., "Sat #20"
-          sales: item.sales,
-        }));
-        setSalesData(cleaned);
-      }
-
-      if (data?.productData) {
-        setProductData(data.productData);
-      }
-    },
-    onError: (error: string) => {
-      console.error("Dashboard data error:", error);
-      // Set stats to null on error to show loading state
-      setStats(null);
-      setSalesData([]);
-      setProductData([]);
-    },
-  });
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchDashboardData({ period: "monthly" });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching dashboard data';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-  }, [isAuthenticated, fetchDashboardData]);
+  }, [isAuthenticated, setLoading, setError, setData]);
 
-  // Fallback: Use dashboardData directly if onSuccess doesn't work
+  // Load data only if not cached or cache is invalid
   useEffect(() => {
-    if (dashboardData && !isLoading && !stats) {
-      console.log("Using dashboardData directly:", dashboardData);
-      if (dashboardData?.stats) {
-        setStats({
-          totalSales: dashboardData.stats.totalSales || 0,
-          totalProducts: dashboardData.stats.totalProducts || 0,
-          totalInvoices: dashboardData.stats.totalInvoices || 0,
-          totalRevenue: dashboardData.stats.totalRevenue || 0,
-          salesGrowth: dashboardData.stats.salesGrowth || 0,
-          productGrowth: dashboardData.stats.productGrowth || 0,
-          invoiceGrowth: dashboardData.stats.invoiceGrowth || 0,
-          revenueGrowth: dashboardData.stats.revenueGrowth || 0,
-        });
-      }
-
-      if (dashboardData?.salesData) {
-        setSalesData(dashboardData.salesData);
-      }
-
-      if (dashboardData?.productData) {
-        setProductData(dashboardData.productData);
-      }
+    if (isAuthenticated && (!isCacheValid || !dashboardData)) {
+      fetchDashboardData();
     }
-  }, [dashboardData, isLoading, stats]);
+  }, [isAuthenticated, isCacheValid, dashboardData, fetchDashboardData]);
 
-  if (isLoading || !stats) {
+  // Redirect team users to team dashboard
+  if (isAuthenticated && !isAdmin(user)) {
+    return <Navigate to="/team-dashboard" replace />;
+  }
+
+  // Show loading only if we don't have cached data and are actually loading
+  const shouldShowLoading = (!dashboardData && isLoading);
+
+  if (shouldShowLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -156,7 +101,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (dashboardError) {
+  if (error) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -167,10 +112,13 @@ export default function DashboardPage() {
                 Error Loading Dashboard
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {dashboardError}
+                {error}
               </p>
               <Button
-                onClick={() => fetchDashboardData({ period: "monthly" })}
+                onClick={() => {
+                  clearCache();
+                  fetchDashboardData();
+                }}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Try Again
@@ -181,6 +129,21 @@ export default function DashboardPage() {
       </DashboardLayout>
     );
   }
+
+  if (!dashboardData) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div
+            className="animate-spin rounded-full h-16 w-16"
+            style={{ borderBottom: "2px solid hsl(var(--primary))" }}
+          ></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const { stats, salesData, productData } = dashboardData;
 
   const statCards = [
     {
@@ -223,23 +186,20 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-gray-900 dark:to-black rounded-xl p-4 sm:p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold">
-                Welcome back, {user?.name}! 🚀
+                Admin Dashboard 🚀
               </h1>
-              <p className="mt-2 text-blue-100 dark:text-gray-300 text-sm sm:text-base">
-                Here&apos;s what&apos;s happening with your business today
+              <p className="mt-2 text-purple-100 dark:text-gray-300 text-sm sm:text-base">
+                Complete system overview and management
               </p>
-              {user?.branch && (
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xs text-blue-200 dark:text-gray-400">Branch:</span>
-                  <span className="text-sm font-semibold text-white">
-                    {typeof user.branch === 'object' ? user.branch.name : user.branch}
-                  </span>
-                </div>
-              )}
+              <div className="mt-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  Admin Access
+                </span>
+              </div>
             </div>
             <div className="text-left sm:text-right">
               <p className="text-xs sm:text-sm text-blue-200 dark:text-gray-400">
@@ -474,3 +434,4 @@ export default function DashboardPage() {
     </DashboardLayout>
   );
 }
+

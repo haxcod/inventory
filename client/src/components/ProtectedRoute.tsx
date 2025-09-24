@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../store';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+export const ProtectedRoute = memo(function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading } = useAuthStore();
   const location = useLocation();
 
   // Show loading spinner while checking authentication
@@ -26,4 +26,4 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   return <>{children}</>;
-}
+});

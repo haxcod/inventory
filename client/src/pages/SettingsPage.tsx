@@ -6,7 +6,7 @@ import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { Select } from '../components/ui/Select';
 import type { SelectOption } from '../components/ui/Select';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useStores';
 import { useTheme } from '../context/ThemeContext';
 import { apiService } from '../lib/api';
 import { useApiUpdate } from '../hooks/useApi';

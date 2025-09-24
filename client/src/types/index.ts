@@ -29,7 +29,7 @@ export interface Product {
   minStock: number;
   maxStock: number;
   unit: string;
-  branch: string;
+  branch: string | { _id: string; name: string; address?: string };
   batchNumber?: string;
   warranty?: string;
   manufacturingDate?: Date;

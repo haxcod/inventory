@@ -99,16 +99,18 @@ export const filterByBranch = (req, res, next) => {
         });
     }
 
-    // Admin users can see all data, regular users only see their branch data
-    if (req.user.role === 'admin') {
+    // Simple role check: admin can see all data, team (user) can only see their branch
+    const isAdmin = req.user.role === 'admin';
+    
+    if (isAdmin) {
         return next();
     }
 
-    // For regular users, add branch filter to query
+    // For team users (role: 'user'), add branch filter to query
     if (req.user.branch) {
         req.branchFilter = { branch: req.user.branch._id || req.user.branch };
     } else {
-        // If user has no branch assigned, they can't see any data
+        // If team user has no branch assigned, they can't see any data
         return res.status(403).json({
             success: false,
             message: 'No branch assigned to user'

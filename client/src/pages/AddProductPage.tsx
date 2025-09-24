@@ -10,8 +10,9 @@ import { ArrowLeftIcon, CheckIcon, XMarkIcon, PlusIcon, CubeIcon, QrCodeIcon, Pr
 import { Link } from 'react-router-dom';
 import QRCode from 'qrcode';
 import tractorData from '../data/tractor_dropdown.json';
-import { useApiCreate, useApiList } from '../hooks/useApi';
+import { useApiCreate } from '../hooks/useApi';
 import { useConfirmations } from '../hooks/useConfirmations';
+import { useBranches } from '../hooks/useStores';
 import { apiService } from '../lib/api';
 
 interface ProductData {
@@ -60,19 +61,7 @@ const AddProductPage: React.FC = () => {
   });
 
   // Fetch branches for dropdown
-  const {
-    data: branches,
-    loading: isLoadingBranches,
-    error: branchesError,
-    execute: fetchBranches
-  } = useApiList<{_id: string, name: string, address: string}>(apiService.branches.getAll, {
-    onSuccess: (data: {_id: string, name: string, address: string}[]) => {
-      console.log('Branches loaded successfully:', data.length);
-    },
-    onError: (error: string) => {
-      console.error('Failed to load branches:', error);
-    }
-  });
+  const { branches, isLoading: isLoadingBranches, error: branchesError, fetchBranches } = useBranches();
   const [productForm, setProductForm] = useState({
     name: '',
     sku: '',
@@ -85,15 +74,28 @@ const AddProductPage: React.FC = () => {
     maxStock: '',
     unit: 'pieces',
     brand: '',
-    branch: 'main'
+    branch: ''
   });
 
   const productData: ProductData[] = tractorData;
 
   // Fetch branches on component mount
   useEffect(() => {
-    fetchBranches();
-  }, [fetchBranches]);
+    if (branches.length === 0) {
+      fetchBranches();
+    }
+  }, [branches.length, fetchBranches]);
+
+  // Set default branch when branches are loaded
+  useEffect(() => {
+    console.log('Branches data:', branches);
+    console.log('Branches loading:', isLoadingBranches);
+    console.log('Branches error:', branchesError);
+    
+    if (Array.isArray(branches) && branches.length > 0 && !productForm.branch) {
+      setProductForm(prev => ({ ...prev, branch: branches[0]._id }));
+    }
+  }, [branches, productForm.branch, isLoadingBranches, branchesError]);
 
   const handleCategorySelect = (category: 'rotovator' | 'tractor' | 'service') => {
     setSelectedProduct({
@@ -881,6 +883,23 @@ const AddProductPage: React.FC = () => {
                       />
                     </div>
                     <div>
+                      <Label htmlFor="costPrice">Cost Price</Label>
+                      <Input
+                        id="costPrice"
+                        name="costPrice"
+                        type="number"
+                        value={productForm.costPrice}
+                        onChange={handleInputChange}
+                        placeholder="0.00"
+                        size="lg"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
                       <Label htmlFor="quantity">Quantity *</Label>
                       <Input
                         id="quantity"
@@ -892,6 +911,21 @@ const AddProductPage: React.FC = () => {
                         size="lg"
                         required
                         min="1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="unit">Unit</Label>
+                      <Select
+                        value={productForm.unit}
+                        onChange={(value) => setProductForm(prev => ({ ...prev, unit: value }))}
+                        options={[
+                          { label: 'Pieces', value: 'pieces' },
+                          { label: 'Kg', value: 'kg' },
+                          { label: 'Liters', value: 'liters' },
+                          { label: 'Meters', value: 'meters' },
+                          { label: 'Boxes', value: 'boxes' }
+                        ]}
+                        placeholder="Select unit"
                       />
                     </div>
                   </div>
@@ -925,16 +959,54 @@ const AddProductPage: React.FC = () => {
                       <Select
                         value={productForm.branch}
                         onChange={(value) => setProductForm(prev => ({ ...prev, branch: value }))}
-                        options={[
-                          { label: 'Main Branch', value: 'main' },
-                          ...(Array.isArray(branches) ? branches.map(branch => ({
-                            label: branch.name,
-                            value: branch._id
-                          })) : [])
-                        ]}
+                        options={Array.isArray(branches) ? branches.map(branch => ({
+                          label: branch.name,
+                          value: branch._id
+                        })) : []}
                         placeholder="Select branch"
                       />
                     )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="brand">Brand</Label>
+                    <Input
+                      id="brand"
+                      name="brand"
+                      value={productForm.brand}
+                      onChange={handleInputChange}
+                      placeholder="Enter brand name"
+                      size="lg"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="minStock">Minimum Stock</Label>
+                      <Input
+                        id="minStock"
+                        name="minStock"
+                        type="number"
+                        value={productForm.minStock}
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        size="lg"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="maxStock">Maximum Stock</Label>
+                      <Input
+                        id="maxStock"
+                        name="maxStock"
+                        type="number"
+                        value={productForm.maxStock}
+                        onChange={handleInputChange}
+                        placeholder="1000"
+                        size="lg"
+                        min="0"
+                      />
+                    </div>
                   </div>
 
                   <div>
