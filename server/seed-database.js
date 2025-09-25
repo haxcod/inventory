@@ -359,9 +359,9 @@ const generateAdditionalInvoices = () => {
   const paymentMethods = ['cash', 'card', 'upi', 'bank_transfer'];
   const paymentStatuses = ['paid', 'pending', 'partial'];
   
-  // Generate invoices for the last 30 days
-  for (let i = 0; i < 30; i++) {
-    const daysAgo = i;
+  // Generate invoices for the last 30 days + future dates for testing
+  for (let i = 0; i < 45; i++) {
+    const daysAgo = i - 15; // Start 15 days ago, go 30 days into future
     const invoiceDate = new Date();
     invoiceDate.setDate(invoiceDate.getDate() - daysAgo);
     
@@ -585,9 +585,9 @@ const generateAdditionalPayments = () => {
     'Cash withdrawal'
   ];
   
-  // Generate payments for the last 30 days
-  for (let i = 0; i < 50; i++) {
-    const daysAgo = i % 30; // Spread across 30 days
+  // Generate payments for the last 30 days + future dates for testing
+  for (let i = 0; i < 60; i++) {
+    const daysAgo = (i % 45) - 15; // Start 15 days ago, go 30 days into future
     const paymentDate = new Date();
     paymentDate.setDate(paymentDate.getDate() - daysAgo);
     

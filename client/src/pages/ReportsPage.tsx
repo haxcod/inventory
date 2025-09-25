@@ -93,7 +93,6 @@ export default function ReportsPage() {
     setSelectedReport,
     setDateRange,
     setPeriod,
-    setReportData,
     fetchReports,
   } = useReports();
 
@@ -102,31 +101,33 @@ export default function ReportsPage() {
   // Load data using the same pattern as other pages
   useEffect(() => {
     console.log('🔍 ReportsPage useEffect - reportData:', reportData ? 'exists' : 'null');
+    console.log('🔍 ReportsPage useEffect - selectedReport:', selectedReport);
+    console.log('🔍 ReportsPage useEffect - dateRange:', dateRange);
+    console.log('🔍 ReportsPage useEffect - period:', period);
     
-    // Only fetch reports if we don't have report data yet
-    if (!reportData) {
-      console.log('📥 Fetching reports...');
-      const params: Record<string, string> = {};
+    // Always fetch reports when dependencies change
+    console.log('📥 Fetching reports...');
+    const params: Record<string, string> = {};
 
-      // Add date range parameters for reports that support them
-      if (["sales", "revenue", "profitLoss"].includes(selectedReport)) {
-        if (dateRange.startDate) params.dateFrom = dateRange.startDate;
-        if (dateRange.endDate) params.dateTo = dateRange.endDate;
-        if (selectedReport === "profitLoss") {
-          if (dateRange.startDate) params.startDate = dateRange.startDate;
-          if (dateRange.endDate) params.endDate = dateRange.endDate;
-        }
+    // Add date range parameters for reports that support them
+    if (["sales", "revenue", "profitLoss"].includes(selectedReport)) {
+      if (dateRange.startDate) params.dateFrom = dateRange.startDate;
+      if (dateRange.endDate) params.dateTo = dateRange.endDate;
+      if (selectedReport === "profitLoss") {
+        if (dateRange.startDate) params.startDate = dateRange.startDate;
+        if (dateRange.endDate) params.endDate = dateRange.endDate;
       }
-
-      // Add period parameter for sales/revenue reports
-      if (["sales", "revenue"].includes(selectedReport)) {
-        params.period = period;
-      }
-
-      fetchReports(params);
     }
+
+    // Add period parameter for sales/revenue reports
+    if (["sales", "revenue"].includes(selectedReport)) {
+      params.period = period;
+    }
+
+    console.log('📥 Fetching with params:', params);
+    fetchReports(params);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportData, selectedReport, period, dateRange]); // fetchReports is stable from Zustand
+  }, [selectedReport, period, dateRange]); // Removed reportData from dependencies to always refetch
 
   const reportTypeOptions: SelectOption[] = [
     { value: "sales", label: "Sales Report" },
@@ -143,25 +144,25 @@ export default function ReportsPage() {
   ];
 
   const handleReportTypeChange = useCallback((value: string) => {
+    console.log(`📊 Report type change: ${value}`);
     setSelectedReport(value);
-    // Clear report data when changing report type to trigger fresh fetch
-    setReportData(null);
-  }, [setSelectedReport, setReportData]);
+    // No need to clear report data - useEffect will handle refetching
+  }, [setSelectedReport]);
 
   const handlePeriodChange = useCallback((value: string) => {
+    console.log(`📅 Period change: ${value}`);
     setPeriod(value);
-    // Clear report data when changing period to trigger fresh fetch
-    setReportData(null);
-  }, [setPeriod, setReportData]);
+    // No need to clear report data - useEffect will handle refetching
+  }, [setPeriod]);
 
   const handleDateRangeChange = useCallback((field: 'startDate' | 'endDate', value: string) => {
+    console.log(`📅 Date range change: ${field} = ${value}`);
     setDateRange({
       ...dateRange,
       [field]: value
     });
-    // Clear report data when changing date range to trigger fresh fetch
-    setReportData(null);
-  }, [dateRange, setDateRange, setReportData]);
+    // No need to clear report data - useEffect will handle refetching
+  }, [dateRange, setDateRange]);
 
   const COLORS = [
     "#3B82F6",
@@ -182,6 +183,27 @@ export default function ReportsPage() {
       month: "short",
       year: "numeric",
     });
+  };
+
+  // Smart formatter that handles different period formats
+  const formatPeriodLabel = (label: string) => {
+    if (!label) return "";
+    
+    // If it's already formatted (Weekly, Monthly, Yearly), return as is
+    if (label.includes('Week of') || (label.includes('2025') && !label.includes('-'))) {
+      return label;
+    }
+    
+    // If it's a date string (Daily), format it
+    if (label.includes('-')) {
+      const date = new Date(label);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    }
+    
+    return label;
   };
 
   // Format month from YYYY-MM format
@@ -540,7 +562,11 @@ export default function ReportsPage() {
             Sales Trend
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Monthly sales performance over time
+            {period === 'daily' && 'Daily sales performance over time'}
+            {period === 'weekly' && 'Weekly sales performance over time'}
+            {period === 'monthly' && 'Monthly sales performance over time'}
+            {period === 'yearly' && 'Yearly sales performance over time'}
+            {!period && 'Sales performance over time'}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -558,7 +584,7 @@ export default function ReportsPage() {
                   dataKey="date"
                   tick={{ fontSize: 12 }}
                   axisLine={{ stroke: "#e0e0e0" }}
-                  tickFormatter={formatDate}
+                  tickFormatter={formatPeriodLabel}
                 />
                 <YAxis
                   tick={{ fontSize: 12 }}
@@ -620,7 +646,7 @@ export default function ReportsPage() {
                     dataKey="date"
                     tick={{ fontSize: 12 }}
                     axisLine={{ stroke: "#e0e0e0" }}
-                    tickFormatter={formatDate}
+                    tickFormatter={formatPeriodLabel}
                   />
                   <YAxis
                     tick={{ fontSize: 12 }}
@@ -727,7 +753,7 @@ export default function ReportsPage() {
                   dataKey="date"
                   tick={{ fontSize: 12 }}
                   axisLine={{ stroke: "#e0e0e0" }}
-                  tickFormatter={formatDate}
+                  tickFormatter={formatPeriodLabel}
                 />
                 <YAxis
                   tick={{ fontSize: 12 }}
@@ -789,7 +815,7 @@ export default function ReportsPage() {
                     dataKey="date"
                     tick={{ fontSize: 12 }}
                     axisLine={{ stroke: "#e0e0e0" }}
-                    tickFormatter={formatDate}
+                    tickFormatter={formatPeriodLabel}
                   />
                   <YAxis
                     tick={{ fontSize: 12 }}

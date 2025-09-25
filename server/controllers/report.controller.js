@@ -3,7 +3,7 @@ import * as reportService from '../services/report.service.js';
 // Get sales report
 export const getSalesReport = async (req, res) => {
     try {
-        const { dateFrom, dateTo, branch } = req.query;
+        const { dateFrom, dateTo, branch, period } = req.query;
         
         const filters = {};
         
@@ -16,6 +16,7 @@ export const getSalesReport = async (req, res) => {
         if (dateFrom) filters.dateFrom = dateFrom;
         if (dateTo) filters.dateTo = dateTo;
         if (branch) filters.branch = branch;
+        if (period) filters.period = period; // Add period parameter
 
         const report = await reportService.getSalesReport(filters);
         
