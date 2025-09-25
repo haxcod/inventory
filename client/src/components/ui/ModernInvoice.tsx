@@ -3,22 +3,31 @@ import { XMarkIcon, PrinterIcon, ArrowDownTrayIcon, ArrowTopRightOnSquareIcon } 
 import { Button } from './Button';
 import type { Invoice, Product } from '../../types';
 import { formatCurrency } from '../../lib/utils';
-import jsPDF from 'jspdf';
-import QRCode from 'qrcode';
+import { downloadInvoicePDF, printInvoicePDF } from '../../lib/pdfGenerator';
 
 // QR Code Display Component
 function QRCodeDisplay({ invoiceNumber }: { invoiceNumber: string }) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
 
   useEffect(() => {
-    QRCode.toDataURL(invoiceNumber, {
-      width: 60,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
+    const generateQRCode = async () => {
+      try {
+        const QRCode = (await import('qrcode')).default;
+        const dataURL = await QRCode.toDataURL(invoiceNumber, {
+          width: 60,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+        setQrCodeDataURL(dataURL);
+      } catch (error) {
+        console.error('Error generating QR code:', error);
       }
-    }).then(setQrCodeDataURL);
+    };
+
+    generateQRCode();
   }, [invoiceNumber]);
 
   if (!qrCodeDataURL) return <div className="w-full h-full bg-gray-200 animate-pulse rounded"></div>;
@@ -40,169 +49,45 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
 
   if (!isOpen) return null;
 
+  // Convert invoice to the format expected by PDF generator
+  const convertInvoiceForPDF = (invoice: Invoice) => {
+    return {
+      ...invoice,
+      items: invoice.items.map(item => ({
+        ...item,
+        product: typeof item.product === 'string' 
+          ? products.find(p => p._id === item.product) || { _id: item.product, name: 'Unknown Product', sku: '', category: '', brand: '', price: 0, costPrice: 0, stock: 0, minStock: 0, maxStock: 0, unit: '', branch: '', isActive: true, createdAt: new Date(), updatedAt: new Date() }
+          : item.product,
+        discount: item.discount || 0
+      })),
+      branch: typeof invoice.branch === 'string' 
+        ? { _id: invoice.branch, name: 'Unknown Branch', address: '', phone: '', email: '', isActive: true, createdAt: new Date(), updatedAt: new Date() }
+        : invoice.branch || { _id: '', name: 'Unknown Branch', address: '', phone: '', email: '', isActive: true, createdAt: new Date(), updatedAt: new Date() },
+      createdBy: typeof invoice.createdBy === 'string' 
+        ? { _id: invoice.createdBy, name: 'Unknown User', email: '', password: '', role: 'team' as const, permissions: [], isActive: true, createdAt: new Date(), updatedAt: new Date() }
+        : invoice.createdBy || { _id: '', name: 'Unknown User', email: '', password: '', role: 'team' as const, permissions: [], isActive: true, createdAt: new Date(), updatedAt: new Date() }
+    };
+  };
+
   const handlePrint = async () => {
     setIsPrinting(true);
     
     try {
-      // Generate QR code for print
-      const qrCodeDataURL = await QRCode.toDataURL(invoice.invoiceNumber.toString(), {
-        width: 100,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
-      
-      // Create a temporary element with QR code
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `
-        <div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
-          <img src="${qrCodeDataURL}" alt="QR Code" style="width: 80px; height: 80px;" />
-          <p style="font-size: 10px; text-align: center; margin: 5px 0;">Invoice QR Code</p>
-        </div>
-      `;
-      document.body.appendChild(tempDiv);
-      
-      // Print
-      window.print();
-      
-      // Remove temporary element
-      document.body.removeChild(tempDiv);
-      
+      await printInvoicePDF(convertInvoiceForPDF(invoice));
     } catch (error) {
-      console.error('Error generating QR code for print:', error);
-      window.print(); // Fallback to regular print
+      console.error('Error printing PDF:', error);
     } finally {
       setTimeout(() => setIsPrinting(false), 1000);
     }
   };
 
   const handleDownload = async () => {
-    if (!invoiceRef.current) return;
-    
     setIsGeneratingPDF(true);
     
     try {
-      // Generate QR code
-      const qrCodeDataURL = await QRCode.toDataURL(invoice.invoiceNumber.toString(), {
-        width: 100,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
-
-      // Create PDF
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      // Add QR code to PDF
-      pdf.addImage(qrCodeDataURL, 'PNG', pageWidth - 30, 20, 20, 20);
-      
-      // Add invoice header
-      pdf.setFontSize(24);
-      pdf.setTextColor(59, 130, 246); // Blue color
-      pdf.text('INVOICE', 20, 30);
-      
-      pdf.setFontSize(12);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(`Invoice #: ${invoice.invoiceNumber}`, 20, 40);
-      pdf.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString()}`, 20, 45);
-      pdf.text(`Status: ${invoice.paymentStatus.toUpperCase()}`, 20, 50);
-      
-      // Company info
-      pdf.setFontSize(14);
-      pdf.text('InventoryPro', 20, 70);
-      pdf.setFontSize(10);
-      pdf.text('123 Business Street', 20, 75);
-      pdf.text('City, State 12345', 20, 80);
-      pdf.text('Phone: +1 (555) 123-4567', 20, 85);
-      pdf.text('Email: info@inventorypro.com', 20, 90);
-      
-      // Customer info
-      pdf.setFontSize(14);
-      pdf.text('Bill To:', 120, 70);
-      pdf.setFontSize(10);
-      pdf.text(invoice.customer?.name || 'Walk-in Customer', 120, 75);
-      if (invoice.customer?.email) pdf.text(invoice.customer.email, 120, 80);
-      if (invoice.customer?.phone) pdf.text(invoice.customer.phone, 120, 85);
-      if (invoice.customer?.address) pdf.text(invoice.customer.address, 120, 90);
-      
-      // Items table
-      let yPosition = 110;
-      pdf.setFontSize(12);
-      pdf.text('Items', 20, yPosition);
-      yPosition += 10;
-      
-      // Table headers
-      pdf.setFontSize(10);
-      pdf.text('Item', 20, yPosition);
-      pdf.text('Qty', 80, yPosition);
-      pdf.text('Price', 100, yPosition);
-      pdf.text('Total', 140, yPosition);
-      yPosition += 5;
-      
-      // Draw line
-      pdf.line(20, yPosition, 180, yPosition);
-      yPosition += 10;
-      
-      // Table rows
-      invoice.items.forEach((item) => {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        
-        pdf.text(typeof item.product === 'string' ? item.product : item.product.name, 20, yPosition);
-        pdf.text(item.quantity.toString(), 80, yPosition);
-        pdf.text(formatCurrency(item.price), 100, yPosition);
-        pdf.text(formatCurrency(item.total), 140, yPosition);
-        yPosition += 8;
-      });
-      
-      // Totals
-      yPosition += 10;
-      pdf.line(20, yPosition, 180, yPosition);
-      yPosition += 10;
-      
-      const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
-      const tax = subtotal * 0.12;
-      const total = subtotal + tax;
-      
-      pdf.text(`Subtotal: ${formatCurrency(subtotal)}`, 120, yPosition);
-      yPosition += 8;
-      pdf.text(`Tax (12%): ${formatCurrency(tax)}`, 120, yPosition);
-      yPosition += 8;
-      pdf.setFontSize(12);
-      pdf.text(`Total: ${formatCurrency(total)}`, 120, yPosition);
-      
-      // Payment method
-      yPosition += 15;
-      pdf.setFontSize(10);
-      pdf.text(`Payment Method: ${invoice.paymentMethod.toUpperCase()}`, 20, yPosition);
-      
-      // Notes
-      if (invoice.notes) {
-        yPosition += 15;
-        pdf.text('Notes:', 20, yPosition);
-        yPosition += 8;
-        pdf.text(invoice.notes, 20, yPosition);
-      }
-      
-      // Footer
-      pdf.setFontSize(8);
-      pdf.text('Thank you for your business!', 20, pageHeight - 20);
-      pdf.text('Generated by InventoryPro', pageWidth - 60, pageHeight - 20);
-      
-      // Save PDF
-      pdf.save(`invoice-${invoice.invoiceNumber}.pdf`);
-      
+      await downloadInvoicePDF(convertInvoiceForPDF(invoice), `invoice-${invoice.invoiceNumber}.pdf`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error('Error downloading PDF:', error);
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -225,10 +110,10 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
   const total = subtotal + tax;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-lg p-4">
-      <div ref={invoiceRef} className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div ref={invoiceRef} className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Invoice</h1>
@@ -254,12 +139,12 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="flex-1 overflow-y-auto p-6">
           {/* Company & Customer Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
             {/* Company Info */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">From</h3>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">From</h3>
               <div className="space-y-2">
                 <p className="text-xl font-bold text-gray-900 dark:text-white">InventoryPro</p>
                 <p className="text-gray-600 dark:text-gray-300">123 Business Street</p>
@@ -270,8 +155,8 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
             </div>
 
             {/* Customer Info */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bill To</h3>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Bill To</h3>
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   {invoice.customer?.name || 'Walk-in Customer'}
@@ -290,21 +175,21 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
           </div>
 
           {/* Invoice Details */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-300">Invoice Date</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Invoice Date</p>
               <p className="text-lg font-semibold text-gray-900 dark:text-white">
                 {new Date(invoice.createdAt).toLocaleDateString()}
               </p>
             </div>
             <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-300">Payment Method</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Payment Method</p>
               <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
                 {invoice.paymentMethod.replace('_', ' ')}
               </p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-300">Status</p>
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg sm:col-span-2 lg:col-span-1">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Status</p>
               <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
                 invoice.paymentStatus === 'paid' 
                   ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
@@ -318,10 +203,10 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
           {/* Items Table */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Items</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <div className="overflow-x-auto border border-gray-200 dark:border-gray-600 rounded-lg">
+              <table className="w-full border-collapse min-w-[600px]">
                 <thead>
-                  <tr className="border-b-2 border-gray-200 dark:border-gray-600">
+                  <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                     <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Item</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Description</th>
                     <th className="text-right py-3 px-4 font-semibold text-gray-900 dark:text-white">Qty</th>
@@ -333,7 +218,7 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
                   {invoice.items.map((item, index) => {
                     const product = getProductDetails(item.product);
                     return (
-                      <tr key={index} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <tr key={index} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <td className="py-3 px-4">
                           <div className="font-medium text-gray-900 dark:text-white">{typeof item.product === 'string' ? item.product : item.product.name}</div>
                           {product?.sku && (
@@ -386,32 +271,34 @@ export function ModernInvoice({ isOpen, onClose, invoice, products }: ModernInvo
         </div>
 
         {/* Footer Actions */}
-        <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex flex-wrap gap-3 justify-end">
-          <Button
-            variant="outline"
-            onClick={handleShare}
-            className="flex items-center gap-2"
-          >
-            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-            Share
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleDownload}
-            disabled={isGeneratingPDF}
-            className="flex items-center gap-2"
-          >
-            <ArrowDownTrayIcon className="h-4 w-4" />
-            {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
-          </Button>
-          <Button
-            onClick={handlePrint}
-            disabled={isPrinting}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <PrinterIcon className="h-4 w-4" />
-            {isPrinting ? 'Printing...' : 'Print'}
-          </Button>
+        <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex-shrink-0 border-t border-gray-200 dark:border-gray-600">
+          <div className="flex flex-wrap gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={handleShare}
+              className="flex items-center gap-2"
+            >
+              <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+              Share
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDownload}
+              disabled={isGeneratingPDF}
+              className="flex items-center gap-2"
+            >
+              <ArrowDownTrayIcon className="h-4 w-4" />
+              {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
+            </Button>
+            <Button
+              onClick={handlePrint}
+              disabled={isPrinting}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <PrinterIcon className="h-4 w-4" />
+              {isPrinting ? 'Printing...' : 'Print'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
