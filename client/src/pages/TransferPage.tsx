@@ -5,6 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { ProductTransferModal } from '../components/ui/ProductTransferModal';
+import { ProductSelectionModal } from '../components/ui/ProductSelectionModal';
+import { TransferViewModal } from '../components/ui/TransferViewModal';
 import { 
   PlusIcon, 
   MagnifyingGlassIcon, 
@@ -14,21 +16,16 @@ import {
   XCircleIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import { useAuth, useBranches, useTransfers } from '../hooks/useStores';
+import { useAuth, useBranches, useTransfers, useProducts } from '../hooks/useStores';
 import { useConfirmations } from '../hooks/useConfirmations';
 import { formatNumber, formatDate } from '../lib/utils';
 import { isAdmin, getUserBranchName } from '../lib/roles';
-import type { Product, Branch } from '../types';
+import type { Product, Branch, Transfer } from '../types';
 
-interface TransferWithDetails {
-  _id: string;
+interface TransferWithDetails extends Omit<Transfer, 'product' | 'fromBranch' | 'toBranch' | 'createdBy' | 'completedBy'> {
   product: Product;
   fromBranch: Branch;
   toBranch: Branch;
-  quantity: number;
-  reason: string;
-  notes?: string;
-  status: 'pending' | 'completed' | 'cancelled';
   createdBy: {
     _id: string;
     name: string;
@@ -39,53 +36,83 @@ interface TransferWithDetails {
     name: string;
     email: string;
   };
-  createdAt: Date;
-  completedAt?: Date;
-  updatedAt: Date;
 }
 
 export default function TransferPage() {
   const { user } = useAuth();
   const { branches, fetchBranches } = useBranches();
-  const { transfers, fetchTransfers, isLoading, error, createTransfer: storeCreateTransfer, removeTransfer } = useTransfers();
+  const { transfers, fetchTransfers, isLoading, error, createTransfer: storeCreateTransfer } = useTransfers();
+  const { products, fetchProducts } = useProducts();
   // Type assertion to ensure compatibility with TransferWithDetails type
   const typedTransfers = transfers as unknown as TransferWithDetails[];
-  const { showSuccess, confirmDelete } = useConfirmations();
+  const { showSuccess } = useConfirmations();
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
-  const [selectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isProductSelectionModalOpen, setIsProductSelectionModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedTransfer, setSelectedTransfer] = useState<TransferWithDetails | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSelectedProduct, setLastSelectedProduct] = useState<Product | null>(null);
 
   const branchName = getUserBranchName(user);
 
-  // Load data using the same pattern as ProductsPage and BillingPage
+  // Load data with better state management
   useEffect(() => {
     console.log('🔍 TransferPage useEffect - transfers.length:', typedTransfers.length, 'branches.length:', branches.length);
     
-    // Only fetch transfers if we don't have transfers yet
-    if (typedTransfers.length === 0) {
-      console.log('📥 Fetching transfers...');
-      fetchTransfers();
-    }
+    const loadData = async () => {
+      try {
+        setIsRefreshing(true);
+        
+        // Fetch transfers and branches in parallel
+        const promises = [];
+
+        if (typedTransfers.length === 0) {
+          console.log('📥 Fetching transfers...');
+          promises.push(fetchTransfers());
+        }
+
+        if (branches.length === 0) {
+          console.log('📥 Fetching branches...');
+          promises.push(fetchBranches());
+        }
+
+        if (products.length === 0) {
+          console.log('📥 Fetching products...');
+          promises.push(fetchProducts());
+        }
+        
+        await Promise.all(promises);
+        
+        // Recent transfers are automatically managed by the store
+        
+      } catch (error) {
+        console.error('Error loading transfer data:', error);
+      } finally {
+        setIsRefreshing(false);
+      }
+    };
     
-    // Only fetch branches if we don't have branches yet
-    if (branches.length === 0) {
-      console.log('📥 Fetching branches...');
-      fetchBranches();
-    }
-  }, [typedTransfers.length, branches.length, fetchTransfers, fetchBranches]);
+    loadData();
+  }, [typedTransfers.length, branches.length, products.length, fetchTransfers, fetchBranches, fetchProducts]);
 
   // Filter transfers based on search and filters
   const filteredTransfers = typedTransfers.filter(transfer => {
+    // Add null checks to prevent errors
+    if (!transfer.product || !transfer.fromBranch || !transfer.toBranch) {
+      return false;
+    }
+
     const matchesSearch = 
-      transfer.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transfer.product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transfer.fromBranch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transfer.toBranch.name.toLowerCase().includes(searchTerm.toLowerCase());
+      transfer.product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transfer.product.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transfer.fromBranch.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transfer.toBranch.name?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = !statusFilter || transfer.status === statusFilter;
     const matchesReason = !reasonFilter || transfer.reason === reasonFilter;
@@ -93,7 +120,7 @@ export default function TransferPage() {
     return matchesSearch && matchesStatus && matchesReason;
   });
 
-  // Handle transfer creation using Zustand store
+  // Enhanced transfer creation with better state management
   const handleTransfer = useCallback(async (transferData: {
     productId: string;
     fromBranch: string;
@@ -103,50 +130,59 @@ export default function TransferPage() {
     notes?: string;
   }) => {
     try {
+      console.log('🚀 Creating transfer:', transferData);
+      
       // Use store method which handles API call and state update
       await storeCreateTransfer(transferData);
+      
+      // Show success message
       showSuccess('Product transferred successfully');
+      
+      // Clear selection and close modals
+      handleClearSelection();
+      
+      // Refresh transfers to show the new one
+      await fetchTransfers();
+      
     } catch (error) {
       console.error('Transfer error:', error);
       throw error;
     }
-  }, [storeCreateTransfer, showSuccess]);
+  }, [storeCreateTransfer, showSuccess, fetchTransfers]);
 
-  // Handle transfer cancellation using Zustand store
-  const handleCancelTransfer = useCallback(async (transfer: TransferWithDetails) => {
-    try {
-      setIsDeleting(true);
-      // Use store method which handles API call and state update
-      await removeTransfer(transfer._id);
-      showSuccess('Transfer cancelled successfully');
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred while cancelling transfer';
-      console.error('Transfer cancellation error:', errorMessage);
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [removeTransfer, showSuccess]);
-
-  // Handle transfer cancellation with confirmation
-  const handleCancelTransferConfirm = (transfer: TransferWithDetails) => {
-    confirmDelete(
-      `transfer of ${transfer.quantity} ${transfer.product.unit} of ${transfer.product.name}`,
-      () => handleCancelTransfer(transfer)
-    );
-  };
 
   // Handle view transfer
   const handleViewTransfer = (transfer: TransferWithDetails) => {
-    // Navigate to transfer details page or show modal
-    console.log('View transfer:', transfer);
+    setSelectedTransfer(transfer);
+    setIsViewModalOpen(true);
   };
 
-  // Handle edit transfer (if pending)
-  const handleEditTransfer = (transfer: TransferWithDetails) => {
-    if (transfer.status === 'pending') {
-      // Navigate to edit page or show edit modal
-      console.log('Edit transfer:', transfer);
+
+  // Enhanced product selection with state persistence
+  const handleProductSelect = (product: Product) => {
+    console.log('🎯 Product selected:', product.name);
+    setSelectedProduct(product);
+    setLastSelectedProduct(product); // Remember last selected product
+    setIsTransferModalOpen(true);
+    setIsProductSelectionModalOpen(false);
+  };
+
+  // Quick transfer with last selected product
+  const handleQuickTransfer = () => {
+    if (lastSelectedProduct) {
+      console.log('⚡ Quick transfer with last product:', lastSelectedProduct.name);
+      setSelectedProduct(lastSelectedProduct);
+      setIsTransferModalOpen(true);
+    } else {
+      // No last product, open selection modal
+      setIsProductSelectionModalOpen(true);
     }
+  };
+
+  // Clear selected product and reset state
+  const handleClearSelection = () => {
+    setSelectedProduct(null);
+    setIsTransferModalOpen(false);
   };
 
   // Get status icon and color
@@ -204,12 +240,23 @@ export default function TransferPage() {
             </div>
             <div className="flex gap-2">
               <Button
-                onClick={() => setIsTransferModalOpen(true)}
+                onClick={handleQuickTransfer}
                 className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2 border-blue-400 w-full sm:w-auto"
               >
                 <PlusIcon className="h-5 w-5 mr-2" />
-                New Transfer
+                {lastSelectedProduct ? `Transfer ${lastSelectedProduct.name}` : 'New Transfer'}
               </Button>
+              
+              {lastSelectedProduct && (
+                <Button
+                  onClick={() => setIsProductSelectionModalOpen(true)}
+                  variant="outline"
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50 w-full sm:w-auto"
+                >
+                  <PlusIcon className="h-5 w-5 mr-2" />
+                  Select Different Product
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -217,8 +264,9 @@ export default function TransferPage() {
         {/* Search and Filters */}
         <Card className="hover:shadow-lg transition-all duration-300">
           <CardContent className="p-4 sm:p-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 flex gap-4">
+                <div className="flex-1">
                 <Label htmlFor="search" className="text-sm font-semibold text-foreground">
                   Search Transfers
                 </Label>
@@ -232,6 +280,7 @@ export default function TransferPage() {
                     size="lg"
                     className="pl-10 sm:pl-12"
                   />
+                </div>
                 </div>
               </div>
               <div className="w-48">
@@ -271,6 +320,33 @@ export default function TransferPage() {
                     <option value="other">Other</option>
                   </select>
                 </div>
+              </div>
+              
+              {/* Refresh Button */}
+              <div className="flex items-end">
+                <Button
+                        onClick={async () => {
+                          setIsRefreshing(true);
+                          try {
+                            await fetchTransfers();
+                            await fetchBranches();
+                            await fetchProducts();
+                          } finally {
+                            setIsRefreshing(false);
+                          }
+                        }}
+                  variant="outline"
+                  size="sm"
+                  disabled={isRefreshing}
+                  className="h-10"
+                >
+                  {isRefreshing ? (
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <MagnifyingGlassIcon className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -322,7 +398,7 @@ export default function TransferPage() {
                   </p>
                   {!(searchTerm || statusFilter || reasonFilter) && (
                     <Button
-                      onClick={() => setIsTransferModalOpen(true)}
+                      onClick={() => setIsProductSelectionModalOpen(true)}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       <PlusIcon className="h-4 w-4 mr-2" />
@@ -339,7 +415,7 @@ export default function TransferPage() {
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                         <div className="flex-1">
                           <CardTitle className="text-lg sm:text-xl font-bold text-foreground group-hover:text-blue-600 transition-colors">
-                            {transfer.product.name}
+                            {transfer.product?.name || 'Unknown Product'}
                           </CardTitle>
                           <div className="flex items-center gap-2 mt-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium flex flex-row items-center gap-1 ${getStatusColor(transfer.status)}`}>
@@ -354,22 +430,22 @@ export default function TransferPage() {
                       <div className="grid gap-2 text-sm">
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">SKU:</span>
-                          <span className="font-medium">{transfer.product.sku}</span>
+                          <span className="font-medium">{transfer.product?.sku || 'N/A'}</span>
                         </div>
                         
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Quantity:</span>
-                          <span className="font-medium">{formatNumber(transfer.quantity)} {transfer.product.unit}</span>
+                          <span className="font-medium">{formatNumber(transfer.quantity)} {transfer.product?.unit || 'units'}</span>
                         </div>
                         
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">From Branch:</span>
-                          <span className="font-medium">{transfer.fromBranch.name}</span>
+                          <span className="font-medium">{transfer.fromBranch?.name || 'Unknown Branch'}</span>
                         </div>
-                        
+
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">To Branch:</span>
-                          <span className="font-medium">{transfer.toBranch.name}</span>
+                          <span className="font-medium">{transfer.toBranch?.name || 'Unknown Branch'}</span>
                         </div>
                         
                         <div className="flex justify-between text-sm">
@@ -379,7 +455,7 @@ export default function TransferPage() {
                         
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Created By:</span>
-                          <span className="font-medium">{transfer.createdBy.name}</span>
+                          <span className="font-medium">{transfer.createdBy?.name || 'Unknown User'}</span>
                         </div>
                         
                         <div className="flex justify-between text-sm">
@@ -403,39 +479,16 @@ export default function TransferPage() {
                         </div>
                       )}
                       
-                      <div className="flex gap-2 mt-4">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleViewTransfer(transfer)}
-                          className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
-                        >
-                          View
-                        </Button>
-                        
-                        {transfer.status === 'pending' && (
-                          <>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleEditTransfer(transfer)}
-                              className="flex-1 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-400 transition-all duration-200"
-                            >
-                              Edit
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleCancelTransferConfirm(transfer)}
-                              disabled={isDeleting}
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200"
-                              title="Cancel Transfer"
-                            >
-                              {isDeleting ? '...' : 'Cancel'}
-                            </Button>
-                          </>
-                        )}
-                      </div>
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewTransfer(transfer)}
+                            className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
+                          >
+                            View
+                          </Button>
+                        </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -444,11 +497,30 @@ export default function TransferPage() {
           </CardContent>
         </Card>
 
+        {/* Transfer View Modal */}
+        <TransferViewModal
+          isOpen={isViewModalOpen}
+          onClose={() => {
+            setIsViewModalOpen(false);
+            setSelectedTransfer(null);
+          }}
+          transfer={selectedTransfer}
+        />
+
+        {/* Product Selection Modal */}
+        <ProductSelectionModal
+          isOpen={isProductSelectionModalOpen}
+          onClose={() => setIsProductSelectionModalOpen(false)}
+          products={products}
+          onProductSelect={handleProductSelect}
+        />
+
         {/* Transfer Modal */}
         <ProductTransferModal
           isOpen={isTransferModalOpen}
-          onClose={() => setIsTransferModalOpen(false)}
+          onClose={handleClearSelection}
           product={selectedProduct}
+          branches={branches}
           onTransfer={handleTransfer}
         />
       </div>

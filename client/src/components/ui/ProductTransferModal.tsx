@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { XMarkIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { Label } from "./Label";
 import type { Product, Branch } from "../../types";
 import { formatCurrency } from "../../lib/utils";
-import apiService from "../../lib/api";
 
 interface ProductTransferModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product | null;
+  branches: Branch[];
   onTransfer: (transferData: TransferData) => Promise<void>;
 }
 
@@ -35,9 +35,9 @@ export const ProductTransferModal: React.FC<ProductTransferModalProps> = ({
   isOpen,
   onClose,
   product,
+  branches,
   onTransfer,
 }) => {
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [transferData, setTransferData] = useState<TransferData>({
     productId: "",
     fromBranch: "",
@@ -48,30 +48,7 @@ export const ProductTransferModal: React.FC<ProductTransferModalProps> = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [branchesLoading, setBranchesLoading] = useState(false);
 
-  const fetchBranches = useCallback(async () => {
-    setBranchesLoading(true);
-    setError(null);
-    try {
-      const response = await apiService.branches.getAll();
-      if (response.data?.success) {
-        const branchData = response.data.data.branches;
-
-        // Ensure we always set an array
-        const branchArray = Array.isArray(branchData) ? branchData : [];
-        setBranches(branchArray);
-      } else {
-        throw new Error(response.data?.message || "Failed to fetch branches");
-      }
-    } catch (error) {
-      console.error("Error fetching branches:", error);
-      setError("Failed to load branches. Please try again.");
-      setBranches([]);
-    } finally {
-      setBranchesLoading(false);
-    }
-  }, []);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -86,11 +63,9 @@ export const ProductTransferModal: React.FC<ProductTransferModalProps> = ({
         notes: "",
       });
       setError(null);
-      fetchBranches();
     } else if (!isOpen) {
       // Reset state when modal closes
       setError(null);
-      setBranches([]);
       setTransferData({
         productId: "",
         fromBranch: "",
@@ -100,7 +75,7 @@ export const ProductTransferModal: React.FC<ProductTransferModalProps> = ({
         notes: "",
       });
     }
-  }, [isOpen, product, fetchBranches]);
+  }, [isOpen, product]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,13 +136,13 @@ export const ProductTransferModal: React.FC<ProductTransferModalProps> = ({
   };
 
   // Helper function to get branch ID from branch data
-  const getBranchId = (branchData: string | any): string => {
+  const getBranchId = (branchData: string | { _id: string; name: string; address?: string }): string => {
     if (!branchData) return "";
     if (typeof branchData === "string") return branchData;
     if (typeof branchData === "object" && branchData._id) return branchData._id;
     return "";
   };
-  const getBranchName = (branchData: string | any): string => {
+  const getBranchName = (branchData: string | { _id: string; name: string; address?: string }): string => {
     if (!branchData) return "Unknown Branch";
 
     // If branchData is already an object with a name property
@@ -327,14 +302,12 @@ export const ProductTransferModal: React.FC<ProductTransferModalProps> = ({
                   }))
                 }
                 required
-                disabled={branchesLoading || isLoading}
+                disabled={isLoading}
                 className="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-describedby="toBranch-help"
               >
                 <option value="">
-                  {branchesLoading
-                    ? "Loading branches..."
-                    : "Select destination branch"}
+                  Select destination branch
                 </option>
                 {availableBranches.map((branch) => (
                   <option key={branch._id} value={branch._id}>
@@ -346,7 +319,7 @@ export const ProductTransferModal: React.FC<ProductTransferModalProps> = ({
                 id="toBranch-help"
                 className="text-xs text-gray-500 dark:text-gray-400 mt-1"
               >
-                {availableBranches.length === 0 && !branchesLoading
+                {availableBranches.length === 0
                   ? "No other branches available"
                   : "Choose where to transfer the product"}
               </p>

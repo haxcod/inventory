@@ -405,6 +405,7 @@ export default function ProductsPage() {
           isOpen={showTransferModal}
           onClose={handleCloseTransferModal}
           product={selectedProduct}
+          branches={branches}
           onTransfer={handleTransfer}
         />
       </div>
