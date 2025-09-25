@@ -122,7 +122,7 @@ export default function TeamDashboardPage() {
     );
   }
 
-  const { stats, salesData, productData } = dashboardData;
+  const { stats, salesData, productData, lowStockProducts } = dashboardData;
   const branchName = getUserBranchName(user);
 
   return (
@@ -185,7 +185,7 @@ export default function TeamDashboardPage() {
               <ExclamationTriangleIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{formatNumber(stats.lowStockItems)}</div>
+              <div className="text-2xl font-bold text-orange-600">{formatNumber(lowStockProducts?.length)}</div>
               <p className="text-xs text-muted-foreground">
                 Items need restocking
               </p>
@@ -249,8 +249,10 @@ export default function TeamDashboardPage() {
                       type="monotone" 
                       dataKey="sales" 
                       stroke="#3b82f6" 
-                      strokeWidth={2}
+                      strokeWidth={3}
                       dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                      connectNulls={true}
                     />
                   </LineChart>
                 </ResponsiveContainer>

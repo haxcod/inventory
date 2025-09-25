@@ -46,6 +46,7 @@ export const hasRole = (user: User | null, role: string | string[]): boolean => 
 export const PERMISSIONS = {
   // Products
   PRODUCTS_VIEW: 'products.view',
+  PRODUCTS_VIEW_DETAILS: 'products.view.details',
   PRODUCTS_CREATE: 'products.create',
   PRODUCTS_EDIT: 'products.edit',
   PRODUCTS_DELETE: 'products.delete',

@@ -5,7 +5,7 @@ export interface User {
   email: string;
   password: string;
   name: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'team';
   permissions: string[];
   branch?: string | null | { name: string; _id: string };
   isActive: boolean;

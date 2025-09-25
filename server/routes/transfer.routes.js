@@ -6,13 +6,16 @@ import {
     cancelTransfer,
     getTransferStats
 } from '../controllers/transfer.controller.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, filterByBranch } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/permissions.js';
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Apply branch filtering
+router.use(filterByBranch);
 
 // GET /api/transfers - Get all transfers (users can view)
 router.get('/', requirePermission('transfers.view'), getAllTransfers);

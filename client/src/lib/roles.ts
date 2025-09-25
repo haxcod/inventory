@@ -8,7 +8,7 @@ export const isAdmin = (user: User | null): boolean => {
 
 // Check if user is team member (non-admin users are team members)
 export const isTeam = (user: User | null): boolean => {
-  return user?.role === 'user';
+  return user?.role === 'team';
 };
 
 // Get user's branch ID

@@ -43,7 +43,22 @@ export const getSalesReport = async (filters = {}) => {
             salesByDate[date].count += 1;
         });
 
-        const chartData = Object.values(salesByDate).sort((a, b) => new Date(a.date) - new Date(b.date));
+        // Fill in missing dates to ensure continuous data
+        const chartData = [];
+        if (Object.keys(salesByDate).length > 0) {
+            const dates = Object.keys(salesByDate).sort();
+            const startDate = new Date(dates[0]);
+            const endDate = new Date(dates[dates.length - 1]);
+            
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+                chartData.push({
+                    date: dateStr,
+                    revenue: salesByDate[dateStr]?.revenue || 0,
+                    count: salesByDate[dateStr]?.count || 0
+                });
+            }
+        }
 
         // Group by payment method
         const paymentMethodStats = {};
@@ -243,18 +258,27 @@ export const getProfitLossReport = async (filters = {}) => {
         payments.forEach(payment => {
             if (payment.paymentType === 'debit') {
                 const month = payment.createdAt.toISOString().substring(0, 7);
-                if (monthlyData[month]) {
-                    monthlyData[month].expenses += payment.amount;
+                if (!monthlyData[month]) {
+                    monthlyData[month] = { month, revenue: 0, expenses: 0, profit: 0 };
                 }
+                monthlyData[month].expenses += payment.amount;
             }
         });
 
-        // Calculate profit for each month
-        Object.values(monthlyData).forEach(month => {
-            month.profit = month.revenue - month.expenses;
-        });
-
-        const chartData = Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
+        // Fill in missing months to ensure continuous data
+        const chartData = [];
+        if (Object.keys(monthlyData).length > 0) {
+            const months = Object.keys(monthlyData).sort();
+            const startMonth = new Date(months[0] + '-01');
+            const endMonth = new Date(months[months.length - 1] + '-01');
+            
+            for (let d = new Date(startMonth); d <= endMonth; d.setMonth(d.getMonth() + 1)) {
+                const monthStr = d.toISOString().substring(0, 7);
+                const monthData = monthlyData[monthStr] || { month: monthStr, revenue: 0, expenses: 0, profit: 0 };
+                monthData.profit = monthData.revenue - monthData.expenses;
+                chartData.push(monthData);
+            }
+        }
 
         return {
             summary: {

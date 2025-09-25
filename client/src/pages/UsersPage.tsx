@@ -32,7 +32,7 @@ export default function UsersPage() {
     name: '',
     email: '',
     password: '',
-    role: 'user' as 'admin' | 'user',
+    role: 'team' as 'admin' | 'team',
     branch: 'main',
   });
 
@@ -88,7 +88,7 @@ export default function UsersPage() {
         name: '',
         email: '',
         password: '',
-        role: 'user',
+        role: 'team',
         branch: 'main',
       });
       setSelectedBranch(null);
@@ -280,7 +280,7 @@ export default function UsersPage() {
                     Regular Users
                   </p>
                   <p className="text-2xl font-bold" style={{color: 'hsl(var(--foreground))'}}>
-                    {(Array.isArray(users) ? users : []).filter(u => u.role === 'user').length}
+                    {(Array.isArray(users) ? users : []).filter(u => u.role === 'team').length}
                   </p>
                 </div>
               </div>
@@ -359,11 +359,11 @@ export default function UsersPage() {
                   <Select
                     id="userRole"
                     options={[
-                      { value: 'user', label: 'User' },
+                      { value: 'team', label: 'Team' },
                       { value: 'admin', label: 'Admin' }
                     ]}
                     value={newUser.role}
-                    onChange={(value) => setNewUser(prev => ({ ...prev, role: value as 'admin' | 'user' }))}
+                    onChange={(value) => setNewUser(prev => ({ ...prev, role: value as 'admin' | 'team' }))}
                     placeholder="Select role"
                     className="mt-2"
                   />

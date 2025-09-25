@@ -6,6 +6,13 @@ export const getSalesReport = async (req, res) => {
         const { dateFrom, dateTo, branch } = req.query;
         
         const filters = {};
+        
+        // Apply branch filter from middleware (for team users)
+        if (req.branchFilter) {
+            Object.assign(filters, req.branchFilter);
+        }
+        
+        // Apply additional filters from query
         if (dateFrom) filters.dateFrom = dateFrom;
         if (dateTo) filters.dateTo = dateTo;
         if (branch) filters.branch = branch;
@@ -30,6 +37,13 @@ export const getStockReport = async (req, res) => {
         const { branch, category } = req.query;
         
         const filters = {};
+        
+        // Apply branch filter from middleware (for team users)
+        if (req.branchFilter) {
+            Object.assign(filters, req.branchFilter);
+        }
+        
+        // Apply additional filters from query
         if (branch) filters.branch = branch;
         if (category) filters.category = category;
 
@@ -53,6 +67,13 @@ export const getPaymentReport = async (req, res) => {
         const { dateFrom, dateTo, branch } = req.query;
         
         const filters = {};
+        
+        // Apply branch filter from middleware (for team users)
+        if (req.branchFilter) {
+            Object.assign(filters, req.branchFilter);
+        }
+        
+        // Apply additional filters from query
         if (dateFrom) filters.dateFrom = dateFrom;
         if (dateTo) filters.dateTo = dateTo;
         if (branch) filters.branch = branch;
@@ -77,6 +98,13 @@ export const getProfitLossReport = async (req, res) => {
         const { startDate, endDate, branch } = req.query;
         
         const filters = {};
+        
+        // Apply branch filter from middleware (for team users)
+        if (req.branchFilter) {
+            Object.assign(filters, req.branchFilter);
+        }
+        
+        // Apply additional filters from query
         if (startDate) filters.startDate = startDate;
         if (endDate) filters.endDate = endDate;
         if (branch) filters.branch = branch;

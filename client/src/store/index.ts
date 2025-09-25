@@ -135,6 +135,9 @@ interface DashboardData {
   stats: DashboardStats;
   salesData: ChartData[];
   productData: ChartData[];
+  lowStockProducts?: LowStockProduct[];
+  recentInvoices?: any[];
+  summary?: any;
 }
 
 interface DashboardState {

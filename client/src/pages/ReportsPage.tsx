@@ -36,8 +36,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
 } from "recharts";
 import * as XLSX from "xlsx";
 
@@ -548,25 +546,13 @@ export default function ReportsPage() {
         <CardContent className="p-6">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
+              <LineChart
                 data={
                   Array.isArray(reportData?.chartData)
                     ? (reportData?.chartData as ChartDataItem[])
                     : []
                 }
               >
-                <defs>
-                  <linearGradient
-                    id="salesGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="date"
@@ -594,14 +580,16 @@ export default function ReportsPage() {
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   }}
                 />
-                <Area
+                <Line
                   type="monotone"
                   dataKey="revenue"
                   stroke="#3B82F6"
-                  strokeWidth={2}
-                  fill="url(#salesGradient)"
+                  strokeWidth={3}
+                  dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: "#3B82F6", strokeWidth: 2 }}
+                  connectNulls={true}
                 />
-              </AreaChart>
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
@@ -768,6 +756,7 @@ export default function ReportsPage() {
                   strokeWidth={3}
                   dot={{ fill: "#10B981", strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, stroke: "#10B981", strokeWidth: 2 }}
+                  connectNulls={true}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -944,6 +933,7 @@ export default function ReportsPage() {
                   strokeWidth={2}
                   name="Revenue"
                   dot={{ fill: "#3B82F6", r: 4 }}
+                  connectNulls={true}
                 />
                 <Line
                   type="monotone"
@@ -952,6 +942,7 @@ export default function ReportsPage() {
                   strokeWidth={2}
                   name="Expenses"
                   dot={{ fill: "#EF4444", r: 4 }}
+                  connectNulls={true}
                 />
                 <Line
                   type="monotone"
@@ -960,6 +951,7 @@ export default function ReportsPage() {
                   strokeWidth={3}
                   name="Profit"
                   dot={{ fill: "#10B981", r: 4 }}
+                  connectNulls={true}
                 />
               </LineChart>
             </ResponsiveContainer>

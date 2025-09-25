@@ -14,6 +14,7 @@ import { formatCurrency } from "../lib/utils";
 import { useConfirmations } from "../hooks/useConfirmations";
 import { useAuth, useProducts, useBranches, useInvoices } from "../hooks/useStores";
 import { isAdmin, getUserBranchName } from "../lib/roles";
+import { hasPermission, PERMISSIONS } from "../lib/permissions";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -77,6 +78,9 @@ export default function BillingPage() {
 
   // Hooks
   const { showError, confirmDelete } = useConfirmations();
+
+  // Permission checks
+  const canDeleteInvoice = hasPermission(user, PERMISSIONS.BILLING_DELETE);
 
   // Helper function to get status display configuration
   const getStatusDisplay = (invoice: Invoice) => {
@@ -749,15 +753,17 @@ export default function BillingPage() {
                       >
                         View
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteInvoice(invoice)}
-                        disabled={isDeletingInvoice}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      {canDeleteInvoice && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteInvoice(invoice)}
+                          disabled={isDeletingInvoice}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

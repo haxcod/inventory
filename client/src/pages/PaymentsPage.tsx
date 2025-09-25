@@ -29,11 +29,16 @@ import {
 import { useConfirmations } from "../hooks/useConfirmations";
 import { useAuth, usePayments } from "../hooks/useStores";
 import { apiService } from "../lib/api";
+import { hasPermission, PERMISSIONS } from "../lib/permissions";
 
 export default function PaymentsPage() {
   const { user } = useAuth();
   const { payments, fetchPayments, isLoading, error, createPayment: storeCreatePayment, removePayment } = usePayments();
   const { confirmDelete, showError } = useConfirmations();
+  
+  // Permission checks
+  const canDeletePayment = hasPermission(user, PERMISSIONS.PAYMENTS_DELETE);
+  const canEditPayment = hasPermission(user, PERMISSIONS.PAYMENTS_EDIT);
   
   // State
   const [searchTerm, setSearchTerm] = useState("");
@@ -848,25 +853,29 @@ export default function PaymentsPage() {
                     <EyeIcon className="h-4 w-4 mr-1" />
                     View
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-green-600 hover:bg-green-50 hover:text-green-700"
-                    onClick={() => handleEditPayment(payment)}
-                  >
-                    <PencilIcon className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={() => handleDeletePayment(payment._id)}
-                    disabled={isDeletingPayment}
-                  >
-                    <TrashIcon className="h-4 w-4 mr-1" />
-                    {isDeletingPayment ? "Deleting..." : "Delete"}
-                  </Button>
+                  {canEditPayment && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                      onClick={() => handleEditPayment(payment)}
+                    >
+                      <PencilIcon className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                  {canDeletePayment && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                      onClick={() => handleDeletePayment(payment._id)}
+                      disabled={isDeletingPayment}
+                    >
+                      <TrashIcon className="h-4 w-4 mr-1" />
+                      {isDeletingPayment ? "Deleting..." : "Delete"}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1120,16 +1129,18 @@ export default function PaymentsPage() {
                   >
                     Close
                   </Button>
-                  <Button
-                    onClick={() => {
-                      setShowPaymentDetails(false);
-                      handleEditPayment(selectedPayment);
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <PencilIcon className="h-4 w-4 mr-2" />
-                    Edit Payment
-                  </Button>
+                  {canEditPayment && (
+                    <Button
+                      onClick={() => {
+                        setShowPaymentDetails(false);
+                        handleEditPayment(selectedPayment);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <PencilIcon className="h-4 w-4 mr-2" />
+                      Edit Payment
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

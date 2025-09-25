@@ -9,6 +9,7 @@ import Branch from './models/Branch.js';
 import Invoice from './models/Invoice.js';
 import Payment from './models/Payment.js';
 import StockMovement from './models/StockMovement.js';
+import Transfer from './models/Transfer.js';
 
 // Load environment variables
 dotenv.config();
@@ -55,26 +56,90 @@ const sampleUsers = [
     password: 'admin123',
     name: 'Admin User',
     role: 'admin',
-    permissions: ['all'],
+    permissions: [
+      'products.view', 'products.view.details', 'products.create', 'products.edit', 'products.delete',
+      'billing.view', 'billing.create', 'billing.edit', 'billing.delete',
+      'transfers.view', 'transfers.create', 'transfers.edit', 'transfers.delete',
+      'payments.view', 'payments.create', 'payments.edit', 'payments.delete',
+      'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.delete',
+      'reports.view', 'reports.create',
+      'users.view', 'users.create', 'users.edit', 'users.delete',
+      'branches.view', 'branches.create', 'branches.edit', 'branches.delete',
+      'dashboard.view', 'settings.view', 'settings.edit'
+    ],
     branch: null,
     isActive: true
   },
   {
-    email: 'manager@company.com',
-    password: 'manager123',
-    name: 'Branch Manager',
-    role: 'user',
-    permissions: ['transfer_products', 'manage_inventory', 'view_reports'],
+    email: 'team1@company.com',
+    password: 'team123',
+    name: 'Team Member 1',
+    role: 'team',
+    permissions: [
+      'products.view',
+      'billing.view', 'billing.create',
+      'transfers.view', 'transfers.create',
+      'payments.view', 'payments.create',
+      'invoices.view', 'invoices.create',
+      'reports.view',
+      'branches.view', // Team users need to see branches for transfers
+      'dashboard.view'
+    ],
     branch: null, // Will be set to main branch
     isActive: true
   },
   {
-    email: 'staff@company.com',
-    password: 'staff123',
-    name: 'Staff Member',
-    role: 'user',
-    permissions: ['transfer_products', 'view_inventory'],
+    email: 'team2@company.com',
+    password: 'team123',
+    name: 'Team Member 2',
+    role: 'team',
+    permissions: [
+      'products.view',
+      'billing.view', 'billing.create',
+      'transfers.view', 'transfers.create',
+      'payments.view', 'payments.create',
+      'invoices.view', 'invoices.create',
+      'reports.view',
+      'branches.view', // Team users need to see branches for transfers
+      'dashboard.view'
+    ],
     branch: null, // Will be set to north branch
+    isActive: true
+  },
+  {
+    email: 'team3@company.com',
+    password: 'team123',
+    name: 'Team Member 3',
+    role: 'team',
+    permissions: [
+      'products.view',
+      'billing.view', 'billing.create',
+      'transfers.view', 'transfers.create',
+      'payments.view', 'payments.create',
+      'invoices.view', 'invoices.create',
+      'reports.view',
+      'branches.view', // Team users need to see branches for transfers
+      'dashboard.view'
+    ],
+    branch: null, // Will be set to south branch
+    isActive: true
+  },
+  {
+    email: 'team4@company.com',
+    password: 'team123',
+    name: 'Team Member 4',
+    role: 'team',
+    permissions: [
+      'products.view',
+      'billing.view', 'billing.create',
+      'transfers.view', 'transfers.create',
+      'payments.view', 'payments.create',
+      'invoices.view', 'invoices.create',
+      'reports.view',
+      'branches.view', // Team users need to see branches for transfers
+      'dashboard.view'
+    ],
+    branch: null, // Will be set to east branch
     isActive: true
   }
 ];
@@ -277,6 +342,67 @@ const sampleProducts = [
   }
 ];
 
+// Generate additional dummy invoices for better chart testing
+const generateAdditionalInvoices = () => {
+  const additionalInvoices = [];
+  const customers = [
+    { name: 'John Smith', email: 'john@email.com', phone: '+91-9876543210' },
+    { name: 'Jane Doe', email: 'jane@email.com', phone: '+91-9876543211' },
+    { name: 'Mike Johnson', email: 'mike@email.com', phone: '+91-9876543212' },
+    { name: 'Sarah Wilson', email: 'sarah@email.com', phone: '+91-9876543213' },
+    { name: 'David Brown', email: 'david@email.com', phone: '+91-9876543214' },
+    { name: 'Lisa Davis', email: 'lisa@email.com', phone: '+91-9876543215' },
+    { name: 'Tom Miller', email: 'tom@email.com', phone: '+91-9876543216' },
+    { name: 'Emma Garcia', email: 'emma@email.com', phone: '+91-9876543217' }
+  ];
+
+  const paymentMethods = ['cash', 'card', 'upi', 'bank_transfer'];
+  const paymentStatuses = ['paid', 'pending', 'partial'];
+  
+  // Generate invoices for the last 30 days
+  for (let i = 0; i < 30; i++) {
+    const daysAgo = i;
+    const invoiceDate = new Date();
+    invoiceDate.setDate(invoiceDate.getDate() - daysAgo);
+    
+    const customer = customers[i % customers.length];
+    const invoiceNumber = `INV-${String(100 + i).padStart(3, '0')}`;
+    const baseAmount = Math.floor(Math.random() * 100000) + 10000; // 10k to 110k
+    const tax = Math.floor(baseAmount * 0.18); // 18% tax
+    const total = baseAmount + tax;
+    
+    additionalInvoices.push({
+      invoiceNumber,
+      customer: {
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: `${Math.floor(Math.random() * 999) + 1} Test Street, City`
+      },
+      items: [
+        {
+          product: null, // Will be set dynamically
+          quantity: Math.floor(Math.random() * 5) + 1,
+          price: baseAmount,
+          discount: 0,
+          total: baseAmount
+        }
+      ],
+      subtotal: baseAmount,
+      tax: tax,
+      discount: 0,
+      total: total,
+      paymentMethod: paymentMethods[i % paymentMethods.length],
+      paymentStatus: paymentStatuses[i % paymentStatuses.length],
+      notes: `Test invoice ${i + 1}`,
+      branch: null, // Will be set dynamically
+      createdBy: null // Will be set to admin user
+    });
+  }
+  
+  return additionalInvoices;
+};
+
 const sampleInvoices = [
   {
     invoiceNumber: 'INV-001',
@@ -443,6 +569,49 @@ const sampleInvoices = [
   }
 ];
 
+// Generate additional dummy payments for better chart testing
+const generateAdditionalPayments = () => {
+  const additionalPayments = [];
+  const paymentTypes = ['credit', 'debit'];
+  const paymentMethods = ['cash', 'card', 'upi', 'bank_transfer'];
+  const descriptions = [
+    'Customer payment',
+    'Supplier payment',
+    'Office expenses',
+    'Marketing expenses',
+    'Equipment purchase',
+    'Service payment',
+    'Refund processing',
+    'Cash withdrawal'
+  ];
+  
+  // Generate payments for the last 30 days
+  for (let i = 0; i < 50; i++) {
+    const daysAgo = i % 30; // Spread across 30 days
+    const paymentDate = new Date();
+    paymentDate.setDate(paymentDate.getDate() - daysAgo);
+    
+    const amount = Math.floor(Math.random() * 50000) + 1000; // 1k to 51k
+    const paymentType = paymentTypes[i % paymentTypes.length];
+    const paymentMethod = paymentMethods[i % paymentMethods.length];
+    const description = descriptions[i % descriptions.length];
+    
+    additionalPayments.push({
+      amount: amount,
+      paymentMethod: paymentMethod,
+      paymentType: paymentType,
+      description: `${description} ${i + 1}`,
+      reference: `REF-${String(1000 + i).padStart(4, '0')}`,
+      customer: `Customer ${i + 1}`,
+      notes: `Test payment ${i + 1}`,
+      branch: null, // Will be set dynamically
+      createdBy: null // Will be set to admin user
+    });
+  }
+  
+  return additionalPayments;
+};
+
 const samplePayments = [
   {
     amount: 271396.46,
@@ -545,6 +714,57 @@ const samplePayments = [
   }
 ];
 
+const sampleTransfers = [
+  {
+    product: null, // Will be set to iPhone 15 Pro
+    fromBranch: null, // Will be set to main branch
+    toBranch: null, // Will be set to north branch
+    quantity: 5,
+    reason: 'restock',
+    notes: 'Transferring iPhone stock to North branch for high demand',
+    status: 'completed',
+    createdBy: null, // Will be set to manager user
+    completedBy: null, // Will be set to manager user
+    completedAt: new Date()
+  },
+  {
+    product: null, // Will be set to Samsung Galaxy S24
+    fromBranch: null, // Will be set to main branch
+    toBranch: null, // Will be set to south branch
+    quantity: 3,
+    reason: 'demand',
+    notes: 'High demand for Samsung phones in South branch',
+    status: 'completed',
+    createdBy: null, // Will be set to staff user
+    completedBy: null, // Will be set to staff user
+    completedAt: new Date()
+  },
+  {
+    product: null, // Will be set to MacBook Pro M3
+    fromBranch: null, // Will be set to main branch
+    toBranch: null, // Will be set to east branch
+    quantity: 2,
+    reason: 'rebalance',
+    notes: 'Stock rebalancing for East branch',
+    status: 'pending',
+    createdBy: null, // Will be set to sales user
+    completedBy: null,
+    completedAt: null
+  },
+  {
+    product: null, // Will be set to Dell XPS 13
+    fromBranch: null, // Will be set to north branch
+    toBranch: null, // Will be set to main branch
+    quantity: 4,
+    reason: 'emergency',
+    notes: 'Emergency transfer due to main branch shortage',
+    status: 'completed',
+    createdBy: null, // Will be set to manager user
+    completedBy: null, // Will be set to manager user
+    completedAt: new Date()
+  }
+];
+
 async function seedDatabase() {
   try {
     // Connect to MongoDB
@@ -559,6 +779,7 @@ async function seedDatabase() {
     await Invoice.deleteMany({});
     await Payment.deleteMany({});
     await StockMovement.deleteMany({});
+    await Transfer.deleteMany({});
 
     // Create branches
     console.log('Creating branches...');
@@ -568,10 +789,10 @@ async function seedDatabase() {
     // Create users
     console.log('Creating users...');
     const hashedUsers = await Promise.all(
-      sampleUsers.map(async (user) => ({
+      sampleUsers.map(async (user, index) => ({
         ...user,
         password: await bcrypt.hash(user.password, 10),
-        branch: user.role === 'admin' ? null : createdBranches[0]._id
+        branch: user.role === 'admin' ? null : createdBranches[index % createdBranches.length]._id
       }))
     );
     const createdUsers = await User.insertMany(hashedUsers);
@@ -588,27 +809,60 @@ async function seedDatabase() {
 
     // Create payments
     console.log('Creating payments...');
-    const paymentsWithReferences = samplePayments.map((payment, index) => ({
-      ...payment,
-      branch: createdBranches[index % createdBranches.length]._id,
-      createdBy: createdUsers[0]._id // Admin user
-    }));
+    const allPayments = [...samplePayments, ...generateAdditionalPayments()];
+    const paymentsWithReferences = allPayments.map((payment, index) => {
+      // Create dates spread across the last 30 days
+      const daysAgo = index % 30;
+      const paymentDate = new Date();
+      paymentDate.setDate(paymentDate.getDate() - daysAgo);
+      
+      return {
+        ...payment,
+        branch: createdBranches[index % createdBranches.length]._id,
+        createdBy: createdUsers[0]._id, // Admin user
+        createdAt: paymentDate,
+        updatedAt: paymentDate
+      };
+    });
     const createdPayments = await Payment.insertMany(paymentsWithReferences);
     console.log(`Created ${createdPayments.length} payments`);
 
     // Create invoices
     console.log('Creating invoices...');
-    const invoicesWithReferences = sampleInvoices.map((invoice, index) => ({
-      ...invoice,
-      items: invoice.items.map(item => ({
-        ...item,
-        product: createdProducts[index % createdProducts.length]._id
-      })),
-      branch: createdBranches[index % createdBranches.length]._id,
-      createdBy: createdUsers[index % createdUsers.length]._id
-    }));
+    const allInvoices = [...sampleInvoices, ...generateAdditionalInvoices()];
+    const invoicesWithReferences = allInvoices.map((invoice, index) => {
+      // Create dates spread across the last 30 days
+      const daysAgo = index % 30;
+      const invoiceDate = new Date();
+      invoiceDate.setDate(invoiceDate.getDate() - daysAgo);
+      
+      return {
+        ...invoice,
+        items: invoice.items.map(item => ({
+          ...item,
+          product: createdProducts[index % createdProducts.length]._id
+        })),
+        branch: createdBranches[index % createdBranches.length]._id,
+        createdBy: createdUsers[index % createdUsers.length]._id,
+        createdAt: invoiceDate,
+        updatedAt: invoiceDate
+      };
+    });
     const createdInvoices = await Invoice.insertMany(invoicesWithReferences);
     console.log(`Created ${createdInvoices.length} invoices`);
+
+    // Create transfers
+    console.log('Creating transfers...');
+    const transfersWithReferences = sampleTransfers.map((transfer, index) => ({
+      ...transfer,
+      product: createdProducts[index % createdProducts.length]._id,
+      fromBranch: createdBranches[index % createdBranches.length]._id,
+      toBranch: createdBranches[(index + 1) % createdBranches.length]._id,
+      createdBy: createdUsers[index % createdUsers.length]._id,
+      completedBy: transfer.status === 'completed' ? createdUsers[index % createdUsers.length]._id : null
+    }));
+    const createdTransfers = await Transfer.insertMany(transfersWithReferences);
+    console.log(`Created ${createdTransfers.length} transfers`);
 
     // Create stock movements
     console.log('Creating stock movements...');
@@ -631,12 +885,15 @@ async function seedDatabase() {
     console.log(`- Products: ${createdProducts.length}`);
     console.log(`- Invoices: ${createdInvoices.length}`);
     console.log(`- Payments: ${createdPayments.length}`);
+    console.log(`- Transfers: ${createdTransfers.length}`);
     console.log(`- Stock Movements: ${stockMovements.length}`);
 
     console.log('\n🔑 Login Credentials:');
     console.log('Admin: admin@company.com / admin123');
-    console.log('Manager: manager@company.com / manager123');
-    console.log('Staff: staff@company.com / staff123');
+    console.log('Team Member 1: team1@company.com / team123');
+    console.log('Team Member 2: team2@company.com / team123');
+    console.log('Team Member 3: team3@company.com / team123');
+    console.log('Team Member 4: team4@company.com / team123');
 
   } catch (error) {
     console.error('Error seeding database:', error);

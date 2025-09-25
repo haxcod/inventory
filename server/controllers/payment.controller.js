@@ -15,6 +15,13 @@ export const getAllPayments = async (req, res) => {
         } = req.query;
         
         const filters = {};
+        
+        // Apply branch filter from middleware (for team users)
+        if (req.branchFilter) {
+            Object.assign(filters, req.branchFilter);
+        }
+        
+        // Apply additional filters from query
         if (branch) filters.branch = branch;
         if (paymentMethod) filters.paymentMethod = paymentMethod;
         if (paymentType) filters.paymentType = paymentType;

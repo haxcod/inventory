@@ -99,14 +99,14 @@ export const filterByBranch = (req, res, next) => {
         });
     }
 
-    // Simple role check: admin can see all data, team (user) can only see their branch
+    // Simple role check: admin can see all data, team can only see their branch
     const isAdmin = req.user.role === 'admin';
     
     if (isAdmin) {
         return next();
     }
 
-    // For team users (role: 'user'), add branch filter to query
+    // For team users (role: 'team'), add branch filter to query
     if (req.user.branch) {
         req.branchFilter = { branch: req.user.branch._id || req.user.branch };
     } else {

@@ -10,6 +10,8 @@ import type { Invoice } from '../types';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { useInvoices } from '../hooks/useStores';
 import { useConfirmations } from '../hooks/useConfirmations';
+import { useAuth } from '../hooks/useStores';
+import { hasPermission, PERMISSIONS } from '../lib/permissions';
 import { 
   MagnifyingGlassIcon, 
   DocumentTextIcon,
@@ -23,6 +25,11 @@ import {
 export default function InvoicesPage() {
   const { invoices, fetchInvoices, isLoading, error, removeInvoice } = useInvoices();
   const { confirmDelete } = useConfirmations();
+  const { user } = useAuth();
+  
+  // Permission checks
+  const canDeleteInvoice = hasPermission(user, PERMISSIONS.INVOICES_DELETE);
+  const canEditInvoice = hasPermission(user, PERMISSIONS.INVOICES_EDIT);
   
   // State
   const [searchTerm, setSearchTerm] = useState('');
@@ -389,22 +396,26 @@ export default function InvoicesPage() {
                           <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50 hover:text-blue-700">
                             <EyeIcon className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-green-600 hover:bg-green-50 hover:text-green-700">
-                            <PencilIcon className="h-4 w-4" />
-                          </Button>
+                          {canEditInvoice && (
+                            <Button variant="ghost" size="sm" className="text-green-600 hover:bg-green-50 hover:text-green-700">
+                              <PencilIcon className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="sm" className="text-purple-600 hover:bg-purple-50 hover:text-purple-700">
                             <PrinterIcon className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                            onClick={() => handleDeleteInvoice(invoice)}
-                            disabled={isDeletingInvoice}
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                            {isDeletingInvoice ? 'Deleting...' : 'Delete'}
-                          </Button>
+                          {canDeleteInvoice && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                              onClick={() => handleDeleteInvoice(invoice)}
+                              disabled={isDeletingInvoice}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                              {isDeletingInvoice ? 'Deleting...' : 'Delete'}
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

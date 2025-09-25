@@ -32,8 +32,8 @@ router.get('/low-stock', requirePermission('products.view'), getLowStockProducts
 // GET /api/products/branch/:branchId - Get products by branch (users can view)
 router.get('/branch/:branchId', requirePermission('products.view'), getProductsByBranch);
 
-// GET /api/products/:id - Get product by ID (users can view)
-router.get('/:id', requirePermission('products.view'), getProductById);
+// GET /api/products/:id - Get product by ID (admin only for details)
+router.get('/:id', requirePermission('products.view.details'), getProductById);
 
 // POST /api/products - Create new product (admin only)
 router.post('/', requirePermission('products.create'), createProduct);

@@ -32,6 +32,13 @@ export const getAllTransfers = async (req, res) => {
         const { page = 1, limit = 10, productId, branch, status, reason } = req.query;
         
         const filters = {};
+        
+        // Apply branch filter from middleware (for team users)
+        if (req.branchFilter) {
+            Object.assign(filters, req.branchFilter);
+        }
+        
+        // Apply additional filters from query
         if (productId) filters.productId = productId;
         if (branch) filters.branch = branch;
         if (status) filters.status = status;

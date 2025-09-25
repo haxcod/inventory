@@ -6,13 +6,16 @@ import {
     updatePayment,
     deletePayment
 } from '../controllers/payment.controller.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, filterByBranch } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/permissions.js';
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Apply branch filtering
+router.use(filterByBranch);
 
 // GET /api/payments - Get all payments (users can view)
 router.get('/', requirePermission('payments.view'), getAllPayments);

@@ -5,7 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency = '₹'): string {
+export function formatCurrency(amount: number | undefined | null, currency = '₹'): string {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return `${currency}0`;
+  }
+  
   if (amount >= 10000000) {
     // 1 crore and above
     return `${currency}${(amount / 10000000).toFixed(1)}cr`;
@@ -41,7 +45,11 @@ export function formatDateTime(date: Date | string): string {
   });
 }
 
-export function formatNumber(num: number): string {
+export function formatNumber(num: number | undefined | null): string {
+  if (num === undefined || num === null || isNaN(num)) {
+    return '0';
+  }
+  
   if (num >= 10000000) {
     // 1 crore and above
     return `${(num / 10000000).toFixed(1)}cr`;
